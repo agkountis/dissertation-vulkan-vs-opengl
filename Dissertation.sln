@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VulkanBenchmarkSingleThreaded", "VulkanBenchmark\VulkanBenchmark.vcxproj", "{D71AC416-07F7-4412-BAEA-30D9657CFD73}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3405B859-7907-42E4-B746-30B750283607} = {3405B859-7907-42E4-B746-30B750283607}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Infrastructure", "Infrastructure\Infrastructure.vcxproj", "{3405B859-7907-42E4-B746-30B750283607}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug - OpenGL|x64 = Debug - OpenGL|x64
+		Debug - OpenGL|x86 = Debug - OpenGL|x86
+		Debug - Vulkan|x64 = Debug - Vulkan|x64
+		Debug - Vulkan|x86 = Debug - Vulkan|x86
+		Release - OpenGL|x64 = Release - OpenGL|x64
+		Release - OpenGL|x86 = Release - OpenGL|x86
+		Release - Vulkan|x64 = Release - Vulkan|x64
+		Release - Vulkan|x86 = Release - Vulkan|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Debug - OpenGL|x64.ActiveCfg = Debug - OpenGL|x64
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Debug - OpenGL|x64.Build.0 = Debug - OpenGL|x64
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Debug - OpenGL|x86.ActiveCfg = Debug - OpenGL|Win32
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Debug - OpenGL|x86.Build.0 = Debug - OpenGL|Win32
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Debug - Vulkan|x64.ActiveCfg = Debug - Vulkan|x64
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Debug - Vulkan|x64.Build.0 = Debug - Vulkan|x64
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Debug - Vulkan|x86.ActiveCfg = Debug - Vulkan|Win32
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Debug - Vulkan|x86.Build.0 = Debug - Vulkan|Win32
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Release - OpenGL|x64.ActiveCfg = Release - OpenGL|x64
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Release - OpenGL|x64.Build.0 = Release - OpenGL|x64
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Release - OpenGL|x86.ActiveCfg = Release - OpenGL|Win32
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Release - OpenGL|x86.Build.0 = Release - OpenGL|Win32
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Release - Vulkan|x64.ActiveCfg = Release - Vulkan|x64
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Release - Vulkan|x64.Build.0 = Release - Vulkan|x64
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Release - Vulkan|x86.ActiveCfg = Release - Vulkan|Win32
+		{D71AC416-07F7-4412-BAEA-30D9657CFD73}.Release - Vulkan|x86.Build.0 = Release - Vulkan|Win32
+		{3405B859-7907-42E4-B746-30B750283607}.Debug - OpenGL|x64.ActiveCfg = Debug - OpenGL|x64
+		{3405B859-7907-42E4-B746-30B750283607}.Debug - OpenGL|x64.Build.0 = Debug - OpenGL|x64
+		{3405B859-7907-42E4-B746-30B750283607}.Debug - OpenGL|x86.ActiveCfg = Debug - OpenGL|Win32
+		{3405B859-7907-42E4-B746-30B750283607}.Debug - OpenGL|x86.Build.0 = Debug - OpenGL|Win32
+		{3405B859-7907-42E4-B746-30B750283607}.Debug - Vulkan|x64.ActiveCfg = Debug - Vulkan|x64
+		{3405B859-7907-42E4-B746-30B750283607}.Debug - Vulkan|x64.Build.0 = Debug - Vulkan|x64
+		{3405B859-7907-42E4-B746-30B750283607}.Debug - Vulkan|x86.ActiveCfg = Debug - Vulkan|Win32
+		{3405B859-7907-42E4-B746-30B750283607}.Debug - Vulkan|x86.Build.0 = Debug - Vulkan|Win32
+		{3405B859-7907-42E4-B746-30B750283607}.Release - OpenGL|x64.ActiveCfg = Release - OpenGL|x64
+		{3405B859-7907-42E4-B746-30B750283607}.Release - OpenGL|x64.Build.0 = Release - OpenGL|x64
+		{3405B859-7907-42E4-B746-30B750283607}.Release - OpenGL|x86.ActiveCfg = Release - OpenGL|Win32
+		{3405B859-7907-42E4-B746-30B750283607}.Release - OpenGL|x86.Build.0 = Release - OpenGL|Win32
+		{3405B859-7907-42E4-B746-30B750283607}.Release - Vulkan|x64.ActiveCfg = Release - Vulkan|x64
+		{3405B859-7907-42E4-B746-30B750283607}.Release - Vulkan|x64.Build.0 = Release - Vulkan|x64
+		{3405B859-7907-42E4-B746-30B750283607}.Release - Vulkan|x86.ActiveCfg = Release - Vulkan|Win32
+		{3405B859-7907-42E4-B746-30B750283607}.Release - Vulkan|x86.Build.0 = Release - Vulkan|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

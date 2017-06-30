@@ -2,3 +2,8 @@
 Release/
 VulkanBenchmark/Debug/vc141.idb
 VulkanBenchmark/Debug/
+Infrastructure/Debug - Vulkan/
+Infrastructure/Release - Vulkan/
+VulkanBenchmark/Debug - Vulkan/
+VulkanBenchmark/Release - Vulkan/
+Release - Vulkan/
