@@ -65,6 +65,9 @@
     <ClInclude Include="vulkan_instance.h">
       <Filter>include\vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan_debug.h">
+      <Filter>include\vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vulkan_renderer.cpp">
@@ -89,6 +92,9 @@
       <Filter>src\vulkan</Filter>
     </ClCompile>
     <ClCompile Include="vulkan_instance.cpp">
+      <Filter>src\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan_debug.cpp">
       <Filter>src\vulkan</Filter>
     </ClCompile>
   </ItemGroup>

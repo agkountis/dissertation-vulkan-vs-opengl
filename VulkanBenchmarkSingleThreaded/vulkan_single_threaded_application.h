@@ -4,7 +4,10 @@
 #include "vulkan_window.h"
 #include <memory>
 #include "vulkan_instance.h"
-#include <optional>
+
+#if !NDEBUG
+#include "vulkan_debug.h"
+#endif
 
 class VulkanSingleThreadedApplication : public Application {
 private:
@@ -12,7 +15,11 @@ private:
 
 	std::unique_ptr<VulkanInstance> m_Instance;
 
-	std::optional<VkPhysicalDevice> PickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface, const std::vector<std::string>& requiredExtensions) const noexcept;
+#if !NDEBUG
+	std::unique_ptr<VulkanDebug> m_VulkanDebug;
+#endif
+
+	VkPhysicalDevice PickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface, const std::vector<std::string>& requiredExtensions) const noexcept;
 
 public:
 	bool Initialize() override;

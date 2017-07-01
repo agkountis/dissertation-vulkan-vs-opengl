@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Infrastructure", "Infrastructure\Infrastructure.vcxproj", "{3405B859-7907-42E4-B746-30B750283607}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VulkanBenchmarkSingleThreaded", "VulkanBenchmarkSingleThreaded\VulkanBenchmarkSingleThreaded.vcxproj", "{71E2436D-EA94-4FF9-A1AE-191AECA420AE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3405B859-7907-42E4-B746-30B750283607} = {3405B859-7907-42E4-B746-30B750283607}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

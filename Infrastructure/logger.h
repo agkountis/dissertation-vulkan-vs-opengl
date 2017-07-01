@@ -1,6 +1,7 @@
 #ifndef LOGGER_H_
 #define LOGGER_H_
 #include <iostream>
+#include <string>
 
 #define LOG(message) std::cout << "LOG: " << message << std::endl
 #define ERROR_LOG(message) std::cerr << "ERROR: " << message << std::endl

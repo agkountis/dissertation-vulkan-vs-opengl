@@ -5,7 +5,7 @@
 
 using namespace VulkanUtilities;
 
-std::optional<VkPhysicalDevice> VulkanSingleThreadedApplication::PickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface, const std::vector<std::string>& requiredExtensions) const noexcept
+VkPhysicalDevice VulkanSingleThreadedApplication::PickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface, const std::vector<std::string>& requiredExtensions) const noexcept
 {
 	ui32 deviceCount{ 0 };
 
@@ -17,11 +17,11 @@ std::optional<VkPhysicalDevice> VulkanSingleThreadedApplication::PickPhysicalDev
 
 	for (const auto& physicalDevice : physicalDevices) {
 		if (DeviceIsSuitable(physicalDevice, surface, requiredExtensions)) {
-			return std::make_optional(physicalDevice);
+			return physicalDevice;
 		}
 	}
 
-	return std::nullopt;
+	return nullptr;
 }
 
 bool VulkanSingleThreadedApplication::Initialize()
@@ -52,6 +52,21 @@ bool VulkanSingleThreadedApplication::Initialize()
 	}
 	catch(std::runtime_error runtimeError) {
 		ERROR_LOG(runtimeError.what());
+		return false;
+	}
+
+#if !NDEBUG
+	try {
+		m_VulkanDebug = std::make_unique<VulkanDebug>(m_Instance);
+	}
+	catch(std::runtime_error runtimeError) {
+		ERROR_LOG(runtimeError.what());
+		return false;
+	}
+	
+#endif
+
+	if (!m_Window->CreateSurface(m_Instance)) {
 		return false;
 	}
 

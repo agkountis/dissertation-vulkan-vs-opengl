@@ -14,7 +14,7 @@ public:
 
 	~VulkanInstance();
 
-	explicit operator VkInstance() const;
+	VkInstance GetHandle() const noexcept;
 };
 
 #endif // VULAKN_INSTANCE_H_

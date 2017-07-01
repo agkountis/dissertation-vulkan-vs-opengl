@@ -62,7 +62,7 @@ VulkanInstance::~VulkanInstance()
 	vkDestroyInstance(m_Instance, nullptr);
 }
 
-VulkanInstance::operator VkInstance() const
+VkInstance VulkanInstance::GetHandle() const noexcept
 {
 	return m_Instance;
 }
