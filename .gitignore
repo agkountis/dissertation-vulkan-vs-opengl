@@ -7,3 +7,4 @@ Infrastructure/Release - Vulkan/
 VulkanBenchmark/Debug - Vulkan/
 VulkanBenchmark/Release - Vulkan/
 Release - Vulkan/
+VulkanBenchmarkSingleThreaded/Debug - Vulkan/

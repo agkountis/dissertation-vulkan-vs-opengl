@@ -1,10 +1,13 @@
 #ifndef APPLICATION_H_
 #define APPLICATION_H_
 #include "types.h"
+#include "timer.h"
 
 class Application {
 private:
 	bool m_Terminate{ false };
+
+	Timer m_Timer;
 
 public:
 	Application() = default;
@@ -19,11 +22,13 @@ public:
 
 	bool ShouldTerminate() const noexcept;
 
-	f64 GetDelta() const noexcept;
+	const Timer& GetTimer() const noexcept;
 
-	virtual bool Initialize() = 0;
+	virtual bool Initialize();
 
-	virtual i32 run() = 0;
+	virtual i32 Run() = 0;
+
+	virtual void Draw() noexcept = 0;
 };
 
 #endif // APPLICATION_H_

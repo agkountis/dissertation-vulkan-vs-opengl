@@ -39,15 +39,23 @@
     <ClInclude Include="ibo.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="mesh.h" />
+    <ClInclude Include="timer.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="vbo.h" />
+    <ClInclude Include="vulkan_device.h" />
+    <ClInclude Include="vulkan_instance.h" />
     <ClInclude Include="vulkan_renderer.h" />
+    <ClInclude Include="vulkan_utilities.h" />
     <ClInclude Include="vulkan_vbo.h" />
     <ClInclude Include="vulkan_window.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="application.cpp" />
+    <ClCompile Include="vulkan_device.cpp" />
+    <ClCompile Include="vulkan_instance.cpp" />
     <ClCompile Include="vulkan_renderer.cpp" />
+    <ClCompile Include="vulkan_utilities.cpp" />
     <ClCompile Include="vulkan_vbo.cpp" />
     <ClCompile Include="vulkan_window.cpp" />
     <ClCompile Include="window.cpp" />

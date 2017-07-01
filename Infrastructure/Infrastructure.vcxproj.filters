@@ -53,6 +53,18 @@
     <ClInclude Include="application.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="timer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan_device.h">
+      <Filter>include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan_utilities.h">
+      <Filter>include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan_instance.h">
+      <Filter>include\vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vulkan_renderer.cpp">
@@ -65,6 +77,18 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="vulkan_window.cpp">
+      <Filter>src\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="application.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan_device.cpp">
+      <Filter>src\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan_utilities.cpp">
+      <Filter>src\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan_instance.cpp">
       <Filter>src\vulkan</Filter>
     </ClCompile>
   </ItemGroup>
