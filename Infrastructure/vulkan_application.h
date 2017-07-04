@@ -94,6 +94,8 @@ private:
 	std::vector<VkFramebuffer> m_FrameBuffers;
 
 
+	virtual VkResult CreateInstance() noexcept;
+
 public:
 
 	/**
