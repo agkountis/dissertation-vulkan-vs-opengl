@@ -24,11 +24,11 @@ public:
 
 	const Timer& GetTimer() const noexcept;
 
-	virtual bool Initialize();
+	virtual bool Initialize() noexcept = 0;
 
-	virtual i32 Run() = 0;
+	virtual i32 Run() const noexcept = 0;
 
-	virtual void Draw() noexcept = 0;
+	virtual void Draw() const noexcept = 0;
 };
 
 #endif // APPLICATION_H_

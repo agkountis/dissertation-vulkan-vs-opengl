@@ -21,9 +21,9 @@ VulkanWindow::VulkanWindow(const std::string& title,
 
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-	m_Window = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
+	handle = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
 
-	glfwSetWindowUserPointer(m_Window, application);
+	glfwSetWindowUserPointer(handle, application);
 	//TODO
 	//glfwSetWindowSizeCallback(m_Window, )
 }
@@ -44,7 +44,7 @@ std::vector<const char*> VulkanWindow::GetExtensions() noexcept
 
 bool VulkanWindow::CreateSurface(const std::unique_ptr<VulkanInstance>& instance) noexcept
 {
-	VkResult result{ glfwCreateWindowSurface(instance->GetHandle(), m_Window, nullptr, &m_Surface) };
+	VkResult result{ glfwCreateWindowSurface(instance->GetHandle(), handle, nullptr, &surface) };
 	
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create window surface.");
@@ -56,11 +56,7 @@ bool VulkanWindow::CreateSurface(const std::unique_ptr<VulkanInstance>& instance
 	return true;
 }
 
-i32 VulkanWindow::MainLoop() noexcept
+VulkanWindow::operator GLFWwindow*() const
 {
-	while (!glfwWindowShouldClose(m_Window)) {
-		glfwPollEvents();
-	}
-
-	return EXIT_SUCCESS;
+	return handle;
 }

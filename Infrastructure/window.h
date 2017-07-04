@@ -3,17 +3,15 @@
 #include <string>
 #include "types.h"
 
-class Window {
-private:
-	std::string m_Title;
+struct Window {
+	std::string title;
 
-	Vec2i m_Size;
+	Vec2i size;
 
-	Vec2i m_Position;
+	Vec2i position;
 
-	Vec2i m_CursorPosition;
+	Vec2i cursorPosition;
 
-public:
 	explicit Window(const std::string& title, const Vec2i& size, const Vec2i& position);
 
 	Window(const Window& other) = delete;
@@ -25,8 +23,6 @@ public:
 	Window&& operator=(Window&& other) = delete;
 
 	virtual ~Window() = default;
-
-	virtual i32 MainLoop() noexcept = 0;
 };
 
 #endif //WINDOW_H_

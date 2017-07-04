@@ -15,10 +15,3 @@ const Timer& Application::GetTimer() const noexcept
 {
 	return m_Timer;
 }
-
-bool Application::Initialize()
-{
-	//TODO
-
-	return true;
-}

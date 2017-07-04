@@ -9,13 +9,11 @@
 class Application;
 class VulkanInstance;
 
-class VulkanWindow : public Window {
-private:
-	GLFWwindow* m_Window{ nullptr };
+struct VulkanWindow : Window {
 
-	VkSurfaceKHR m_Surface{ VK_NULL_HANDLE };
+	GLFWwindow* handle{ nullptr };
 
-	VkSwapchainKHR m_Swapchain{ VK_NULL_HANDLE };
+	VkSurfaceKHR surface{ VK_NULL_HANDLE };
 
 	static void OnWindowResize(GLFWwindow* window, i32 width, i32 height) noexcept;
 
@@ -26,7 +24,7 @@ public:
 
 	bool CreateSurface(const std::unique_ptr<VulkanInstance>& instance) noexcept;
 
-	i32 MainLoop() noexcept override;
+	explicit operator GLFWwindow*() const;
 };
 
 

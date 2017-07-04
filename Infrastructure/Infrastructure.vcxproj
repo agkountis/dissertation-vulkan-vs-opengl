@@ -42,6 +42,7 @@
     <ClInclude Include="timer.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="vbo.h" />
+    <ClInclude Include="vulkan_application.h" />
     <ClInclude Include="vulkan_debug.h" />
     <ClInclude Include="vulkan_device.h" />
     <ClInclude Include="vulkan_instance.h" />
@@ -53,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="application.cpp" />
+    <ClCompile Include="vulkan_application.cpp" />
     <ClCompile Include="vulkan_debug.cpp" />
     <ClCompile Include="vulkan_device.cpp" />
     <ClCompile Include="vulkan_instance.cpp" />
