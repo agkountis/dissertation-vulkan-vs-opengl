@@ -1,5 +1,6 @@
 #ifndef VULKAN_WINDOW_H_
 #define VULKAN_WINDOW_H_
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "window.h"
@@ -24,7 +25,7 @@ public:
 
 	bool CreateSurface(const std::unique_ptr<VulkanInstance>& instance) noexcept;
 
-	explicit operator GLFWwindow*() const;
+	operator GLFWwindow*() const;
 };
 
 

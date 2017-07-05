@@ -7,25 +7,14 @@
 #include "application.h"
 #include <vector>
 #include "vulkan_window.h"
-
-struct VulkanPhysicalDevice {
-	VkPhysicalDevice device{ nullptr };
-
-	VkPhysicalDeviceProperties properties;
-
-	VkPhysicalDeviceFeatures features;
-
-	VkPhysicalDeviceMemoryProperties memoryProperties;
-
-	explicit operator VkPhysicalDevice() const
-	{
-		return device;
-	}
-};
+#include "vulkan_physical_device.h"
+#include "vulkan_debug.h"
+#include "vulkan_swapchain.h"
+#include "vulkan_device.h"
 
 class VulkanApplication : public Application {
 private:
-	
+
 	/**
 	 * \brief The application's window.
 	 */
@@ -36,11 +25,14 @@ private:
 	 */
 	VkInstance m_Instance{ nullptr };
 
+#if !defined(NDEBUG) && !defined(__APPLE__)
+	VulkanDebug m_VulkanDebug;
+#endif
+
 	/**
-	 * \brief A struct that encapsulates a Vulkan physical device with it's
-	 * properties and supported features.
+	 * \brief Encapsulates both the physical and the logical device.
 	 */
-	VulkanPhysicalDevice m_PhysicalDevice;
+	VulkanDevice m_Device;
 
 	/**
 	 * \brief The physical device features to be enabled for this application.
@@ -73,7 +65,7 @@ private:
 	VkPipelineStageFlags m_PipelineStageFlags{ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
 	/**
-	 * \brief 
+	 * \brief
 	 */
 	VkSubmitInfo m_SubmitInfo;
 
@@ -93,17 +85,61 @@ private:
 	 */
 	std::vector<VkFramebuffer> m_FrameBuffers;
 
+	std::vector<VkShaderModule> m_ShaderModules;
 
+	// Pipeline cache object
+	VkPipelineCache m_PipelineCache;
+
+	// Wraps the swap chain to present images (framebuffers) to the windowing system
+	VulkanSwapChain m_SwapChain;
+
+	// Swap chain image presentation
+	VkSemaphore m_PresentComplete{ nullptr };
+
+	// Command buffer submission and execution
+	VkSemaphore m_DrawComplete{ nullptr };
+
+	/**
+	 * \brief Creates the Vulkan instance.
+	 * \details Derived classes can override for
+	 * application specific initialization.
+	 * \return The corresponding Vulkan result code.
+	 */
 	virtual VkResult CreateInstance() noexcept;
 
+	/**
+	 * \brief Funcation for derived classes to override in order to enable
+	 * specific physical device features if supported.
+	 * \details Must be called after the physical device has been picked.
+	 */
+	virtual void EnableFeatures() noexcept = 0;
+
 public:
+
+	/**
+	 * \brief VulkanApplication's constructor.
+	 * \param settings The settings of the application.
+	 */
+	VulkanApplication(const ApplicationSettings& settings);
+
+	/**
+	 * \brief VulkanApplication's destructor.
+	 * \details Cleans up allocated Vulkan resources.
+	 */
+	~VulkanApplication();
+
+	const std::unique_ptr<VulkanWindow>& GetWindow() const noexcept;
+
+	const VulkanDevice& GetDevice() const noexcept;
+
+	VkPhysicalDeviceFeatures& GetFeaturesToEnable() noexcept;
 
 	/**
 	 * \brief Initializes the application
 	 * \details This is the base class implementation and it
 	 * initializes Vulkan. Derived classes can override and implement
 	 * application specific initialization.
-	 * \return TRUE if successfull, FALSE otherwise.
+	 * \return TRUE if successful, FALSE otherwise.
 	 */
 	bool Initialize() noexcept override;
 
@@ -113,12 +149,6 @@ public:
 	 * \return The application's exit code.
 	 */
 	i32 Run() const noexcept final override;
-
-	/**
-	 * \brief The main draw function.
-	 * \details Derived classes have to implement their specific drawing code.
-	 */
-	void Draw() const noexcept override = 0;
 };
 
 #endif // VULKAN_APPLICATION_H_

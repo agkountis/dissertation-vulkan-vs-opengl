@@ -3,7 +3,12 @@
 #include "vulkan_application.h"
 
 class VulkanSingleThreadedApplication : public VulkanApplication {
+private:
+	void EnableFeatures() noexcept override;
+
 public:
+	VulkanSingleThreadedApplication(const ApplicationSettings& settings);
+
 	bool Initialize() noexcept override;
 
 	void Draw() const noexcept override;

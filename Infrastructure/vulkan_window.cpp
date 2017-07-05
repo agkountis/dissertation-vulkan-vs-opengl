@@ -1,10 +1,16 @@
 #include "vulkan_window.h"
 #include "logger.h"
 #include "vulkan_instance.h"
+#include "vulkan_application.h"
 
 // Static methods ------------------------
 void VulkanWindow::OnWindowResize(GLFWwindow* window, i32 width, i32 height) noexcept
 {
+	VulkanApplication* app{ static_cast<VulkanApplication*>(glfwGetWindowUserPointer(window)) };
+
+	app->GetWindow()->size = Vec2i{ width, height };
+
+	//TODO: recreate the swapchain and resources that depend on it.
 }
 
 //----------------------------------------
@@ -45,7 +51,7 @@ std::vector<const char*> VulkanWindow::GetExtensions() noexcept
 bool VulkanWindow::CreateSurface(const std::unique_ptr<VulkanInstance>& instance) noexcept
 {
 	VkResult result{ glfwCreateWindowSurface(instance->GetHandle(), handle, nullptr, &surface) };
-	
+
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create window surface.");
 		return false;
@@ -55,6 +61,7 @@ bool VulkanWindow::CreateSurface(const std::unique_ptr<VulkanInstance>& instance
 
 	return true;
 }
+
 
 VulkanWindow::operator GLFWwindow*() const
 {

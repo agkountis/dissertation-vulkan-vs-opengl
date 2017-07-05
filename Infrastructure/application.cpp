@@ -1,5 +1,10 @@
+#include <string>
 #include "application.h"
 
+Application::Application(const ApplicationSettings& settings)
+		: m_Settings{ settings }
+{
+}
 
 void Application::SetTermination(bool state) noexcept
 {
@@ -14,4 +19,14 @@ bool Application::ShouldTerminate() const noexcept
 const Timer& Application::GetTimer() const noexcept
 {
 	return m_Timer;
+}
+
+const ApplicationSettings& Application::GetSettings() const noexcept
+{
+	return m_Settings;
+}
+
+void Application::SetSettings(const ApplicationSettings& settings) noexcept
+{
+	m_Settings = settings;
 }
