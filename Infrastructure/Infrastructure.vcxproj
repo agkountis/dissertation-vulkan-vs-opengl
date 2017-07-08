@@ -46,7 +46,9 @@
     <ClInclude Include="vulkan_debug.h" />
     <ClInclude Include="vulkan_device.h" />
     <ClInclude Include="vulkan_instance.h" />
+    <ClInclude Include="vulkan_physical_device.h" />
     <ClInclude Include="vulkan_renderer.h" />
+    <ClInclude Include="vulkan_swapchain.h" />
     <ClInclude Include="vulkan_utilities.h" />
     <ClInclude Include="vulkan_vbo.h" />
     <ClInclude Include="vulkan_window.h" />
@@ -59,6 +61,7 @@
     <ClCompile Include="vulkan_device.cpp" />
     <ClCompile Include="vulkan_instance.cpp" />
     <ClCompile Include="vulkan_renderer.cpp" />
+    <ClCompile Include="vulkan_swapchain.cpp" />
     <ClCompile Include="vulkan_utilities.cpp" />
     <ClCompile Include="vulkan_vbo.cpp" />
     <ClCompile Include="vulkan_window.cpp" />

@@ -1,6 +1,7 @@
 #include "vulkan_swapchain.h"
 #include "logger.h"
 #include "vulkan_window.h"
+#include <algorithm>
 
 // Private functions ------------------------------------------
 bool VulkanSwapChain::InitializeSurface(const std::unique_ptr<VulkanWindow>& window) noexcept
@@ -276,7 +277,7 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 
 	// If an existing swap chain is re-created, destroy the old swap chain
 	// This also cleans up all the presentable images
-	if (oldSwapChain != nullptr) {
+	if (oldSwapChain != VK_NULL_HANDLE) {
 
 		for (ui32 i = 0; i < imageCount; i++) {
 			vkDestroyImageView(m_LogicalDevice, m_Buffers[i].imageView, nullptr);

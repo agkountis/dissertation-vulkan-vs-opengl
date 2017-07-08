@@ -71,6 +71,12 @@
     <ClInclude Include="vulkan_application.h">
       <Filter>include\vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan_swapchain.h">
+      <Filter>include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan_physical_device.h">
+      <Filter>include\vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vulkan_renderer.cpp">
@@ -101,6 +107,9 @@
       <Filter>src\vulkan</Filter>
     </ClCompile>
     <ClCompile Include="vulkan_application.cpp">
+      <Filter>src\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan_swapchain.cpp">
       <Filter>src\vulkan</Filter>
     </ClCompile>
   </ItemGroup>

@@ -2,12 +2,13 @@
 #define VULKAN_SWAPCHAIN_H_
 
 #include <vector>
+#include <memory>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "types.h"
 
-class VulkanWindow;
+struct VulkanWindow;
 
 struct SwapChainBuffer {
 	VkImage image;
@@ -16,21 +17,21 @@ struct SwapChainBuffer {
 
 class VulkanSwapChain {
 private:
-	VkInstance m_Instance;
+	VkInstance m_Instance{ nullptr };
 
-	VkDevice m_LogicalDevice;
+	VkDevice m_LogicalDevice{ nullptr };
 
-	VkPhysicalDevice m_PhysicalDevice;
+	VkPhysicalDevice m_PhysicalDevice{ nullptr };
 
-	VkSurfaceKHR m_Surface;
+	VkSurfaceKHR m_Surface{ VK_NULL_HANDLE };
 
-	VkFormat m_Format;
+	VkFormat m_Format{ VK_FORMAT_UNDEFINED };
 
-	VkColorSpaceKHR m_ColorSpace;
+	VkColorSpaceKHR m_ColorSpace{ VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 
 	VkSwapchainKHR m_SwapChain{ VK_NULL_HANDLE };
 
-	ui32 m_ImageCount;
+	ui32 m_ImageCount{ 0 };
 
 	std::vector<VkImage> m_Images;
 

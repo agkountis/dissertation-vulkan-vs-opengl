@@ -94,10 +94,10 @@ private:
 	VulkanSwapChain m_SwapChain;
 
 	// Swap chain image presentation
-	VkSemaphore m_PresentComplete{ nullptr };
+	VkSemaphore m_PresentComplete{ VK_NULL_HANDLE };
 
 	// Command buffer submission and execution
-	VkSemaphore m_DrawComplete{ nullptr };
+	VkSemaphore m_DrawComplete{ VK_NULL_HANDLE };
 
 	/**
 	 * \brief Creates the Vulkan instance.
