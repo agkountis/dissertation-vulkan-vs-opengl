@@ -196,8 +196,8 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 				break;
 			}
 
-			if ((swapChainPresentMode != VK_PRESENT_MODE_MAILBOX_KHR) &&
-			    (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)) {
+			if (swapChainPresentMode != VK_PRESENT_MODE_MAILBOX_KHR &&
+			    presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
 				swapChainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 			}
 		}
@@ -206,8 +206,8 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	// Determine the number of images
 	ui32 desiredNumberOfSwapChainImages{ surfaceCapabilities.minImageCount + 1 };
 
-	if ((surfaceCapabilities.maxImageCount > 0) &&
-	    (desiredNumberOfSwapChainImages > surfaceCapabilities.maxImageCount)) {
+	if (surfaceCapabilities.maxImageCount > 0 &&
+	    desiredNumberOfSwapChainImages > surfaceCapabilities.maxImageCount) {
 		desiredNumberOfSwapChainImages = surfaceCapabilities.maxImageCount;
 	}
 
