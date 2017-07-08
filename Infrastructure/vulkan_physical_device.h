@@ -2,6 +2,8 @@
 #define VULKAN_PHYSICAL_DEVICE_H_
 
 #include <vulkan/vulkan.h>
+#include <vector>
+#include "types.h"
 
 struct VulkanPhysicalDevice {
 	VkPhysicalDevice device{ nullptr };
@@ -16,10 +18,9 @@ struct VulkanPhysicalDevice {
 
 	std::vector<std::string> supportedExtensions;
 
-	operator VkPhysicalDevice() const
-	{
-		return device;
-	}
+	operator VkPhysicalDevice() const noexcept;
+
+	ui32 GetQueueFamilyIndex(VkQueueFlagBits queueFlagBits) noexcept;
 };
 
 #endif //VULKAN_PHYSICAL_DEVICE_H_

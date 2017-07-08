@@ -165,6 +165,11 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	                                                   &presentModeCount,
 	                                                   presentModes.data());
 
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to get physical device surface present modes.");
+		return false;
+	}
+
 	VkExtent2D swapChainExtent{};
 	// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
 	if (surfaceCapabilities.currentExtent.width != std::numeric_limits<ui32>::max()) {
@@ -224,7 +229,7 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	VkCompositeAlphaFlagBitsKHR compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
 	// Simply select the first composite alpha format available
-	std::vector<VkCompositeAlphaFlagBitsKHR> compositeAlphaFlags = {
+	std::vector<VkCompositeAlphaFlagBitsKHR> compositeAlphaFlags{
 			VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 			VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
 			VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,

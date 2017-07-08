@@ -99,11 +99,131 @@ bool VulkanDevice::CreateLogicalDevice(VkPhysicalDeviceFeatures featuresToEnable
                                        bool useSwapChain,
                                        VkQueueFlags requestedQueueTypes)
 {
-	//TODO
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos{};
+
+	const float defaultQueuePriority{ 0.0f };
+
+	if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT) {
+		m_QueueFamilyIndices.graphics = m_PhysicalDevice.GetQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT);
+
+		if (m_QueueFamilyIndices.graphics == std::numeric_limits<ui32>::max()) {
+			ERROR_LOG("Could not find a matching queue family.");
+			return false;
+		}
+
+		VkDeviceQueueCreateInfo queueInfo{};
+		queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueInfo.queueFamilyIndex = m_QueueFamilyIndices.graphics;
+		queueInfo.queueCount = 1;
+		queueInfo.pQueuePriorities = &defaultQueuePriority;
+		queueCreateInfos.push_back(queueInfo);
+	} else {
+		m_QueueFamilyIndices.graphics = VK_NULL_HANDLE;
+	}
+
+	if (requestedQueueTypes & VK_QUEUE_COMPUTE_BIT) {
+		m_QueueFamilyIndices.compute = m_PhysicalDevice.GetQueueFamilyIndex(VK_QUEUE_COMPUTE_BIT);
+
+		if (m_QueueFamilyIndices.compute == std::numeric_limits<ui32>::max()) {
+			ERROR_LOG("Failed to find a matching queue family.");
+			return false;
+		}
+
+		if (m_QueueFamilyIndices.compute != m_QueueFamilyIndices.graphics) {
+			// If compute family index differs, we need an additional queue create info for the compute queue
+			VkDeviceQueueCreateInfo queueInfo{};
+			queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			queueInfo.queueFamilyIndex = m_QueueFamilyIndices.compute;
+			queueInfo.queueCount = 1;
+			queueInfo.pQueuePriorities = &defaultQueuePriority;
+			queueCreateInfos.push_back(queueInfo);
+		}
+	} else {
+		// Else we use the same queue
+		m_QueueFamilyIndices.compute = m_QueueFamilyIndices.graphics;
+	}
+
+	// Dedicated transfer queue
+	if (requestedQueueTypes & VK_QUEUE_TRANSFER_BIT) {
+		m_QueueFamilyIndices.transfer = m_PhysicalDevice.GetQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
+
+		if (m_QueueFamilyIndices.transfer == std::numeric_limits<ui32>::max()) {
+			ERROR_LOG("Failed to find a matching queue family");
+			return false;
+		}
+
+		if ((m_QueueFamilyIndices.transfer != m_QueueFamilyIndices.graphics) &&
+		    (m_QueueFamilyIndices.transfer != m_QueueFamilyIndices.compute)) {
+			// If compute family index differs, we need an additional queue create info for the compute queue
+			VkDeviceQueueCreateInfo queueInfo{};
+			queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			queueInfo.queueFamilyIndex = m_QueueFamilyIndices.transfer;
+			queueInfo.queueCount = 1;
+			queueInfo.pQueuePriorities = &defaultQueuePriority;
+			queueCreateInfos.push_back(queueInfo);
+		}
+	} else {
+		// Else we use the same queue
+		m_QueueFamilyIndices.transfer = m_QueueFamilyIndices.graphics;
+	}
+
+	std::vector<const char*> deviceExtensions{ std::move(extensionsToEnable) };
+	if (useSwapChain)
+	{
+		// If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
+		deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	}
+
+	VkDeviceCreateInfo deviceCreateInfo{};
+	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	deviceCreateInfo.queueCreateInfoCount = static_cast<ui32>(queueCreateInfos.size());
+	deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
+	deviceCreateInfo.pEnabledFeatures = &featuresToEnable;
+
+	if (!deviceExtensions.empty())
+	{
+		deviceCreateInfo.enabledExtensionCount = static_cast<ui32>(deviceExtensions.size());
+		deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+	}
+
+	VkResult result{ vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice) };
+
+	if (result != VK_SUCCESS){
+		ERROR_LOG("Failed to create logical device.");
+		return false;
+	}
+
+	m_CommandPool = CreateCommandPool(m_QueueFamilyIndices.graphics);
+
+	if (!m_CommandPool) {
+		ERROR_LOG("Failed to create command pool");
+		return false;
+	}
+
+	m_EnabledFeatures = featuresToEnable;
+
 	return true;
 }
 
 const VulkanPhysicalDevice& VulkanDevice::GetPhysicalDevice() const noexcept
 {
 	return m_PhysicalDevice;
+}
+
+VkCommandPool VulkanDevice::CreateCommandPool(ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags)
+{
+	VkCommandPoolCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	createInfo.queueFamilyIndex = queueFamilyIndex;
+	createInfo.flags = createFlags;
+
+	VkCommandPool commandPool{ nullptr };
+	vkCreateCommandPool(m_LogicalDevice, &createInfo, nullptr, &commandPool);
+
+	return commandPool;
+}
+
+VulkanDevice::operator VkDevice() noexcept
+{
+	return m_LogicalDevice;
 }

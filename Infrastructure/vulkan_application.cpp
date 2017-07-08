@@ -90,7 +90,7 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	if (!m_SwapChain.Initialize(m_Instance, m_Device.GetPhysicalDevice(), nullptr, m_Window)) {
+	if (!m_SwapChain.Initialize(m_Instance, m_Device.GetPhysicalDevice(), m_Device, m_Window)) {
 		return false;
 	}
 
