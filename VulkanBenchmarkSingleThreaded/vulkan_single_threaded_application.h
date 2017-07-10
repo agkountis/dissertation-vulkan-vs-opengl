@@ -7,7 +7,7 @@ private:
 	void EnableFeatures() noexcept override;
 
 public:
-	VulkanSingleThreadedApplication(const ApplicationSettings& settings);
+	explicit VulkanSingleThreadedApplication(const ApplicationSettings& settings);
 
 	bool Initialize() noexcept override;
 

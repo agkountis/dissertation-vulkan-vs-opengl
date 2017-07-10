@@ -28,13 +28,13 @@ struct VulkanBuffer {
 
 	void Unmap();
 
-	VkResult Bind(VkDeviceSize offset = 0) noexcept;
+	VkResult Bind(VkDeviceSize offset = 0) const noexcept;
 
-	void Fill(void* data, VkDeviceSize size) noexcept;
+	void Fill(void* data, VkDeviceSize size) const noexcept;
 
 	void InitializeDescriptor(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) noexcept;
 
-	void CleanUp() noexcept;
+	void CleanUp() const noexcept;
 
 };
 

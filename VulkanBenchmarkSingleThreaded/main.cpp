@@ -1,4 +1,3 @@
-#include <iostream>
 #include "vulkan_single_threaded_application.h"
 
 int main(int argc, char* argv[])
@@ -7,8 +6,6 @@ int main(int argc, char* argv[])
 	applicationSettings.name = "Vulkan Single Threaded Benchmark";
 	applicationSettings.windowResolution = Vec2i{ 1024, 768 };
 	applicationSettings.vsync = false;
-
-
 
 	VulkanSingleThreadedApplication app{ applicationSettings };
 

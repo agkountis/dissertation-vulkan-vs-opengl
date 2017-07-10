@@ -77,6 +77,12 @@
     <ClInclude Include="vulkan_physical_device.h">
       <Filter>include\vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan_buffer.h">
+      <Filter>include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan_depth_stencil.h">
+      <Filter>include\vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vulkan_renderer.cpp">
@@ -110,6 +116,15 @@
       <Filter>src\vulkan</Filter>
     </ClCompile>
     <ClCompile Include="vulkan_swapchain.cpp">
+      <Filter>src\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan_buffer.cpp">
+      <Filter>src\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan_physical_device.cpp">
+      <Filter>src\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan_depth_stencil.cpp">
       <Filter>src\vulkan</Filter>
     </ClCompile>
   </ItemGroup>

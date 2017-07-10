@@ -40,15 +40,15 @@ public:
 	ui32 GetMemoryTypeIndex(ui32 memoryTypeMask, VkMemoryPropertyFlags memoryPropertyFlags) const noexcept;
 
 	VkCommandPool CreateCommandPool(ui32 queueFamilyIndex,
-	                                VkCommandPoolCreateFlags createFlags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+	                                VkCommandPoolCreateFlags createFlags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT) const noexcept;
 
 	bool CreateBuffer(VkBufferUsageFlags usageFlags,
 	                  VkMemoryPropertyFlags memoryPropertyFlags,
 	                  VulkanBuffer& buffer,
 	                  VkDeviceSize size,
-	                  void *data = nullptr);
+	                  void *data = nullptr) const noexcept;
 
-	operator VkDevice() noexcept;
+	operator VkDevice() const noexcept;
 };
 
 #endif //VULKAN_DEVICE_H_

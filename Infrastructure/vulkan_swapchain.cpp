@@ -27,7 +27,8 @@ bool VulkanSwapChain::InitializeSurface(const std::unique_ptr<VulkanWindow>& win
 	// Iterate over each queue to learn whether it supports presenting:
 	// Find a queue with present support
 	// Will be used to present the swap chain images to the windowing system
-	std::vector<VkBool32> supportsPresent{ queueCount };
+	std::vector<VkBool32> supportsPresent;
+	supportsPresent.resize(queueCount);
 	for (ui32 i = 0; i < queueCount; ++i) {
 		vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice, i, m_Surface, &supportsPresent[i]);
 	}
@@ -89,7 +90,7 @@ bool VulkanSwapChain::InitializeSurface(const std::unique_ptr<VulkanWindow>& win
 
 	// If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
 	// there is no preferred format, so we assume VK_FORMAT_B8G8R8A8_UNORM
-	if ((formatCount == 1) && (surfaceFormats[0].format == VK_FORMAT_UNDEFINED)) {
+	if (formatCount == 1 && surfaceFormats[0].format == VK_FORMAT_UNDEFINED) {
 		m_Format = VK_FORMAT_B8G8R8A8_UNORM;
 		m_ColorSpace = surfaceFormats[0].colorSpace;
 		return true;
@@ -111,6 +112,8 @@ bool VulkanSwapChain::InitializeSurface(const std::unique_ptr<VulkanWindow>& win
 	// select the first available color format
 	m_Format = surfaceFormats[0].format;
 	m_ColorSpace = surfaceFormats[0].colorSpace;
+
+	LOG("Surface succesfully initialized.");
 
 	return true;
 }
@@ -339,6 +342,8 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 			return false;
 		}
 	}
+
+	LOG("Successfully created the swap chain.");
 
 	return true;
 }

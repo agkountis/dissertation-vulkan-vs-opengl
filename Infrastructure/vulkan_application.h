@@ -11,6 +11,7 @@
 #include "vulkan_debug.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_device.h"
+#include "vulkan_depth_stencil.h"
 
 class VulkanApplication : public Application {
 private:
@@ -37,7 +38,7 @@ private:
 	/**
 	 * \brief The physical device features to be enabled for this application.
 	 */
-	VkPhysicalDeviceFeatures m_FeaturesToEnable;
+	VkPhysicalDeviceFeatures m_FeaturesToEnable{};
 
 	/**
 	 * \brief The device extensions to be enabled for this application.
@@ -65,7 +66,7 @@ private:
 	VkPipelineStageFlags m_PipelineStageFlags{ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
 	/**
-	 * \brief
+	 * \brief Struct used to submit commands to the queues.
 	 */
 	VkSubmitInfo m_SubmitInfo;
 
@@ -85,18 +86,25 @@ private:
 	 */
 	std::vector<VkFramebuffer> m_FrameBuffers;
 
+	VulkanDepthStencil m_DepthStencil;
+
 	std::vector<VkShaderModule> m_ShaderModules;
 
 	// Pipeline cache object
-	VkPipelineCache m_PipelineCache;
+	VkPipelineCache m_PipelineCache{ VK_NULL_HANDLE };
 
 	// Wraps the swap chain to present images (framebuffers) to the windowing system
 	VulkanSwapChain m_SwapChain;
-
-	// Swap chain image presentation
+	
+	/**
+	 * \brief Semaphore used to signal that the presentation of an image
+	 * is complete.
+	 */
 	VkSemaphore m_PresentComplete{ VK_NULL_HANDLE };
 
-	// Command buffer submission and execution
+	/**
+	 * \brief Semaphore used to signal that the drawing is complete.
+	 */
 	VkSemaphore m_DrawComplete{ VK_NULL_HANDLE };
 
 	/**
@@ -112,11 +120,13 @@ private:
 	bool CreateCommandBuffers() noexcept;
 
 	/**
-	 * \brief Funcation for derived classes to override in order to enable
+	 * \brief Function for derived classes to override in order to enable
 	 * specific physical device features if supported.
 	 * \details Must be called after the physical device has been picked.
 	 */
 	virtual void EnableFeatures() noexcept = 0;
+
+	virtual bool SetupDepthStencil() noexcept;
 
 public:
 
@@ -124,7 +134,7 @@ public:
 	 * \brief VulkanApplication's constructor.
 	 * \param settings The settings of the application.
 	 */
-	VulkanApplication(const ApplicationSettings& settings);
+	explicit VulkanApplication(const ApplicationSettings& settings);
 
 	/**
 	 * \brief VulkanApplication's destructor.
@@ -132,8 +142,16 @@ public:
 	 */
 	~VulkanApplication();
 
+	/**
+	 * \brief Returns the window of the application.
+	 * \return The window of the application.
+	 */
 	const std::unique_ptr<VulkanWindow>& GetWindow() const noexcept;
 
+	/**
+	 * \brief Returns the vulkan device instance.
+	 * \return The vulkan device instance.
+	 */
 	const VulkanDevice& GetDevice() const noexcept;
 
 	VkPhysicalDeviceFeatures& GetFeaturesToEnable() noexcept;

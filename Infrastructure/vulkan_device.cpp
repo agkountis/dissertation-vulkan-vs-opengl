@@ -222,14 +222,14 @@ ui32 VulkanDevice::GetMemoryTypeIndex(ui32 memoryTypeMask, VkMemoryPropertyFlags
 	return std::numeric_limits<ui32>::max();
 }
 
-VkCommandPool VulkanDevice::CreateCommandPool(ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags)
+VkCommandPool VulkanDevice::CreateCommandPool(ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags) const noexcept
 {
 	VkCommandPoolCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	createInfo.queueFamilyIndex = queueFamilyIndex;
 	createInfo.flags = createFlags;
 
-	VkCommandPool commandPool{ nullptr };
+	VkCommandPool commandPool{ VK_NULL_HANDLE };
 	vkCreateCommandPool(m_LogicalDevice, &createInfo, nullptr, &commandPool);
 
 	return commandPool;
@@ -239,7 +239,7 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
                                 VkMemoryPropertyFlags memoryPropertyFlags,
                                 VulkanBuffer& buffer,
                                 VkDeviceSize size,
-                                void *data)
+                                void *data) const noexcept
 {
 	buffer.pLogicalDevice = m_LogicalDevice;
 
@@ -306,7 +306,7 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 	return true;
 }
 
-VulkanDevice::operator VkDevice() noexcept
+VulkanDevice::operator VkDevice() const noexcept
 {
 	return m_LogicalDevice;
 }

@@ -20,12 +20,12 @@ void VulkanBuffer::Unmap()
 	}
 }
 
-VkResult VulkanBuffer::Bind(VkDeviceSize offset) noexcept
+VkResult VulkanBuffer::Bind(VkDeviceSize offset) const noexcept
 {
 	return vkBindBufferMemory(pLogicalDevice, buffer, memory, offset);
 }
 
-void VulkanBuffer::Fill(void* data, VkDeviceSize size) noexcept
+void VulkanBuffer::Fill(void* data, VkDeviceSize size) const noexcept
 {
 	assert(data);
 	memcpy(this->data, data, size);
@@ -38,7 +38,7 @@ void VulkanBuffer::InitializeDescriptor(VkDeviceSize range, VkDeviceSize offset)
 	descriptor.offset = offset;
 }
 
-void VulkanBuffer::CleanUp() noexcept
+void VulkanBuffer::CleanUp() const noexcept
 {
 	if (buffer) {
 		vkDestroyBuffer(pLogicalDevice, buffer, nullptr);
