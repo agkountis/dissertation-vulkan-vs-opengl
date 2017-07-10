@@ -31,8 +31,6 @@ private:
 
 	VkSwapchainKHR m_SwapChain{ VK_NULL_HANDLE };
 
-	ui32 m_ImageCount{ 0 };
-
 	std::vector<VkImage> m_Images;
 
 	std::vector<SwapChainBuffer> m_Buffers;
@@ -49,6 +47,10 @@ public:
 	                const std::unique_ptr<VulkanWindow>& window) noexcept;
 
 	bool Create(const Vec2i& size, bool vsync) noexcept;
+
+	const std::vector<VkImage>& GetImages() const noexcept;
+
+	ui32 GetQueueIndex() const noexcept;
 };
 
 #endif //VULKAN_SWAPCHAIN_H_

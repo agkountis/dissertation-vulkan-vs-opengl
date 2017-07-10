@@ -28,10 +28,46 @@ VkResult VulkanApplication::CreateInstance() noexcept
 	instanceCreateInfo.enabledLayerCount = static_cast<ui32>(layers.size());
 	instanceCreateInfo.ppEnabledLayerNames = layers.data();
 #endif
-	//TODO: Enable layers here.
 
 	return vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance);
 }
+
+bool VulkanApplication::CreateCommandPool() noexcept
+{
+	VkCommandPoolCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	createInfo.queueFamilyIndex = m_SwapChain.GetQueueIndex();
+	createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	VkResult result{ vkCreateCommandPool(m_Device, &createInfo, nullptr, &m_CommandPool) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create command pool.");
+		return false;
+	}
+
+	return true;
+}
+
+bool VulkanApplication::CreateCommandBuffers() noexcept
+{
+	m_DrawCommandBuffers.resize(m_SwapChain.GetImages().size());
+
+	VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
+	commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	commandBufferAllocateInfo.commandPool = m_CommandPool;
+	commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	commandBufferAllocateInfo.commandBufferCount = static_cast<ui32>(m_DrawCommandBuffers.size());
+
+	VkResult result{ vkAllocateCommandBuffers(m_Device, &commandBufferAllocateInfo, m_DrawCommandBuffers.data()) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to allocate command buffers.");
+		return false;
+	}
+
+	return true;
+}
+
 // -------------------------------------------------
 
 VulkanApplication::VulkanApplication(const ApplicationSettings& settings)
@@ -85,7 +121,6 @@ bool VulkanApplication::Initialize() noexcept
 
 	EnableFeatures();
 
-	//TODO: This function call is not implemented.
 	if (!m_Device.CreateLogicalDevice(m_FeaturesToEnable, m_ExtensionsToEnable)) {
 		return false;
 	}
@@ -97,6 +132,51 @@ bool VulkanApplication::Initialize() noexcept
 	if (!m_SwapChain.Create(settings.windowResolution, settings.vsync)) {
 		return false;
 	}
+
+	m_DepthBufferFormat = m_Device.GetPhysicalDevice().GetSupportedDepthFormat();
+
+	if (m_DepthBufferFormat == VK_FORMAT_UNDEFINED) {
+		ERROR_LOG("Could not find supported depth format.");
+		return false;
+	}
+
+	VkSemaphoreCreateInfo semaphoreCreateInfo{};
+	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	result = vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_PresentComplete);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create 'present complete' semaphore");
+		return false;
+	}
+
+	result = vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_DrawComplete);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create 'draw complete' semaphore");
+		return false;
+	}
+
+	m_SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	m_SubmitInfo.pWaitDstStageMask = &m_PipelineStageFlags;
+	m_SubmitInfo.waitSemaphoreCount = 1;
+	m_SubmitInfo.pWaitSemaphores = &m_PresentComplete;
+	m_SubmitInfo.signalSemaphoreCount = 1;
+	m_SubmitInfo.pSignalSemaphores = &m_DrawComplete;
+
+	if (!CreateCommandPool()) {
+		return false;
+	}
+
+	if (!CreateCommandBuffers()){
+		return false;
+	}
+
+	//TODO: Implement these.
+//	setupDepthStencil();
+//	setupRenderPass();
+//	createPipelineCache();
+//	setupFrameBuffer();
 
 	return true;
 }

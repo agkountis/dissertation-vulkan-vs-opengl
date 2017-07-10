@@ -107,6 +107,10 @@ private:
 	 */
 	virtual VkResult CreateInstance() noexcept;
 
+	bool CreateCommandPool() noexcept;
+
+	bool CreateCommandBuffers() noexcept;
+
 	/**
 	 * \brief Funcation for derived classes to override in order to enable
 	 * specific physical device features if supported.

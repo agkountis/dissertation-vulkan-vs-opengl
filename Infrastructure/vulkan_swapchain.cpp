@@ -299,8 +299,8 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	}
 
 	// Get the swap chain images
-	std::vector<VkImage> images{ imageCount };
-	result = vkGetSwapchainImagesKHR(m_LogicalDevice, m_SwapChain, &imageCount, images.data());
+	m_Images.resize(imageCount);
+	result = vkGetSwapchainImagesKHR(m_LogicalDevice, m_SwapChain, &imageCount, m_Images.data());
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to get the swap chain images.");
@@ -328,7 +328,7 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		createInfo.flags = 0;
 
-		m_Buffers[i].image = images[i];
+		m_Buffers[i].image = m_Images[i];
 
 		createInfo.image = m_Buffers[i].image;
 
@@ -341,5 +341,15 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	}
 
 	return true;
+}
+
+const std::vector<VkImage>& VulkanSwapChain::GetImages() const noexcept
+{
+	return m_Images;
+}
+
+ui32 VulkanSwapChain::GetQueueIndex() const noexcept
+{
+	return m_PresentQueueIndex;
 }
 

@@ -167,9 +167,8 @@ bool VulkanDevice::CreateLogicalDevice(VkPhysicalDeviceFeatures featuresToEnable
 		m_QueueFamilyIndices.transfer = m_QueueFamilyIndices.graphics;
 	}
 
-	std::vector<const char*> deviceExtensions{ std::move(extensionsToEnable) };
-	if (useSwapChain)
-	{
+	std::vector<const char *> deviceExtensions{ std::move(extensionsToEnable) };
+	if (useSwapChain) {
 		// If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
 		deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 	}
@@ -180,15 +179,14 @@ bool VulkanDevice::CreateLogicalDevice(VkPhysicalDeviceFeatures featuresToEnable
 	deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
 	deviceCreateInfo.pEnabledFeatures = &featuresToEnable;
 
-	if (!deviceExtensions.empty())
-	{
+	if (!deviceExtensions.empty()) {
 		deviceCreateInfo.enabledExtensionCount = static_cast<ui32>(deviceExtensions.size());
 		deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 	}
 
 	VkResult result{ vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice) };
 
-	if (result != VK_SUCCESS){
+	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create logical device.");
 		return false;
 	}
@@ -210,6 +208,20 @@ const VulkanPhysicalDevice& VulkanDevice::GetPhysicalDevice() const noexcept
 	return m_PhysicalDevice;
 }
 
+ui32 VulkanDevice::GetMemoryTypeIndex(ui32 memoryTypeMask, VkMemoryPropertyFlags memoryPropertyFlags) const noexcept
+{
+	for (uint32_t i = 0; i < m_PhysicalDevice.memoryProperties.memoryTypeCount; i++) {
+		if ((memoryTypeMask & (1 << i)) &&
+		    (m_PhysicalDevice.memoryProperties.memoryTypes[i].propertyFlags & memoryPropertyFlags) ==
+		    memoryPropertyFlags) {
+			return i;
+		}
+	}
+
+	ERROR_LOG("Could not find suitable memory type.");
+	return std::numeric_limits<ui32>::max();
+}
+
 VkCommandPool VulkanDevice::CreateCommandPool(ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags)
 {
 	VkCommandPoolCreateInfo createInfo{};
@@ -221,6 +233,77 @@ VkCommandPool VulkanDevice::CreateCommandPool(ui32 queueFamilyIndex, VkCommandPo
 	vkCreateCommandPool(m_LogicalDevice, &createInfo, nullptr, &commandPool);
 
 	return commandPool;
+}
+
+bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
+                                VkMemoryPropertyFlags memoryPropertyFlags,
+                                VulkanBuffer& buffer,
+                                VkDeviceSize size,
+                                void *data)
+{
+	buffer.pLogicalDevice = m_LogicalDevice;
+
+	// Create the buffer handle
+	VkBufferCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	createInfo.usage = usageFlags;
+	createInfo.size = size;
+	VkResult result{ vkCreateBuffer(m_LogicalDevice, &createInfo, nullptr, &buffer.buffer) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create buffer.");
+		return false;
+	}
+
+	VkMemoryRequirements memoryRequirements;
+	vkGetBufferMemoryRequirements(m_LogicalDevice, buffer.buffer, &memoryRequirements);
+
+	VkMemoryAllocateInfo allocateInfo{};
+	allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocateInfo.allocationSize = memoryRequirements.size;
+
+	ui32 memoryTypeIndex{ GetMemoryTypeIndex(memoryRequirements.memoryTypeBits, memoryPropertyFlags) };
+
+	if (memoryTypeIndex == std::numeric_limits<ui32>::max()) {
+		return false;
+	}
+
+	allocateInfo.memoryTypeIndex = memoryTypeIndex;
+
+	result = vkAllocateMemory(m_LogicalDevice, &allocateInfo, nullptr, &buffer.memory);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to allocate buffer memory");
+		return false;
+	}
+
+	buffer.memoryAlignment = memoryRequirements.alignment;
+	buffer.size = allocateInfo.allocationSize;
+	buffer.usageFlags = usageFlags;
+	buffer.memoryPropertyFlags = memoryPropertyFlags;
+
+	if (data != nullptr) {
+		result = buffer.Map();
+
+		if (result != VK_SUCCESS) {
+			ERROR_LOG("Failed to map buffer memory.");
+			return false;
+		}
+
+		memcpy(buffer.data, data, size);
+		buffer.Unmap();
+	}
+
+	buffer.InitializeDescriptor();
+
+	result = buffer.Bind();
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to bind buffer memory");
+		return false;
+	}
+
+	return true;
 }
 
 VulkanDevice::operator VkDevice() noexcept

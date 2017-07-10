@@ -21,6 +21,8 @@ struct VulkanPhysicalDevice {
 	operator VkPhysicalDevice() const noexcept;
 
 	ui32 GetQueueFamilyIndex(VkQueueFlagBits queueFlagBits) noexcept;
+
+	VkFormat GetSupportedDepthFormat() const noexcept;
 };
 
 #endif //VULKAN_PHYSICAL_DEVICE_H_
