@@ -26,22 +26,6 @@ bool VulkanApplication::CreateInstance() noexcept
 	return true;
 }
 
-bool VulkanApplication::CreateCommandPool() noexcept
-{
-	VkCommandPoolCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	createInfo.queueFamilyIndex = m_SwapChain.GetQueueIndex();
-	createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	VkResult result{ vkCreateCommandPool(m_Device, &createInfo, nullptr, &m_CommandPool) };
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to create command pool.");
-		return false;
-	}
-
-	return true;
-}
-
 bool VulkanApplication::CreateCommandBuffers() noexcept
 {
 	m_DrawCommandBuffers.resize(m_SwapChain.GetImages().size());
@@ -138,8 +122,6 @@ VulkanApplication::VulkanApplication(const ApplicationSettings& settings)
 
 VulkanApplication::~VulkanApplication()
 {
-	vkDestroySemaphore(m_Device, m_PresentComplete, nullptr);
-	vkDestroySemaphore(m_Device, m_DrawComplete, nullptr);
 }
 
 const std::unique_ptr<VulkanWindow>& VulkanApplication::GetWindow() const noexcept
@@ -207,20 +189,11 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	VkSemaphoreCreateInfo semaphoreCreateInfo{};
-	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-	VkResult result{ vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_PresentComplete) };
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to create 'present complete' semaphore");
+	if(!m_PresentComplete.Create(m_Device)) {
 		return false;
 	}
 
-	result = vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_DrawComplete);
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to create 'draw complete' semaphore");
+	if (!m_DrawComplete.Create(m_Device)) {
 		return false;
 	}
 
@@ -231,7 +204,7 @@ bool VulkanApplication::Initialize() noexcept
 	m_SubmitInfo.signalSemaphoreCount = 1;
 	m_SubmitInfo.pSignalSemaphores = &m_DrawComplete;
 
-	if (!CreateCommandPool()) {
+	if (!m_CommandPool.Create(m_Device, m_SwapChain.GetQueueIndex(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)) {
 		return false;
 	}
 

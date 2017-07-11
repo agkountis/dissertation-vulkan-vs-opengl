@@ -12,6 +12,8 @@
 #include "vulkan_swapchain.h"
 #include "vulkan_device.h"
 #include "vulkan_depth_stencil.h"
+#include "vulkan_semaphore.h"
+#include "vulkan_command_pool.h"
 
 class VulkanApplication : public Application {
 private:
@@ -59,7 +61,7 @@ private:
 	/**
 	 * \brief The command pool from which the application can allocate command buffers.
 	 */
-	VkCommandPool m_CommandPool{ VK_NULL_HANDLE };
+	VulkanCommandPool m_CommandPool;
 
 	/**
 	 * \brief The pipeline stages to wait at for graphics queue submissions.
@@ -101,12 +103,12 @@ private:
 	 * \brief Semaphore used to signal that the presentation of an image
 	 * is complete.
 	 */
-	VkSemaphore m_PresentComplete{ VK_NULL_HANDLE };
+	VulkanSemaphore m_PresentComplete;
 
 	/**
 	 * \brief Semaphore used to signal that the drawing is complete.
 	 */
-	VkSemaphore m_DrawComplete{ VK_NULL_HANDLE };
+	VulkanSemaphore m_DrawComplete;
 
 	/**
 	 * \brief Creates the Vulkan instance.
@@ -115,8 +117,6 @@ private:
 	 * \return The corresponding Vulkan result code.
 	 */
 	virtual bool CreateInstance() noexcept;
-
-	bool CreateCommandPool() noexcept;
 
 	bool CreateCommandBuffers() noexcept;
 
