@@ -17,23 +17,24 @@ class VulkanApplication : public Application {
 private:
 
 	/**
+	* \brief The Vulkan instance. Manages per-application states.
+	*/
+	VulkanInstance m_Instance;
+
+	/**
 	 * \brief The application's window.
 	 */
 	std::unique_ptr<VulkanWindow> m_Window;
 
+
 	/**
-	 * \brief The Vulkan instance. Manages per-application states.
-	 */
-	VkInstance m_Instance{ nullptr };
+	* \brief Encapsulates both the physical and the logical device.
+	*/
+	VulkanDevice m_Device;
 
 #if !defined(NDEBUG) && !defined(__APPLE__)
 	VulkanDebug m_VulkanDebug;
 #endif
-
-	/**
-	 * \brief Encapsulates both the physical and the logical device.
-	 */
-	VulkanDevice m_Device;
 
 	/**
 	 * \brief The physical device features to be enabled for this application.
@@ -113,7 +114,7 @@ private:
 	 * application specific initialization.
 	 * \return The corresponding Vulkan result code.
 	 */
-	virtual VkResult CreateInstance() noexcept;
+	virtual bool CreateInstance() noexcept;
 
 	bool CreateCommandPool() noexcept;
 
@@ -147,6 +148,8 @@ public:
 	 * \return The window of the application.
 	 */
 	const std::unique_ptr<VulkanWindow>& GetWindow() const noexcept;
+
+	VkInstance GetVulkanInstance() const noexcept;
 
 	/**
 	 * \brief Returns the vulkan device instance.

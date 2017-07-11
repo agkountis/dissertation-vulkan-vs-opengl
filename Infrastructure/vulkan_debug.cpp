@@ -50,7 +50,7 @@ bool VulkanDebug::Initialize(VkInstance instance) noexcept
 
 VulkanDebug::~VulkanDebug()
 {
-	auto vkDestroyDebugReportCallbackEXT = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_InstanceHandle, "vkCreateDebugReportCallbackEXT"));
+	auto vkDestroyDebugReportCallbackEXT = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_InstanceHandle, "vkDestroyDebugReportCallbackEXT"));
 
 	if (vkDestroyDebugReportCallbackEXT) {
 		vkDestroyDebugReportCallbackEXT(m_InstanceHandle, m_DebugReportCallback, nullptr);

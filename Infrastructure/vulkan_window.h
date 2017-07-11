@@ -12,6 +12,8 @@ class VulkanInstance;
 
 struct VulkanWindow : Window {
 
+	VkInstance instance{ nullptr };
+
 	GLFWwindow* handle{ nullptr };
 
 	VkSurfaceKHR surface{ VK_NULL_HANDLE };
@@ -20,6 +22,8 @@ struct VulkanWindow : Window {
 
 public:
 	VulkanWindow(const std::string& title, const Vec2i& size, const Vec2i& position, Application* application);
+
+	~VulkanWindow();
 
 	static std::vector<const char*> GetExtensions() noexcept;
 

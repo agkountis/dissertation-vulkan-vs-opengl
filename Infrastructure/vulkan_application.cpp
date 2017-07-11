@@ -2,7 +2,7 @@
 #include "logger.h"
 
 // Private functions -------------------------------
-VkResult VulkanApplication::CreateInstance() noexcept
+bool VulkanApplication::CreateInstance() noexcept
 {
 	VkApplicationInfo appInfo{};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -11,25 +11,19 @@ VkResult VulkanApplication::CreateInstance() noexcept
 
 	auto instanceExtensions = m_Window->GetExtensions();
 
-	VkInstanceCreateInfo instanceCreateInfo{};
-	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	instanceCreateInfo.pApplicationInfo = &appInfo;
-
-	if (!instanceExtensions.empty()) {
 #if !NDEBUG
-		instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+	instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif
-		instanceCreateInfo.enabledExtensionCount = static_cast<ui32>(instanceExtensions.size());
-		instanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
-	}
 
 #if !NDEBUG
 	std::vector<const char *> layers{ "VK_LAYER_LUNARG_standard_validation" };
-	instanceCreateInfo.enabledLayerCount = static_cast<ui32>(layers.size());
-	instanceCreateInfo.ppEnabledLayerNames = layers.data();
 #endif
 
-	return vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance);
+	if (!m_Instance.Create(appInfo, instanceExtensions, layers)) {
+		return false;
+	}
+
+	return true;
 }
 
 bool VulkanApplication::CreateCommandPool() noexcept
@@ -144,12 +138,18 @@ VulkanApplication::VulkanApplication(const ApplicationSettings& settings)
 
 VulkanApplication::~VulkanApplication()
 {
-
+	vkDestroySemaphore(m_Device, m_PresentComplete, nullptr);
+	vkDestroySemaphore(m_Device, m_DrawComplete, nullptr);
 }
 
 const std::unique_ptr<VulkanWindow>& VulkanApplication::GetWindow() const noexcept
 {
 	return m_Window;
+}
+
+VkInstance VulkanApplication::GetVulkanInstance() const noexcept
+{
+	return m_Instance;
 }
 
 const VulkanDevice& VulkanApplication::GetDevice() const noexcept
@@ -170,11 +170,11 @@ bool VulkanApplication::Initialize() noexcept
 	                                          settings.windowPosition,
 	                                          this);
 
-	VkResult result{ CreateInstance() };
-
-	if (result != VK_SUCCESS) {
+	if (!CreateInstance()) {
 		return false;
 	}
+
+	m_Window->instance = m_Instance;
 
 #if !defined(NDEBUG) && !defined(__APPLE__)
 	if(!m_VulkanDebug.Initialize(m_Instance)) {
@@ -210,7 +210,7 @@ bool VulkanApplication::Initialize() noexcept
 	VkSemaphoreCreateInfo semaphoreCreateInfo{};
 	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-	result = vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_PresentComplete);
+	VkResult result{ vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_PresentComplete) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create 'present complete' semaphore");

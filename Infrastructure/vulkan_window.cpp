@@ -34,6 +34,13 @@ VulkanWindow::VulkanWindow(const std::string& title,
 	//glfwSetWindowSizeCallback(m_Window, )
 }
 
+VulkanWindow::~VulkanWindow()
+{
+	vkDestroySurfaceKHR(instance, surface, nullptr);
+
+	glfwTerminate();
+}
+
 std::vector<const char*> VulkanWindow::GetExtensions() noexcept
 {
 	std::vector<const char*> extensions;
@@ -50,7 +57,7 @@ std::vector<const char*> VulkanWindow::GetExtensions() noexcept
 
 bool VulkanWindow::CreateSurface(const std::unique_ptr<VulkanInstance>& instance) noexcept
 {
-	VkResult result{ glfwCreateWindowSurface(instance->GetHandle(), handle, nullptr, &surface) };
+	VkResult result{ glfwCreateWindowSurface(*instance, handle, nullptr, &surface) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create window surface.");

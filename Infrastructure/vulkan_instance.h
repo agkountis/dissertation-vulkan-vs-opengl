@@ -7,14 +7,18 @@ class VulkanInstance {
 private:
 	VkInstance m_Instance{ nullptr };
 
-public:
-	VulkanInstance(const VkApplicationInfo& applicationInfo,
-	               const std::vector<const char*>& extensions,
-	               const std::vector<const char*>& layers);
+	std::vector<const char*> m_Extensions;
 
+	std::vector<const char*> m_Layers;
+
+public:
 	~VulkanInstance();
 
-	VkInstance GetHandle() const noexcept;
+	bool Create(const VkApplicationInfo& applicationInfo,
+	            const std::vector<const char*>& extensions,
+	            const std::vector<const char*>& layers) noexcept;
+
+	operator VkInstance() const noexcept;
 };
 
 #endif // VULAKN_INSTANCE_H_
