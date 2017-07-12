@@ -51,6 +51,8 @@ public:
 	const std::vector<VkImage>& GetImages() const noexcept;
 
 	ui32 GetQueueIndex() const noexcept;
+
+	VkFormat GetFormat() const noexcept;
 };
 
 #endif //VULKAN_SWAPCHAIN_H_

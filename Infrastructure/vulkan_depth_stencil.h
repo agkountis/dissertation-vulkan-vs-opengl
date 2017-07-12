@@ -2,17 +2,25 @@
 #define VULKAN_DEPTH_STENCIL_H_
 
 #include <vulkan/vulkan.h>
+#include "types.h"
+#include <GLM/detail/type_mat.hpp>
 
-struct VulkanDepthStencil {
-	VkDevice logicalDevice{ nullptr };
+class VulkanDevice;
 
-	VkImage image{ VK_NULL_HANDLE };
+class VulkanDepthStencil {
+private:
+	VkDevice m_pLogicalDevice{ nullptr };
 
-	VkDeviceMemory memory{ VK_NULL_HANDLE };
+	VkImage m_Image{ VK_NULL_HANDLE };
 
-	VkImageView imageView{ VK_NULL_HANDLE };
+	VkDeviceMemory m_Memory{ VK_NULL_HANDLE };
 
+	VkImageView m_ImageView{ VK_NULL_HANDLE };
+
+public:
 	~VulkanDepthStencil();
+
+	bool Create(const VulkanDevice& logicalDevice, const Vec2ui& size, VkFormat format) noexcept;
 };
 
 #endif //VULKAN_DEPTH_STENCIL_H_

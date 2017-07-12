@@ -21,7 +21,7 @@ struct VulkanWindow : Window {
 	static void OnWindowResize(GLFWwindow* window, i32 width, i32 height) noexcept;
 
 public:
-	VulkanWindow(const std::string& title, const Vec2i& size, const Vec2i& position, Application* application);
+	VulkanWindow(const std::string& title, const Vec2ui& size, const Vec2i& position, Application* application);
 
 	~VulkanWindow();
 

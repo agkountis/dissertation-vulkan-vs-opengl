@@ -6,13 +6,13 @@
 struct Window {
 	std::string title;
 
-	Vec2i size;
+	Vec2ui size;
 
 	Vec2i position;
 
 	Vec2i cursorPosition;
 
-	explicit Window(const std::string& title, const Vec2i& size, const Vec2i& position);
+	explicit Window(const std::string& title, const Vec2ui& size, const Vec2i& position);
 
 	Window(const Window& other) = delete;
 

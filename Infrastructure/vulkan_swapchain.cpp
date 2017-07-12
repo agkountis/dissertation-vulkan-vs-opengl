@@ -358,3 +358,7 @@ ui32 VulkanSwapChain::GetQueueIndex() const noexcept
 	return m_PresentQueueIndex;
 }
 
+VkFormat VulkanSwapChain::GetFormat() const noexcept
+{
+	return m_Format;
+}

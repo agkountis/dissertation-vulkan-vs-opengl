@@ -11,6 +11,10 @@ using Vec2i = glm::ivec2;
 using Vec3i = glm::ivec3;
 using Vec4i = glm::ivec4;
 
+using Vec2ui = glm::u32vec2;
+using Vec3ui = glm::u32vec3;
+using Vec4ui = glm::u32vec4;
+
 using Quatf = glm::quat;
 using Quatd = glm::dquat;
 

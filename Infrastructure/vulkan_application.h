@@ -14,6 +14,8 @@
 #include "vulkan_depth_stencil.h"
 #include "vulkan_semaphore.h"
 #include "vulkan_command_pool.h"
+#include "vulkan_render_pass.h"
+#include "vulkan_pipeline_cache.h"
 
 class VulkanApplication : public Application {
 private:
@@ -81,7 +83,7 @@ private:
 	/**
 	 * \brief The default global render pass.
 	 */
-	VkRenderPass m_RenderPass{ VK_NULL_HANDLE };
+	VulkanRenderPass m_RenderPass;
 
 	/**
 	 * \brief The available framebuffers.
@@ -94,7 +96,7 @@ private:
 	std::vector<VkShaderModule> m_ShaderModules;
 
 	// Pipeline cache object
-	VkPipelineCache m_PipelineCache{ VK_NULL_HANDLE };
+	VulkanPipelineCache m_PipelineCache;
 
 	// Wraps the swap chain to present images (framebuffers) to the windowing system
 	VulkanSwapChain m_SwapChain;
@@ -126,8 +128,6 @@ private:
 	 * \details Must be called after the physical device has been picked.
 	 */
 	virtual void EnableFeatures() noexcept = 0;
-
-	virtual bool SetupDepthStencil() noexcept;
 
 public:
 

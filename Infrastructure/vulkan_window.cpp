@@ -8,7 +8,7 @@ void VulkanWindow::OnWindowResize(GLFWwindow* window, i32 width, i32 height) noe
 {
 	VulkanApplication* app{ static_cast<VulkanApplication*>(glfwGetWindowUserPointer(window)) };
 
-	app->GetWindow()->size = Vec2i{ width, height };
+	app->GetWindow()->size = Vec2ui{ width, height };
 
 	//TODO: recreate the swapchain and resources that depend on it.
 }
@@ -16,7 +16,7 @@ void VulkanWindow::OnWindowResize(GLFWwindow* window, i32 width, i32 height) noe
 //----------------------------------------
 
 VulkanWindow::VulkanWindow(const std::string& title,
-                           const Vec2i& size,
+                           const Vec2ui& size,
                            const Vec2i& position,
                            Application* application)
 	: Window{ title, size, position }

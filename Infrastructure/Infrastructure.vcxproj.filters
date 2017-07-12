@@ -89,6 +89,12 @@
     <ClInclude Include="vulkan_command_pool.h">
       <Filter>include\vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan_render_pass.h">
+      <Filter>include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan_pipeline_cache.h">
+      <Filter>include\vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vulkan_renderer.cpp">
@@ -137,6 +143,12 @@
       <Filter>src\vulkan</Filter>
     </ClCompile>
     <ClCompile Include="vulkan_command_pool.cpp">
+      <Filter>src\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan_render_pass.cpp">
+      <Filter>src\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan_pipeline_cache.cpp">
       <Filter>src\vulkan</Filter>
     </ClCompile>
   </ItemGroup>

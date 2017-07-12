@@ -50,7 +50,9 @@
     <ClInclude Include="vulkan_device.h" />
     <ClInclude Include="vulkan_instance.h" />
     <ClInclude Include="vulkan_physical_device.h" />
+    <ClInclude Include="vulkan_pipeline_cache.h" />
     <ClInclude Include="vulkan_renderer.h" />
+    <ClInclude Include="vulkan_render_pass.h" />
     <ClInclude Include="vulkan_semaphore.h" />
     <ClInclude Include="vulkan_swapchain.h" />
     <ClInclude Include="vulkan_utilities.h" />
@@ -68,7 +70,9 @@
     <ClCompile Include="vulkan_device.cpp" />
     <ClCompile Include="vulkan_instance.cpp" />
     <ClCompile Include="vulkan_physical_device.cpp" />
+    <ClCompile Include="vulkan_pipeline_cache.cpp" />
     <ClCompile Include="vulkan_renderer.cpp" />
+    <ClCompile Include="vulkan_render_pass.cpp" />
     <ClCompile Include="vulkan_semaphore.cpp" />
     <ClCompile Include="vulkan_swapchain.cpp" />
     <ClCompile Include="vulkan_utilities.cpp" />
