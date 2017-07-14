@@ -25,7 +25,23 @@ set(SOURCE_FILES vulkan_vbo.h
         vulkan_application.h
         timer.h
         vulkan_vbo.cpp
-        window.cpp vulkan_physical_device.h vulkan_swapchain.h vulkan_swapchain.cpp vulkan_physical_device.cpp vulkan_buffer.h vulkan_buffer.cpp)
+        window.cpp
+        vulkan_physical_device.h
+        vulkan_swapchain.h
+        vulkan_swapchain.cpp
+        vulkan_physical_device.cpp
+        vulkan_buffer.h
+        vulkan_buffer.cpp
+        vulkan_pipeline_cache.cpp
+        vulkan_command_pool.cpp
+        vulkan_render_pass.cpp
+        vulkan_depth_stencil.cpp
+        vulkan_command_pool.h
+        vulkan_depth_stencil.h
+        vulkan_render_pass.h
+        vulkan_semaphore.cpp
+        vulkan_pipeline_cache.h
+        vulkan_semaphore.h vulkan_framebuffer.h vulkan_framebuffer.cpp)
 
 if(APPLE)
     include_directories(~/Downloads/Molten-0.18.0/MoltenVK/include)

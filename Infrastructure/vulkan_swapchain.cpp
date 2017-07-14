@@ -113,7 +113,7 @@ bool VulkanSwapChain::InitializeSurface(const std::unique_ptr<VulkanWindow>& win
 	m_Format = surfaceFormats[0].format;
 	m_ColorSpace = surfaceFormats[0].colorSpace;
 
-	LOG("Surface succesfully initialized.");
+	LOG("Surface successfully initialized.");
 
 	return true;
 }

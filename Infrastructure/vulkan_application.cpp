@@ -136,6 +136,7 @@ bool VulkanApplication::Initialize() noexcept
 	m_SubmitInfo.signalSemaphoreCount = 1;
 	m_SubmitInfo.pSignalSemaphores = &m_DrawComplete;
 
+	//TODO: The VulkanDevice class already has a command pool allocated. Do I need 2 of them?
 	if (!m_CommandPool.Create(m_Device, m_SwapChain.GetQueueIndex(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)) {
 		return false;
 	}
@@ -148,14 +149,13 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	if (!m_RenderPass.Create(m_Device, m_SwapChain.GetFormat(), m_DepthBufferFormat)) {
+	if (!m_DefaultRenderPass.Create(m_Device, m_SwapChain.GetFormat(), m_DepthBufferFormat)) {
 		return false;
 	}
 
 	if (!m_PipelineCache.Create(m_Device)) {
 		return false;
 	}
-	//TODO: Implement these.
 
 //	setupFrameBuffer();
 

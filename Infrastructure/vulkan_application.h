@@ -53,7 +53,7 @@ private:
 	/**
 	 * \brief Handle to the graphics queue.
 	 */
-	VkQueue m_GraphicsQueue{ nullptr };
+	VkQueue m_GraphicsQueue{ nullptr }; //TODO: check if this is needed.
 
 	/**
 	 * \brief The depth buffer's image format.
@@ -83,7 +83,7 @@ private:
 	/**
 	 * \brief The default global render pass.
 	 */
-	VulkanRenderPass m_RenderPass;
+	VulkanRenderPass m_DefaultRenderPass;
 
 	/**
 	 * \brief The available framebuffers.
@@ -100,7 +100,7 @@ private:
 
 	// Wraps the swap chain to present images (framebuffers) to the windowing system
 	VulkanSwapChain m_SwapChain;
-	
+
 	/**
 	 * \brief Semaphore used to signal that the presentation of an image
 	 * is complete.
