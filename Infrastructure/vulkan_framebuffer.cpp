@@ -10,7 +10,7 @@ VulkanFramebuffer::~VulkanFramebuffer()
 bool VulkanFramebuffer::Create(VkDevice logicalDevice,
                                const std::vector<VkImageView>& imageViews,
                                const Vec2ui& size,
-                               VkRenderPass renderPass)
+                               VkRenderPass renderPass) noexcept
 {
 	m_pLogicalDevice = logicalDevice;
 
@@ -33,7 +33,7 @@ bool VulkanFramebuffer::Create(VkDevice logicalDevice,
 	return true;
 }
 
-VulkanFramebuffer::operator VkFramebuffer()
+VulkanFramebuffer::operator VkFramebuffer() const noexcept
 {
 	return m_Framebuffer;
 }

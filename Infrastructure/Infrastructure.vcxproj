@@ -48,6 +48,7 @@
     <ClInclude Include="vulkan_debug.h" />
     <ClInclude Include="vulkan_depth_stencil.h" />
     <ClInclude Include="vulkan_device.h" />
+    <ClInclude Include="vulkan_framebuffer.h" />
     <ClInclude Include="vulkan_instance.h" />
     <ClInclude Include="vulkan_physical_device.h" />
     <ClInclude Include="vulkan_pipeline_cache.h" />
@@ -68,6 +69,7 @@
     <ClCompile Include="vulkan_debug.cpp" />
     <ClCompile Include="vulkan_depth_stencil.cpp" />
     <ClCompile Include="vulkan_device.cpp" />
+    <ClCompile Include="vulkan_framebuffer.cpp" />
     <ClCompile Include="vulkan_instance.cpp" />
     <ClCompile Include="vulkan_physical_device.cpp" />
     <ClCompile Include="vulkan_pipeline_cache.cpp" />

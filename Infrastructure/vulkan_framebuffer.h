@@ -18,7 +18,7 @@ public:
 	            const Vec2ui& size,
 	            VkRenderPass renderPass) noexcept;
 
-	operator VkFramebuffer() noexcept;
+	operator VkFramebuffer() const noexcept;
 };
 
 #endif //VULKAN_FRAMEBUFFER_H_
