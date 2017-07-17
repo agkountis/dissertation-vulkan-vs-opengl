@@ -3,16 +3,20 @@
 #include <string>
 #include "types.h"
 
-struct Window {
-	std::string title;
+class Application;
 
-	Vec2ui size;
+class Window {
+private:
+	std::string m_Title;
 
-	Vec2i position;
+	Vec2ui m_Size;
 
-	Vec2i cursorPosition;
+	Vec2i m_Position;
 
-	explicit Window(const std::string& title, const Vec2ui& size, const Vec2i& position);
+	Vec2i m_CursorPosition;
+
+public:
+	Window() = default;
 
 	Window(const Window& other) = delete;
 
@@ -23,6 +27,27 @@ struct Window {
 	Window&& operator=(Window&& other) = delete;
 
 	virtual ~Window() = default;
+
+	virtual bool Create(const std::string title,
+	                    const Vec2ui& size,
+	                    const Vec2i& position,
+	                    Application* application) noexcept = 0;
+
+	const std::string& GetTitle() const noexcept;
+
+	void SetTitle(const std::string title) noexcept;
+
+	const Vec2ui& GetSize() const noexcept;
+
+	void SetSize(const Vec2ui& size) noexcept;
+
+	const Vec2i& GetPosition() const noexcept;
+
+	void SetPosition(const Vec2i& position) noexcept;
+
+	const Vec2i& GetCursorPosition() const noexcept;
+
+	void SetCursorPosition(const Vec2i& cursorPosition) noexcept;
 };
 
 #endif //WINDOW_H_

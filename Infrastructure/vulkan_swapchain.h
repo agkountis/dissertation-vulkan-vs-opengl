@@ -8,12 +8,7 @@
 #include <GLFW/glfw3.h>
 #include "types.h"
 
-struct VulkanWindow;
-
-struct SwapChainBuffer {
-	VkImage image;
-	VkImageView imageView;
-};
+class VulkanWindow;
 
 class VulkanSwapChain {
 private:
@@ -33,26 +28,33 @@ private:
 
 	std::vector<VkImage> m_Images;
 
-	std::vector<SwapChainBuffer> m_Buffers;
+	std::vector<VkImageView> m_ImageViews;
 
-	ui32 m_PresentQueueIndex{ std::numeric_limits<ui32>::max() };
+	ui32 m_GraphicsAndPresentQueueIndex{ std::numeric_limits<ui32>::max() };
 
-	bool InitializeSurface(const std::unique_ptr<VulkanWindow>& window) noexcept;
+	VkExtent2D m_Extent;
+
+	bool InitializeSurface(const VulkanWindow& window) noexcept;
 
 public:
+	~VulkanSwapChain();
 
 	bool Initialize(VkInstance instance,
 	                VkPhysicalDevice physicalDevice,
 	                VkDevice logicalDevice,
-	                const std::unique_ptr<VulkanWindow>& window) noexcept;
+	                const VulkanWindow& window) noexcept;
 
 	bool Create(const Vec2i& size, bool vsync) noexcept;
 
 	const std::vector<VkImage>& GetImages() const noexcept;
 
+	const std::vector<VkImageView>& GetImageViews() const noexcept;
+
 	ui32 GetQueueIndex() const noexcept;
 
 	VkFormat GetFormat() const noexcept;
+
+	const VkExtent2D& GetExtent() const noexcept;
 };
 
 #endif //VULKAN_SWAPCHAIN_H_

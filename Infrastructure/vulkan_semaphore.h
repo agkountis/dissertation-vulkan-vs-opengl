@@ -14,9 +14,12 @@ public:
 
 	bool Create(VkDevice logicalDevice) noexcept;
 
+	void Destroy() const noexcept;
+
 	operator VkSemaphore() const noexcept;
 
 	const VkSemaphore* operator&() const noexcept;
+
 };
 
 #endif //VULKAN_SEMAPHORE_H_

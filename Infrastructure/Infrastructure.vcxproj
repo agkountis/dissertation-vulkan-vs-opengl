@@ -36,12 +36,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application.h" />
-    <ClInclude Include="ibo.h" />
     <ClInclude Include="logger.h" />
-    <ClInclude Include="mesh.h" />
+    <ClInclude Include="entity.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="types.h" />
-    <ClInclude Include="vbo.h" />
     <ClInclude Include="vulkan_application.h" />
     <ClInclude Include="vulkan_buffer.h" />
     <ClInclude Include="vulkan_command_pool.h" />

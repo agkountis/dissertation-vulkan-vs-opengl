@@ -13,6 +13,15 @@ VulkanDepthStencil::~VulkanDepthStencil()
 	vkDestroyImageView(m_pLogicalDevice, m_ImageView, nullptr);
 }
 
+VkImageView VulkanDepthStencil::GetImageView() const noexcept
+{
+	return m_ImageView;
+}
+
+VkImage VulkanDepthStencil::GetImage() const noexcept
+{
+	return m_Image;
+}
 
 bool VulkanDepthStencil::Create(const VulkanDevice& logicalDevice, const Vec2ui& size, VkFormat format) noexcept
 {

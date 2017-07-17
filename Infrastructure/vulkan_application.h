@@ -14,26 +14,24 @@
 #include "vulkan_depth_stencil.h"
 #include "vulkan_semaphore.h"
 #include "vulkan_command_pool.h"
-#include "vulkan_render_pass.h"
 #include "vulkan_pipeline_cache.h"
+#include "vulkan_framebuffer.h"
 
 class VulkanApplication : public Application {
 private:
-
 	/**
-	* \brief The Vulkan instance. Manages per-application states.
-	*/
+	 * \brief The Vulkan instance. Manages per-application states.
+	 */
 	VulkanInstance m_Instance;
 
 	/**
 	 * \brief The application's window.
 	 */
-	std::unique_ptr<VulkanWindow> m_Window;
-
+	VulkanWindow m_Window;
 
 	/**
-	* \brief Encapsulates both the physical and the logical device.
-	*/
+	 * \brief Encapsulates both the physical and the logical device.
+	 */
 	VulkanDevice m_Device;
 
 #if !defined(NDEBUG) && !defined(__APPLE__)
@@ -53,7 +51,7 @@ private:
 	/**
 	 * \brief Handle to the graphics queue.
 	 */
-	VkQueue m_GraphicsQueue{ nullptr }; //TODO: check if this is needed.
+	VkQueue m_GraphicsQueue{ nullptr };
 
 	/**
 	 * \brief The depth buffer's image format.
@@ -81,24 +79,33 @@ private:
 	std::vector<VkCommandBuffer> m_DrawCommandBuffers;
 
 	/**
-	 * \brief The default global render pass.
-	 */
-	VulkanRenderPass m_DefaultRenderPass;
-
-	/**
 	 * \brief The available framebuffers.
 	 * \details Same as the number of swap chain images.
 	 */
-	std::vector<VkFramebuffer> m_FrameBuffers;
+	std::vector<VulkanFramebuffer> m_SwapChainFrameBuffers;
 
+	/**
+	 * \brief A struct that wraps the functionality of a 
+	 *  Vulkan depth stencil.
+	 */
 	VulkanDepthStencil m_DepthStencil;
 
+	/**
+	 * \brief The shader stages to be used in the pipeline.
+	 */
 	std::vector<VkShaderModule> m_ShaderModules;
 
-	// Pipeline cache object
+	/**
+	 * \brief Pipeline cache object used to acceletare pipeline creation.
+	 */
 	VulkanPipelineCache m_PipelineCache;
 
-	// Wraps the swap chain to present images (framebuffers) to the windowing system
+	VkRenderPass m_RenderPass{ VK_NULL_HANDLE };
+	
+	/**
+	 * \brief A class that encapsulates the functionality of a 
+	 * Vulkan swap chain.
+	 */
 	VulkanSwapChain m_SwapChain;
 
 	/**
@@ -120,6 +127,10 @@ private:
 	 */
 	virtual bool CreateInstance() noexcept;
 
+	/**
+	 * \brief Creates the command buffers used to record rendering commands.
+	 * \return TRUE if successfull, FALSE otherwise.
+	 */
 	bool CreateCommandBuffers() noexcept;
 
 	/**
@@ -129,8 +140,31 @@ private:
 	 */
 	virtual void EnableFeatures() noexcept = 0;
 
-public:
+	/**
+	 * \brief Function for derived classes to override to set up the application
+	 * specific render passes.
+	 * \return TRUE if successfull, FALSE otherwise.
+	 */
+	virtual bool CreateRenderPasses() noexcept;
 
+	/**
+	 * \brief Function for derived classes to override to set up the application
+	 * specific pipelines.
+	 * \return TRUE if successfull, FALSE otherwise.
+	 */
+	virtual bool CreatePipelines() noexcept = 0;
+
+	/**
+	 * \brief Function for derived classes to override to set up the application
+	 * specific framebuffers and the swap chain's framebuffers.
+	 * \details Swap chain framebuffer creation is deferred to the derived classes
+	 * due to the fact that it depends on a render pass, and render passes are application
+	 * specific.
+	 * \return TRUE if successfull, FALSE otherwise.
+	 */
+	virtual bool CreateFramebuffers() noexcept;
+
+public:
 	/**
 	 * \brief VulkanApplication's constructor.
 	 * \param settings The settings of the application.
@@ -147,9 +181,13 @@ public:
 	 * \brief Returns the window of the application.
 	 * \return The window of the application.
 	 */
-	const std::unique_ptr<VulkanWindow>& GetWindow() const noexcept;
+	VulkanWindow& GetWindow() noexcept;
 
-	VkInstance GetVulkanInstance() const noexcept;
+	/**
+	 * \brief Returns the application's Vulkan instance.
+	 * \return The application's VulkanInstance.
+	 */
+	const VulkanInstance& GetVulkanInstance() const noexcept;
 
 	/**
 	 * \brief Returns the vulkan device instance.
@@ -157,7 +195,20 @@ public:
 	 */
 	const VulkanDevice& GetDevice() const noexcept;
 
+	/**
+	 * \brief Returns a reference to the VkPhysicalDeviceFeatures struct
+	 * in order for features to be turned on and/or off.
+	 * \return A reference to the VkPhysicalDeviceFeatures struct.
+	 */
 	VkPhysicalDeviceFeatures& GetFeaturesToEnable() noexcept;
+
+	const VulkanSwapChain& GetSwapChain() const noexcept;
+
+	const std::vector<VkCommandBuffer>& GetCommandBuffers() const noexcept;
+
+	VkFormat GetDepthBufferFormat() const noexcept;
+
+	VkQueue GetGraphicsQueue() const noexcept;
 
 	/**
 	 * \brief Initializes the application

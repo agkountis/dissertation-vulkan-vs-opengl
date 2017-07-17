@@ -8,36 +8,15 @@ void VulkanWindow::OnWindowResize(GLFWwindow* window, i32 width, i32 height) noe
 {
 	VulkanApplication* app{ static_cast<VulkanApplication*>(glfwGetWindowUserPointer(window)) };
 
-	app->GetWindow()->size = Vec2ui{ width, height };
+	app->GetWindow().SetSize(Vec2ui{ width, height });
 
 	//TODO: recreate the swapchain and resources that depend on it.
 }
 
 //----------------------------------------
 
-VulkanWindow::VulkanWindow(const std::string& title,
-                           const Vec2ui& size,
-                           const Vec2i& position,
-                           Application* application)
-	: Window{ title, size, position }
-{
-	glfwInit();
-
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
-	handle = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
-
-	glfwSetWindowUserPointer(handle, application);
-	//TODO
-	//glfwSetWindowSizeCallback(m_Window, )
-}
-
 VulkanWindow::~VulkanWindow()
 {
-	vkDestroySurfaceKHR(instance, surface, nullptr);
-
 	glfwTerminate();
 }
 
@@ -55,22 +34,42 @@ std::vector<const char*> VulkanWindow::GetExtensions() noexcept
 	return std::move(extensions);
 }
 
-bool VulkanWindow::CreateSurface(const std::unique_ptr<VulkanInstance>& instance) noexcept
+bool VulkanWindow::Create(const std::string title,
+                          const Vec2ui& size,
+                          const Vec2i& position,
+                          Application* application) noexcept
 {
-	VkResult result{ glfwCreateWindowSurface(*instance, handle, nullptr, &surface) };
+	glfwInit();
 
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to create window surface.");
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+	m_Handle = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
+
+	if (!m_Handle) {
+		ERROR_LOG("Failed to create window.");
 		return false;
 	}
 
-	LOG("Window surface sucessfully created.");
+	glfwSetWindowPos(m_Handle, position.x, position.y);
+
+	glfwShowWindow(m_Handle);
+
+	glfwSetWindowUserPointer(m_Handle, application);
+
+	glfwSetWindowSizeCallback(m_Handle, OnWindowResize);
+
+	SetSize(size);
+
+	SetPosition(position);
 
 	return true;
 }
 
-
 VulkanWindow::operator GLFWwindow*() const
 {
-	return handle;
+	return m_Handle;
 }

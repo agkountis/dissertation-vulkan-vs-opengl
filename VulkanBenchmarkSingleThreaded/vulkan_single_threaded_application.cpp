@@ -1,14 +1,32 @@
 #include <iostream>
 #include "vulkan_single_threaded_application.h"
+#include "logger.h"
+
+bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
+{
+	return true;
+}
 
 VulkanSingleThreadedApplication::VulkanSingleThreadedApplication(const ApplicationSettings& settings)
 		: VulkanApplication{ settings }
 {
 }
 
+
+VulkanSingleThreadedApplication::~VulkanSingleThreadedApplication()
+{
+	vkDestroyPipeline(GetDevice(), m_Pipeline, nullptr);
+
+	vkDestroyPipelineLayout(GetDevice(), m_PipelineLayout, nullptr);
+}
+
 bool VulkanSingleThreadedApplication::Initialize() noexcept
 {
-	return VulkanApplication::Initialize();
+	if (!VulkanApplication::Initialize()) {
+		return false;
+	}
+
+	return true;
 }
 
 void VulkanSingleThreadedApplication::Draw() const noexcept

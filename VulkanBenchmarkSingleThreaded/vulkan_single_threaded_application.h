@@ -4,10 +4,22 @@
 
 class VulkanSingleThreadedApplication : public VulkanApplication {
 private:
+	VkPipeline m_Pipeline{ VK_NULL_HANDLE };
+
+	VkPipelineLayout m_PipelineLayout{ VK_NULL_HANDLE };
+
+	VkDescriptorSet m_DescriptorSet{ VK_NULL_HANDLE };
+
+	VkDescriptorSetLayout m_DescriptorSetLayout{ VK_NULL_HANDLE };
+
 	void EnableFeatures() noexcept override;
+
+	bool CreatePipelines() noexcept override;
 
 public:
 	explicit VulkanSingleThreadedApplication(const ApplicationSettings& settings);
+
+	~VulkanSingleThreadedApplication();
 
 	bool Initialize() noexcept override;
 

@@ -29,15 +29,6 @@
     <ClInclude Include="vulkan_vbo.h">
       <Filter>include\vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="ibo.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="mesh.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="vbo.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="window.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -97,6 +88,9 @@
     </ClInclude>
     <ClInclude Include="vulkan_framebuffer.h">
       <Filter>include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="entity.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

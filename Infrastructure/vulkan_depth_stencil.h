@@ -3,7 +3,6 @@
 
 #include <vulkan/vulkan.h>
 #include "types.h"
-#include <GLM/detail/type_mat.hpp>
 
 class VulkanDevice;
 
@@ -19,6 +18,10 @@ private:
 
 public:
 	~VulkanDepthStencil();
+
+	VkImageView GetImageView() const noexcept;
+
+	VkImage GetImage() const noexcept;
 
 	bool Create(const VulkanDevice& logicalDevice, const Vec2ui& size, VkFormat format) noexcept;
 };

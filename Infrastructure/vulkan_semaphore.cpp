@@ -3,7 +3,7 @@
 
 VulkanSemaphore::~VulkanSemaphore()
 {
-	vkDestroySemaphore(m_pLogicalDevice, m_Semaphore, nullptr);
+	Destroy();
 }
 
 bool VulkanSemaphore::Create(VkDevice logicalDevice) noexcept
@@ -21,6 +21,13 @@ bool VulkanSemaphore::Create(VkDevice logicalDevice) noexcept
 	}
 
 	return true;
+}
+
+void VulkanSemaphore::Destroy() const noexcept
+{
+	if (m_pLogicalDevice) {
+		vkDestroySemaphore(m_pLogicalDevice, m_Semaphore, nullptr);
+	}
 }
 
 VulkanSemaphore::operator VkSemaphore() const noexcept

@@ -4,9 +4,9 @@
 #include <algorithm>
 
 // Private functions ------------------------------------------
-bool VulkanSwapChain::InitializeSurface(const std::unique_ptr<VulkanWindow>& window) noexcept
+bool VulkanSwapChain::InitializeSurface(const VulkanWindow& window) noexcept
 {
-	VkResult result{ glfwCreateWindowSurface(m_Instance, *window, nullptr, &m_Surface) };
+	VkResult result{ glfwCreateWindowSurface(m_Instance, window, nullptr, &m_Surface) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create Vulkan Surface.");
@@ -69,7 +69,7 @@ bool VulkanSwapChain::InitializeSurface(const std::unique_ptr<VulkanWindow>& win
 	}
 
 	//TODO: rename the member variable to something that makes sense. This queue supports both graphics and presentation.
-	m_PresentQueueIndex = graphicsQueueIndex;
+	m_GraphicsAndPresentQueueIndex = graphicsQueueIndex;
 
 	// Get list of supported surface formats
 	ui32 formatCount{ 0 };
@@ -119,10 +119,21 @@ bool VulkanSwapChain::InitializeSurface(const std::unique_ptr<VulkanWindow>& win
 }
 // ------------------------------------------------------------
 
+VulkanSwapChain::~VulkanSwapChain()
+{
+	for (const auto& imageView : m_ImageViews) {
+		vkDestroyImageView(m_LogicalDevice, imageView, nullptr);
+	}
+
+	vkDestroySwapchainKHR(m_LogicalDevice, m_SwapChain, nullptr);
+
+	vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
+}
+
 bool VulkanSwapChain::Initialize(VkInstance instance,
                                  VkPhysicalDevice physicalDevice,
                                  VkDevice logicalDevice,
-                                 const std::unique_ptr<VulkanWindow>& window) noexcept
+                                 const VulkanWindow& window) noexcept
 {
 	m_Instance = instance;
 	m_PhysicalDevice = physicalDevice;
@@ -173,10 +184,9 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 		return false;
 	}
 
-	VkExtent2D swapChainExtent{};
 	// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
 	if (surfaceCapabilities.currentExtent.width != std::numeric_limits<ui32>::max()) {
-		swapChainExtent = surfaceCapabilities.currentExtent;
+		m_Extent = surfaceCapabilities.currentExtent;
 	} else {
 		VkExtent2D actualExtent{ static_cast<ui32>(size.x), static_cast<ui32>(size.y) };
 
@@ -185,7 +195,7 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 		actualExtent.height = std::max(surfaceCapabilities.minImageExtent.height,
 		                               std::min(surfaceCapabilities.maxImageExtent.height, actualExtent.height));
 
-		swapChainExtent = actualExtent;
+		m_Extent = actualExtent;
 	}
 
 
@@ -254,7 +264,7 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	swapChainCreateInfo.minImageCount = desiredNumberOfSwapChainImages;
 	swapChainCreateInfo.imageFormat = m_Format;
 	swapChainCreateInfo.imageColorSpace = m_ColorSpace;
-	swapChainCreateInfo.imageExtent = swapChainExtent;
+	swapChainCreateInfo.imageExtent = m_Extent;
 	swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	swapChainCreateInfo.preTransform = static_cast<VkSurfaceTransformFlagBitsKHR>(preTransform);
 	swapChainCreateInfo.imageArrayLayers = 1;
@@ -280,15 +290,16 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 		return false;
 	}
 
-	//The image count == numer of buffers since each buffer contains an image.
-	ui32 imageCount{ static_cast<ui32>(m_Buffers.size()) };
+	ui32 imageCount{ static_cast<ui32>(m_Images.size()) };
 
 	// If an existing swap chain is re-created, destroy the old swap chain
 	// This also cleans up all the presentable images
 	if (oldSwapChain != VK_NULL_HANDLE) {
 
+		LOG("Destroying old swapchain.");
+
 		for (ui32 i = 0; i < imageCount; i++) {
-			vkDestroyImageView(m_LogicalDevice, m_Buffers[i].imageView, nullptr);
+			vkDestroyImageView(m_LogicalDevice, m_ImageViews[i], nullptr);
 		}
 
 		vkDestroySwapchainKHR(m_LogicalDevice, oldSwapChain, nullptr);
@@ -311,7 +322,7 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	}
 
 	// Get the swap chain buffers containing the image and imageview
-	m_Buffers.resize(imageCount);
+	m_ImageViews.resize(imageCount);
 	for (ui32 i = 0; i < imageCount; ++i) {
 		VkImageViewCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -330,12 +341,9 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 		createInfo.subresourceRange.layerCount = 1;
 		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		createInfo.flags = 0;
+		createInfo.image = m_Images[i];
 
-		m_Buffers[i].image = m_Images[i];
-
-		createInfo.image = m_Buffers[i].image;
-
-		result = vkCreateImageView(m_LogicalDevice, &createInfo, nullptr, &m_Buffers[i].imageView);
+		result = vkCreateImageView(m_LogicalDevice, &createInfo, nullptr, &m_ImageViews[i]);
 
 		if (result != VK_SUCCESS) {
 			ERROR_LOG("Failed to create swap chain image view");
@@ -353,12 +361,22 @@ const std::vector<VkImage>& VulkanSwapChain::GetImages() const noexcept
 	return m_Images;
 }
 
+const std::vector<VkImageView>& VulkanSwapChain::GetImageViews() const noexcept
+{
+	return m_ImageViews;
+}
+
 ui32 VulkanSwapChain::GetQueueIndex() const noexcept
 {
-	return m_PresentQueueIndex;
+	return m_GraphicsAndPresentQueueIndex;
 }
 
 VkFormat VulkanSwapChain::GetFormat() const noexcept
 {
 	return m_Format;
+}
+
+const VkExtent2D& VulkanSwapChain::GetExtent() const noexcept
+{
+	return m_Extent;
 }

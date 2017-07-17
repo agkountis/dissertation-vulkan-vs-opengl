@@ -5,29 +5,27 @@
 #include <GLFW/glfw3.h>
 #include "window.h"
 #include <vector>
-#include <memory>
 
 class Application;
 class VulkanInstance;
 
-struct VulkanWindow : Window {
+class VulkanWindow : public Window {
+private:
+	VkInstance m_pInstance{ nullptr };
 
-	VkInstance instance{ nullptr };
-
-	GLFWwindow* handle{ nullptr };
-
-	VkSurfaceKHR surface{ VK_NULL_HANDLE };
+	GLFWwindow* m_Handle{ nullptr };
 
 	static void OnWindowResize(GLFWwindow* window, i32 width, i32 height) noexcept;
 
 public:
-	VulkanWindow(const std::string& title, const Vec2ui& size, const Vec2i& position, Application* application);
-
 	~VulkanWindow();
 
 	static std::vector<const char*> GetExtensions() noexcept;
 
-	bool CreateSurface(const std::unique_ptr<VulkanInstance>& instance) noexcept;
+	bool Create(const std::string title,
+	            const Vec2ui& size,
+	            const Vec2i& position,
+	            Application* application) noexcept override;
 
 	operator GLFWwindow*() const;
 };
