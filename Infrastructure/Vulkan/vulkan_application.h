@@ -4,7 +4,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include "application.h"
+#include "../application.h"
 #include <vector>
 #include "vulkan_window.h"
 #include "vulkan_physical_device.h"
@@ -96,7 +96,7 @@ private:
 	std::vector<VkShaderModule> m_ShaderModules;
 
 	/**
-	 * \brief Pipeline cache object used to acceletare pipeline creation.
+	 * \brief Pipeline cache object used to accelerate pipeline creation.
 	 */
 	VulkanPipelineCache m_PipelineCache;
 
@@ -129,9 +129,11 @@ private:
 
 	/**
 	 * \brief Creates the command buffers used to record rendering commands.
-	 * \return TRUE if successfull, FALSE otherwise.
+	 * \return TRUE if successful, FALSE otherwise.
 	 */
 	bool CreateCommandBuffers() noexcept;
+
+	virtual bool BuildCommandBuffers() noexcept = 0;
 
 	/**
 	 * \brief Function for derived classes to override in order to enable
@@ -160,7 +162,7 @@ private:
 	 * \details Swap chain framebuffer creation is deferred to the derived classes
 	 * due to the fact that it depends on a render pass, and render passes are application
 	 * specific.
-	 * \return TRUE if successfull, FALSE otherwise.
+	 * \return TRUE if successful, FALSE otherwise.
 	 */
 	virtual bool CreateFramebuffers() noexcept;
 
@@ -206,9 +208,21 @@ public:
 
 	const std::vector<VkCommandBuffer>& GetCommandBuffers() const noexcept;
 
+	const std::vector<VulkanFramebuffer>& GetFramebuffers() const noexcept;
+
+	const VulkanPipelineCache& GetPipelineCache() const noexcept;
+
 	VkFormat GetDepthBufferFormat() const noexcept;
 
 	VkQueue GetGraphicsQueue() const noexcept;
+
+	VkRenderPass GetRenderPass() const noexcept;
+
+	const VulkanSemaphore& GetPresentCompleteSemaphore() const noexcept;
+
+	const VulkanSemaphore& GetDrawCompleteSemaphore() const noexcept;
+
+	VkSubmitInfo& GetSubmitInfo() noexcept;
 
 	/**
 	 * \brief Initializes the application
@@ -224,7 +238,7 @@ public:
 	 * \details Executes the main loop.
 	 * \return The application's exit code.
 	 */
-	i32 Run() const noexcept final override;
+	i32 Run() noexcept final override;
 };
 
 #endif // VULKAN_APPLICATION_H_

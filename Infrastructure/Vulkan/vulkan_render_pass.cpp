@@ -1,8 +1,8 @@
 #include "vulkan_render_pass.h"
 #include <array>
 #include <vector>
-#include "logger.h"
-#include "types.h"
+#include "../logger.h"
+#include "../types.h"
 
 VulkanRenderPass::~VulkanRenderPass()
 {

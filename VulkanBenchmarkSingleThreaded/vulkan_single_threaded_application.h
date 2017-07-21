@@ -1,10 +1,12 @@
 #ifndef VULKAN_SINGLE_THREADED_APPLICATION_H_
 #define VULKAN_SINGLE_THREADED_APPLICATION_H_
-#include "vulkan_application.h"
+#include "Vulkan/vulkan_application.h"
 
 class VulkanSingleThreadedApplication : public VulkanApplication {
 private:
-	VkPipeline m_Pipeline{ VK_NULL_HANDLE };
+	VkPipeline m_Pipeline{ nullptr };
+
+	VkPipeline m_WireframePipeline{ nullptr };
 
 	VkPipelineLayout m_PipelineLayout{ VK_NULL_HANDLE };
 
@@ -16,6 +18,8 @@ private:
 
 	bool CreatePipelines() noexcept override;
 
+	bool BuildCommandBuffers() noexcept override;
+
 public:
 	explicit VulkanSingleThreadedApplication(const ApplicationSettings& settings);
 
@@ -23,7 +27,7 @@ public:
 
 	bool Initialize() noexcept override;
 
-	void Draw() const noexcept override;
+	void Draw() noexcept override;
 };
 
 #endif // VULKAN_SINGLE_THREADED_APPLICATION_H_

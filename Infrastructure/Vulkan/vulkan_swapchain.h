@@ -6,7 +6,7 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "types.h"
+#include "../types.h"
 
 class VulkanWindow;
 
@@ -55,6 +55,10 @@ public:
 	VkFormat GetFormat() const noexcept;
 
 	const VkExtent2D& GetExtent() const noexcept;
+
+	VkResult GetNextImageIndex(VkSemaphore presentComplete, ui32& index) const noexcept;
+
+	VkResult Present(VkQueue presentQueue, ui32 imageIndex, VkSemaphore waitSemaphore) const noexcept;
 };
 
 #endif //VULKAN_SWAPCHAIN_H_

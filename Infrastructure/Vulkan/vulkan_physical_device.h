@@ -3,7 +3,8 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
-#include "types.h"
+#include <string>
+#include "../types.h"
 
 struct VulkanPhysicalDevice {
 	VkPhysicalDevice device{ nullptr };

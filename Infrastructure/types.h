@@ -1,6 +1,6 @@
 #ifndef TYPES_H_
 #define TYPES_H_
-#include "GLM/glm.hpp"
+#include "glm/glm.hpp"
 #include <cstdint>
 
 using Vec2f = glm::vec2;
@@ -32,7 +32,7 @@ using ui32 = uint32_t;
 using ui16 = uint16_t;
 using ui8 = uint8_t;
 
-using Byte = uint8_t;
+using Byte = char;
 
 using i64 = int64_t;
 using i32 = int32_t;

@@ -1,5 +1,5 @@
 #include "vulkan_swapchain.h"
-#include "logger.h"
+#include "../logger.h"
 #include "vulkan_window.h"
 #include <algorithm>
 
@@ -379,4 +379,19 @@ VkFormat VulkanSwapChain::GetFormat() const noexcept
 const VkExtent2D& VulkanSwapChain::GetExtent() const noexcept
 {
 	return m_Extent;
+}
+
+VkResult VulkanSwapChain::GetNextImageIndex(VkSemaphore presentComplete, ui32& index) const noexcept
+{
+	return vkAcquireNextImageKHR(m_LogicalDevice,
+	                             m_SwapChain,
+	                             std::numeric_limits<ui64>::max(),
+	                             presentComplete,
+	                             nullptr,
+	                             &index);
+}
+
+VkResult VulkanSwapChain::Present(VkQueue presentQueue, ui32 imageIndex, VkSemaphore waitSemaphore) const noexcept
+{
+	return VK_TIMEOUT;
 }

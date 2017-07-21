@@ -1,7 +1,8 @@
 #include <vector>
+#include <cstring>
+#include <limits>
 #include "vulkan_device.h"
-#include "types.h"
-#include "logger.h"
+#include "../logger.h"
 
 // Private functions -------------------------------------------
 bool VulkanDevice::PickPhysicalDevice(VkInstance instance)

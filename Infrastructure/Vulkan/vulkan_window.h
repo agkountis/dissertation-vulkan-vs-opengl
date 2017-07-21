@@ -3,7 +3,7 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "window.h"
+#include "../window.h"
 #include <vector>
 
 class Application;

@@ -1,6 +1,5 @@
 #include "vulkan_application.h"
-#include "logger.h"
-#include <array>
+#include "../logger.h"
 
 // Private functions -------------------------------
 bool VulkanApplication::CreateInstance() noexcept
@@ -16,15 +15,22 @@ bool VulkanApplication::CreateInstance() noexcept
 	instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif
 
+    std::vector<const char *> layers;
 #if !NDEBUG
-	std::vector<const char *> layers{ "VK_LAYER_LUNARG_standard_validation" };
+	layers.push_back("VK_LAYER_LUNARG_standard_validation");
+	uint32_t layerCount{ 0 };
+	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+	std::vector<VkLayerProperties> availableLayers(layerCount);
+	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+    for (int i = 0; i < availableLayers.size(); ++i) {
+        std::cout << availableLayers[i].layerName << std::endl;
+    }
+
 #endif
 
-	if (!m_Instance.Create(appInfo, instanceExtensions, layers)) {
-		return false;
-	}
-
-	return true;
+    return m_Instance.Create(appInfo, instanceExtensions, layers);
 }
 
 bool VulkanApplication::CreateCommandBuffers() noexcept
@@ -196,14 +202,44 @@ const std::vector<VkCommandBuffer>& VulkanApplication::GetCommandBuffers() const
 	return m_DrawCommandBuffers;
 }
 
+const std::vector<VulkanFramebuffer>& VulkanApplication::GetFramebuffers() const noexcept
+{
+	return m_SwapChainFrameBuffers;
+}
+
+const VulkanPipelineCache& VulkanApplication::GetPipelineCache() const noexcept
+{
+	return m_PipelineCache;
+}
+
 VkQueue VulkanApplication::GetGraphicsQueue() const noexcept
 {
 	return m_GraphicsQueue;
 }
 
+VkRenderPass VulkanApplication::GetRenderPass() const noexcept
+{
+	return m_RenderPass;
+}
+
 VkFormat VulkanApplication::GetDepthBufferFormat() const noexcept
 {
 	return m_DepthBufferFormat;
+}
+
+const VulkanSemaphore& VulkanApplication::GetPresentCompleteSemaphore() const noexcept
+{
+	return m_PresentComplete;
+}
+
+const VulkanSemaphore& VulkanApplication::GetDrawCompleteSemaphore() const noexcept
+{
+	return m_DrawComplete;
+}
+
+VkSubmitInfo& VulkanApplication::GetSubmitInfo() noexcept
+{
+	return m_SubmitInfo;
 }
 
 bool VulkanApplication::Initialize() noexcept
@@ -294,7 +330,7 @@ bool VulkanApplication::Initialize() noexcept
 	return true;
 }
 
-i32 VulkanApplication::Run() const noexcept
+i32 VulkanApplication::Run() noexcept
 {
 	while (!glfwWindowShouldClose(m_Window)) {
 		glfwPollEvents();

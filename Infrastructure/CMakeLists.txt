@@ -1,47 +1,50 @@
 project(Infrastructure)
 
-set(SOURCE_FILES vulkan_vbo.h
-        vulkan_renderer.cpp
-        vulkan_device.cpp
-        vulkan_instance.cpp
+set(SOURCE_FILES
+        Vulkan/vulkan_vbo.h
+        Vulkan/vulkan_renderer.cpp
+        Vulkan/vulkan_device.cpp
+        Vulkan/vulkan_instance.cpp
         types.h
-        vbo.h
-        vulkan_utilities.h
-        vulkan_window.h
-        vulkan_application.cpp
-        vulkan_debug.h
-        mesh.h
-        vulkan_debug.cpp
-        ibo.h
-        vulkan_instance.h
+        Vulkan/vulkan_utilities.h
+        Vulkan/vulkan_window.h
+        Vulkan/vulkan_application.cpp
+        Vulkan/vulkan_debug.h
+        Vulkan/vulkan_debug.cpp
+        Vulkan/vulkan_instance.h
         logger.h
-        vulkan_utilities.cpp
-        vulkan_renderer.h
+        Vulkan/vulkan_utilities.cpp
+        Vulkan/vulkan_renderer.h
         window.h
-        vulkan_window.cpp
+        Vulkan/vulkan_window.cpp
         application.h
         application.cpp
-        vulkan_device.h
-        vulkan_application.h
+        Vulkan/vulkan_device.h
+        Vulkan/vulkan_application.h
         timer.h
-        vulkan_vbo.cpp
+        Vulkan/vulkan_vbo.cpp
         window.cpp
-        vulkan_physical_device.h
-        vulkan_swapchain.h
-        vulkan_swapchain.cpp
-        vulkan_physical_device.cpp
-        vulkan_buffer.h
-        vulkan_buffer.cpp
-        vulkan_pipeline_cache.cpp
-        vulkan_command_pool.cpp
-        vulkan_render_pass.cpp
-        vulkan_depth_stencil.cpp
-        vulkan_command_pool.h
-        vulkan_depth_stencil.h
-        vulkan_render_pass.h
-        vulkan_semaphore.cpp
-        vulkan_pipeline_cache.h
-        vulkan_semaphore.h vulkan_framebuffer.h vulkan_framebuffer.cpp)
+        Vulkan/vulkan_physical_device.h
+        Vulkan/vulkan_swapchain.h
+        Vulkan/vulkan_swapchain.cpp
+        Vulkan/vulkan_physical_device.cpp
+        Vulkan/vulkan_buffer.h
+        Vulkan/vulkan_buffer.cpp
+        Vulkan/vulkan_pipeline_cache.cpp
+        Vulkan/vulkan_command_pool.cpp
+        Vulkan/vulkan_render_pass.cpp
+        Vulkan/vulkan_depth_stencil.cpp
+        Vulkan/vulkan_command_pool.h
+        Vulkan/vulkan_depth_stencil.h
+        Vulkan/vulkan_render_pass.h
+        Vulkan/vulkan_semaphore.cpp
+        Vulkan/vulkan_pipeline_cache.h
+        Vulkan/vulkan_semaphore.h
+        Vulkan/vulkan_framebuffer.h
+        Vulkan/vulkan_framebuffer.cpp
+        entity.h
+        resource.h
+        resource_manager.h Vulkan/vulkan_shader.h Vulkan/vulkan_shader.cpp)
 
 if(APPLE)
     include_directories(~/Downloads/Molten-0.18.0/MoltenVK/include)
@@ -50,21 +53,20 @@ if(APPLE)
     find_library(COCOA Cocoa REQUIRED)
     find_library(METAL Metal REQUIRED)
     find_library(QUARTZ_CORE QuartzCore REQUIRED)
+    find_package(glfw3 3.3 REQUIRED)
 
-    set(MOLTEN_VK "/Users/gordath/Downloads/Molten-0.18.0/MoltenVK/macOS/libMoltenVK.dylib")
+    set(VULKAN_LIB "/Users/gordath/Downloads/Molten-0.18.0/MoltenVK/macOS/libMoltenVK.dylib")
+    set(LIBRARIES ${COCOA} ${METAL} ${QUARTZ_CORE} ${VULKAN_LIB})
 elseif(MSVC)
     #setup visual studio paths
 elseif(MINGW)
     #handle mingw
 else()
-    #handle linux
+    set(VULKAN_LIB vulkan)
+    find_package(glfw3 3.2 REQUIRED)
+    set(LIBRARIES ${VULKAN_LIB} glfw)
 endif()
-
-
-
-
-find_package(glfw3 3.3 REQUIRED)
 
 add_library(Infrastructure ${SOURCE_FILES})
 
-target_link_libraries(Infrastructure ${COCOA} ${METAL} ${QUARTZ_CORE} stdc++ ${MOLTEN_VK} glfw)
+target_link_libraries(Infrastructure ${LIBRARIES})

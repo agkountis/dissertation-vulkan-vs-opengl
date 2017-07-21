@@ -2,7 +2,7 @@
 #define VULKAN_FRAMEBUFFER_H_
 
 #include <vulkan/vulkan.h>
-#include "types.h"
+#include "../types.h"
 
 class VulkanFramebuffer {
 private:
