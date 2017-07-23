@@ -393,5 +393,17 @@ VkResult VulkanSwapChain::GetNextImageIndex(VkSemaphore presentComplete, ui32& i
 
 VkResult VulkanSwapChain::Present(VkQueue presentQueue, ui32 imageIndex, VkSemaphore waitSemaphore) const noexcept
 {
-	return VK_TIMEOUT;
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.pNext = nullptr;
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &m_SwapChain;
+	presentInfo.pImageIndices = &imageIndex;
+
+	if (waitSemaphore != nullptr) {
+		presentInfo.pWaitSemaphores = &waitSemaphore;
+		presentInfo.waitSemaphoreCount = 1;
+	}
+
+	return vkQueuePresentKHR(presentQueue, &presentInfo);
 }

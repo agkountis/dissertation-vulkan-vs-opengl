@@ -202,6 +202,8 @@ bool VulkanDevice::CreateLogicalDevice(VkPhysicalDeviceFeatures featuresToEnable
 
 	m_EnabledFeatures = featuresToEnable;
 
+	vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.graphics, 0, &m_GraphicsQueue);
+
 	return true;
 }
 
@@ -306,6 +308,18 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 	}
 
 	return true;
+}
+
+VkQueue VulkanDevice::GetQueue(QueueFamily queueFamily) const noexcept
+{
+	switch (queueFamily) {
+		case QueueFamily::GRAPHICS:
+		case QueueFamily::PRESENT:
+			return m_GraphicsQueue;
+		case QueueFamily::COMPUTE:
+		case QueueFamily::TRANSFER:
+			return nullptr;
+	}
 }
 
 VulkanDevice::operator VkDevice() const noexcept

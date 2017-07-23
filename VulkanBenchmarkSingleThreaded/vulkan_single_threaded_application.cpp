@@ -92,9 +92,19 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 
 	// Solid rendering pipeline
 	// Load shaders
-	VulkanShader* vertexShader{ GetResource<VulkanShader>("sdr/default.vert.spv", GetDevice()) };
+	VulkanShader* vertexShader{ LoadShader("sdr/default.vert.spv") };
 
-	VulkanShader* fragmentShader{ GetResource<VulkanShader>("sdr/default.frag.spv", GetDevice()) };
+	if (!vertexShader) {
+		ERROR_LOG("Failed to load vertex shader.");
+		return false;
+	}
+
+	VulkanShader* fragmentShader{ LoadShader("sdr/default.frag.spv") };
+
+	if (!fragmentShader) {
+		ERROR_LOG("Failed to load fragment shader.");
+		return false;
+	}
 
 	VkPipelineShaderStageCreateInfo vertexShaderStage{};
 	vertexShaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -163,7 +173,7 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 		return false;
 	}
 
-	// Wire frame rendering pipeline
+	//Wire frame pipeline
 	if (GetDevice().GetPhysicalDevice().features.fillModeNonSolid) {
 		rasterizationState.polygonMode = VK_POLYGON_MODE_LINE;
 		rasterizationState.lineWidth = 1.0f;
@@ -293,7 +303,9 @@ void VulkanSingleThreadedApplication::Draw() noexcept
 {
 	ui32 imageIndex;
 
-	const auto& swapChain = GetSwapChain();
+	const VulkanSwapChain& swapChain{ GetSwapChain() };
+
+	VkQueue graphicsQueue{ GetDevice().GetQueue(QueueFamily::GRAPHICS) };
 
 	VkResult result{ swapChain.GetNextImageIndex(GetPresentCompleteSemaphore(),
 	                                             imageIndex) };
@@ -313,14 +325,26 @@ void VulkanSingleThreadedApplication::Draw() noexcept
 	submitInfo.pCommandBuffers = &GetCommandBuffers()[imageIndex];
 
 	//TODO: Fix this. Graphics queue is NULL.
-	result = vkQueueSubmit(GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+	result = vkQueueSubmit(graphicsQueue,
+	                       1,
+	                       &submitInfo,
+	                       VK_NULL_HANDLE);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to submit the command buffer.");
 		return;
 	}
 
-	result = GetSwapChain().Present(GetGraphicsQueue(), imageIndex, GetDrawCompleteSemaphore());
+	result = GetSwapChain().Present(graphicsQueue,
+	                                imageIndex,
+	                                GetDrawCompleteSemaphore());
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to present swap chain image.");
+		return;
+	}
+
+	vkQueueWaitIdle(graphicsQueue);
 }
 
 void VulkanSingleThreadedApplication::EnableFeatures() noexcept

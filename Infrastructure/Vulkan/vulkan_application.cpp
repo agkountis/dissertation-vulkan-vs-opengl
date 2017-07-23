@@ -24,10 +24,10 @@ bool VulkanApplication::CreateInstance() noexcept
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
+	LOG("|- AVAILABLE VULKAN LAYERS:");
     for (int i = 0; i < availableLayers.size(); ++i) {
-        std::cout << availableLayers[i].layerName << std::endl;
+	    LOG("\t |- " + std::string{ availableLayers[i].layerName });
     }
-
 #endif
 
     return m_Instance.Create(appInfo, instanceExtensions, layers);
@@ -70,7 +70,7 @@ bool VulkanApplication::CreateRenderPasses() noexcept
 	attachments.push_back(colorAttachment);
 
 	VkAttachmentDescription depthAttachment{};
-	depthAttachment.format = m_DepthBufferFormat;
+	depthAttachment.format = m_DepthStencil.GetFormat();
 	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -144,14 +144,14 @@ bool VulkanApplication::CreateFramebuffers() noexcept
 
 	const auto& swapChainImageViews = m_SwapChain.GetImageViews();
 
-	auto swapchainExtent = m_SwapChain.GetExtent();
+	auto swapChainExtent = m_SwapChain.GetExtent();
 
 	for (int i = 0; i < swapChainImageViews.size(); ++i) {
 		std::vector<VkImageView> attachments{ swapChainImageViews[i], m_DepthStencil.GetImageView() };
 
 		if (!m_SwapChainFrameBuffers[i].Create(m_Device,
 		                                       attachments,
-		                                       Vec2ui{ swapchainExtent.width, swapchainExtent.height },
+		                                       Vec2ui{ swapChainExtent.width, swapChainExtent.height },
 		                                       m_RenderPass)) {
 			return false;
 		}
@@ -170,6 +170,10 @@ VulkanApplication::VulkanApplication(const ApplicationSettings& settings)
 VulkanApplication::~VulkanApplication()
 {
 	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
+
+	for(auto shader : m_Shaders) {
+		DestroyResource(shader);
+	}
 }
 
 VulkanWindow& VulkanApplication::GetWindow() noexcept
@@ -212,19 +216,14 @@ const VulkanPipelineCache& VulkanApplication::GetPipelineCache() const noexcept
 	return m_PipelineCache;
 }
 
-VkQueue VulkanApplication::GetGraphicsQueue() const noexcept
-{
-	return m_GraphicsQueue;
-}
-
 VkRenderPass VulkanApplication::GetRenderPass() const noexcept
 {
 	return m_RenderPass;
 }
 
-VkFormat VulkanApplication::GetDepthBufferFormat() const noexcept
+const VulkanDepthStencil& VulkanApplication::GetDepthStencil() const noexcept
 {
-	return m_DepthBufferFormat;
+	return m_DepthStencil;
 }
 
 const VulkanSemaphore& VulkanApplication::GetPresentCompleteSemaphore() const noexcept
@@ -240,6 +239,19 @@ const VulkanSemaphore& VulkanApplication::GetDrawCompleteSemaphore() const noexc
 VkSubmitInfo& VulkanApplication::GetSubmitInfo() noexcept
 {
 	return m_SubmitInfo;
+}
+
+VulkanShader* VulkanApplication::LoadShader(const std::string& fileName) noexcept
+{
+	VulkanShader* shader{ GetResource<VulkanShader>(fileName, m_Device) };
+
+	if (!shader) {
+		return nullptr;
+	}
+
+	m_Shaders.push_back(shader);
+
+	return shader;
 }
 
 bool VulkanApplication::Initialize() noexcept
@@ -280,10 +292,14 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	m_DepthBufferFormat = m_Device.GetPhysicalDevice().GetSupportedDepthFormat();
+	VkFormat depthStencilFormat{ m_Device.GetPhysicalDevice().GetSupportedDepthFormat() };
 
-	if (m_DepthBufferFormat == VK_FORMAT_UNDEFINED) {
+	if (depthStencilFormat == VK_FORMAT_UNDEFINED) {
 		ERROR_LOG("Could not find supported depth format.");
+		return false;
+	}
+
+	if (!m_DepthStencil.Create(m_Device, m_Window.GetSize(), depthStencilFormat)) {
 		return false;
 	}
 
@@ -308,10 +324,6 @@ bool VulkanApplication::Initialize() noexcept
 	}
 
 	if (!CreateCommandBuffers()) {
-		return false;
-	}
-
-	if (!m_DepthStencil.Create(m_Device, m_Window.GetSize(), m_DepthBufferFormat)) {
 		return false;
 	}
 

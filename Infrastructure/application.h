@@ -53,6 +53,10 @@ public:
 		m_ResourceManager.RegisterResource(resource, name);
 	}
 
+	void DestroyResource(const std::string& name) noexcept;
+
+	void DestroyResource(Resource* resource) noexcept;
+
 	virtual bool Initialize() noexcept = 0;
 
 	virtual i32 Run() noexcept = 0;

@@ -47,7 +47,7 @@ public:
 	 * false otherwise.
 	 */
 	template<typename T, typename... Args>
-	bool Load(const std::string& fileName, Args&&...args)
+	bool Load(const std::string& fileName, Args&&...args) noexcept
 	{
 		T* resource{ new T{std::forward<Args>(args)...} };
 
@@ -58,6 +58,7 @@ public:
 			return true;
 		}
 
+		ERROR_LOG("Failed to load resource \"" + fileName + "\".");
 		return false;
 	}
 
@@ -66,22 +67,19 @@ public:
 	 * \return the resource
 	 */
 	template<typename T, typename... Args>
-	T* Get(const std::string& fileName, Args&&... args)
+	T* Get(const std::string& fileName, Args&&... args) noexcept
 	{
 		auto resource = m_ResourcesByName[fileName];
 
 		if (!resource) {
-			Load<T>(fileName, std::forward<Args>(args)...);
-			resource = m_ResourcesByName[fileName];
+			if (!Load<T>(fileName, std::forward<Args>(args)...)) {
+				return nullptr;
+			}
 		}
 
-		T* res{ static_cast<T*>(resource) };
-		if (!res) {
-			std::cerr << "The file you asked for does not represent the type you are requesting!" << std::endl;
-			return nullptr;
-		}
+		resource = m_ResourcesByName[fileName];
 
-		return res;
+		return static_cast<T*>(resource);
 	}
 
 	/**
@@ -89,7 +87,7 @@ public:
 	 * \param resource the resource to register
 	 * \param the name of the resource.
 	 */
-	void RegisterResource(Resource* resource, const std::string& name)
+	void RegisterResource(Resource* resource, const std::string& name) noexcept
 	{
 		if (!resource) {
 			ERROR_LOG("Resource registration failed: Cannot register a null resource.");
@@ -103,6 +101,50 @@ public:
 
 		m_ResourcesByName[name] = resource;
 		m_ResourcesById[s_Id++] = resource;
+	}
+
+	void DestroyResource(const std::string& name) noexcept
+	{
+		auto itByName = m_ResourcesByName.cbegin();
+		auto itById = m_ResourcesById.cbegin();
+
+		while (itByName != m_ResourcesByName.cend()) {
+			auto entry = *itByName;
+
+			if (entry.first == name) {
+				delete entry.second;
+				itByName = m_ResourcesByName.erase(itByName);
+				itById = m_ResourcesById.erase(itById);
+				return;
+			} else {
+				++itByName;
+				++itById;
+			}
+		}
+
+		WARNING_LOG("Resource with name \"" + name + "\" not registered.");
+	}
+
+	void DestroyResource(Resource* resource) noexcept
+	{
+		auto itByName = m_ResourcesByName.cbegin();
+		auto itById = m_ResourcesById.cbegin();
+
+		while (itByName != m_ResourcesByName.cend()) {
+			auto entry = *itByName;
+
+			if (entry.second == resource) {
+				delete entry.second;
+				itByName = m_ResourcesByName.erase(itByName);
+				itById = m_ResourcesById.erase(itById);
+				return;
+			} else {
+				++itByName;
+				++itById;
+			}
+		}
+
+		WARNING_LOG("Resource not registered.");
 	}
 };
 

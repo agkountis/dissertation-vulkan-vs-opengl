@@ -32,11 +32,9 @@ set(SOURCE_FILES
         Vulkan/vulkan_buffer.cpp
         Vulkan/vulkan_pipeline_cache.cpp
         Vulkan/vulkan_command_pool.cpp
-        Vulkan/vulkan_render_pass.cpp
         Vulkan/vulkan_depth_stencil.cpp
         Vulkan/vulkan_command_pool.h
         Vulkan/vulkan_depth_stencil.h
-        Vulkan/vulkan_render_pass.h
         Vulkan/vulkan_semaphore.cpp
         Vulkan/vulkan_pipeline_cache.h
         Vulkan/vulkan_semaphore.h

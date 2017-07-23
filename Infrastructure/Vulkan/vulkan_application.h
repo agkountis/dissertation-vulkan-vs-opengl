@@ -16,6 +16,7 @@
 #include "vulkan_command_pool.h"
 #include "vulkan_pipeline_cache.h"
 #include "vulkan_framebuffer.h"
+#include "vulkan_shader.h"
 
 class VulkanApplication : public Application {
 private:
@@ -49,16 +50,6 @@ private:
 	std::vector<const char*> m_ExtensionsToEnable;
 
 	/**
-	 * \brief Handle to the graphics queue.
-	 */
-	VkQueue m_GraphicsQueue{ nullptr };
-
-	/**
-	 * \brief The depth buffer's image format.
-	 */
-	VkFormat m_DepthBufferFormat{ VK_FORMAT_UNDEFINED };
-
-	/**
 	 * \brief The command pool from which the application can allocate command buffers.
 	 */
 	VulkanCommandPool m_CommandPool;
@@ -71,7 +62,7 @@ private:
 	/**
 	 * \brief Struct used to submit commands to the queues.
 	 */
-	VkSubmitInfo m_SubmitInfo;
+	VkSubmitInfo m_SubmitInfo{};
 
 	/**
 	 * \brief The command buffers to use for drawing.
@@ -93,7 +84,7 @@ private:
 	/**
 	 * \brief The shader stages to be used in the pipeline.
 	 */
-	std::vector<VkShaderModule> m_ShaderModules;
+	std::vector<VulkanShader*> m_Shaders;
 
 	/**
 	 * \brief Pipeline cache object used to accelerate pipeline creation.
@@ -212,7 +203,7 @@ public:
 
 	const VulkanPipelineCache& GetPipelineCache() const noexcept;
 
-	VkFormat GetDepthBufferFormat() const noexcept;
+	const VulkanDepthStencil& GetDepthStencil() const noexcept;
 
 	VkQueue GetGraphicsQueue() const noexcept;
 
@@ -223,6 +214,8 @@ public:
 	const VulkanSemaphore& GetDrawCompleteSemaphore() const noexcept;
 
 	VkSubmitInfo& GetSubmitInfo() noexcept;
+
+	VulkanShader* LoadShader(const std::string& fileName) noexcept;
 
 	/**
 	 * \brief Initializes the application

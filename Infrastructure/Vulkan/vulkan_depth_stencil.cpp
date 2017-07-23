@@ -23,6 +23,11 @@ VkImage VulkanDepthStencil::GetImage() const noexcept
 	return m_Image;
 }
 
+VkFormat VulkanDepthStencil::GetFormat() const noexcept
+{
+	return m_Format;
+}
+
 bool VulkanDepthStencil::Create(const VulkanDevice& logicalDevice, const Vec2ui& size, VkFormat format) noexcept
 {
 	m_pLogicalDevice = logicalDevice;
@@ -38,7 +43,6 @@ bool VulkanDepthStencil::Create(const VulkanDevice& logicalDevice, const Vec2ui&
 	imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 	imageCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 	imageCreateInfo.flags = 0;
-
 
 	VkImageViewCreateInfo depthStencilView{};
 	depthStencilView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -87,6 +91,8 @@ bool VulkanDepthStencil::Create(const VulkanDevice& logicalDevice, const Vec2ui&
 		ERROR_LOG("Failed to create depth image view.");
 		return false;
 	}
+
+	m_Format = format;
 
 	return true;
 }

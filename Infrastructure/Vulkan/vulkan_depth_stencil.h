@@ -16,12 +16,16 @@ private:
 
 	VkImageView m_ImageView{ VK_NULL_HANDLE };
 
+	VkFormat m_Format{ VK_FORMAT_UNDEFINED };
+
 public:
 	~VulkanDepthStencil();
 
 	VkImageView GetImageView() const noexcept;
 
 	VkImage GetImage() const noexcept;
+
+	VkFormat GetFormat() const noexcept;
 
 	bool Create(const VulkanDevice& logicalDevice, const Vec2ui& size, VkFormat format) noexcept;
 };

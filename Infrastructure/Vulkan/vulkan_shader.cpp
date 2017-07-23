@@ -24,6 +24,7 @@ bool VulkanShader::Load(const std::string& fileName) noexcept
 
 	if (!file.is_open()) {
 		ERROR_LOG("Failed to open file: " + fileName);
+		return false;
 	}
 
 	i64 fileSize{ file.tellg() };

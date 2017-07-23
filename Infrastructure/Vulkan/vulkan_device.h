@@ -11,6 +11,13 @@ struct QueueFamilyIndices {
 	ui32 transfer{ std::numeric_limits<ui32>::max() };
 };
 
+enum class QueueFamily {
+	GRAPHICS,
+	TRANSFER,
+	COMPUTE,
+	PRESENT
+};
+
 class VulkanDevice {
 private:
 	VulkanPhysicalDevice m_PhysicalDevice;
@@ -20,6 +27,8 @@ private:
 	QueueFamilyIndices m_QueueFamilyIndices;
 
 	VkCommandPool m_CommandPool{ VK_NULL_HANDLE };
+
+	VkQueue m_GraphicsQueue{ nullptr };
 
 	VkPhysicalDeviceFeatures m_EnabledFeatures;
 
@@ -47,6 +56,8 @@ public:
 	                  VulkanBuffer& buffer,
 	                  VkDeviceSize size,
 	                  void *data = nullptr) const noexcept;
+
+	VkQueue GetQueue(QueueFamily queueFamily) const noexcept;
 
 	operator VkDevice() const noexcept;
 };
