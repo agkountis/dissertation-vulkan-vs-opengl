@@ -1,6 +1,5 @@
 #include "vulkan_window.h"
-#include "../logger.h"
-#include "vulkan_instance.h"
+#include "logger.h"
 #include "vulkan_application.h"
 
 // Static methods ------------------------
@@ -11,6 +10,7 @@ void VulkanWindow::OnWindowResize(GLFWwindow* window, i32 width, i32 height) noe
 	app->GetWindow().SetSize(Vec2ui{ width, height });
 
 	//TODO: recreate the swapchain and resources that depend on it.
+	//TODO: call the application's reshape.
 }
 
 //----------------------------------------

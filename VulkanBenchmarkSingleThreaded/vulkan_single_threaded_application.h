@@ -1,6 +1,15 @@
 #ifndef VULKAN_SINGLE_THREADED_APPLICATION_H_
 #define VULKAN_SINGLE_THREADED_APPLICATION_H_
-#include "Vulkan/vulkan_application.h"
+#include "vulkan_application.h"
+#include "vulkan_mesh.h"
+
+struct UniformBufferObject {
+	Mat4f model;
+	Mat4f view;
+	Mat4f projection;
+	Mat4f inverseTransposeModelView;
+	f32 time;
+};
 
 class VulkanSingleThreadedApplication : public VulkanApplication {
 private:
@@ -8,13 +17,21 @@ private:
 
 	VkPipeline m_WireframePipeline{ nullptr };
 
-	VkPipelineLayout m_PipelineLayout{ VK_NULL_HANDLE };
+	VkPipelineLayout m_PipelineLayout{ nullptr };
 
-	VkDescriptorSet m_DescriptorSet{ VK_NULL_HANDLE };
+	VkDescriptorPool m_DescriptorPool{ nullptr };
 
-	VkDescriptorSetLayout m_DescriptorSetLayout{ VK_NULL_HANDLE };
+	VkDescriptorSetLayout m_DescriptorSetLayout{ nullptr };
+
+	VkDescriptorSet m_DescriptorSet{ nullptr };
+
+	VulkanBuffer m_Ubo;
+
+	VulkanMesh mesh;
 
 	void EnableFeatures() noexcept override;
+
+	bool CreateUniforms() noexcept;
 
 	bool CreatePipelines() noexcept override;
 
@@ -26,6 +43,8 @@ public:
 	~VulkanSingleThreadedApplication();
 
 	bool Initialize() noexcept override;
+
+	void Update() noexcept override;
 
 	void Draw() noexcept override;
 };

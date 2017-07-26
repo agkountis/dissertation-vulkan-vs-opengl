@@ -1,7 +1,7 @@
 #ifndef VULKAN_UTILITIES_H_
 #define VULKAN_UTILITIES_H_
 
-#include "../types.h"
+#include "types.h"
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <string>

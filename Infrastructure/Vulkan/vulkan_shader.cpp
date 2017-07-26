@@ -1,7 +1,7 @@
 #include <vector>
 #include <fstream>
 #include "vulkan_shader.h"
-#include "../logger.h"
+#include "logger.h"
 
 VulkanShader::VulkanShader(VkDevice logicalDevice)
 		: m_pLogicalDevice{ logicalDevice }

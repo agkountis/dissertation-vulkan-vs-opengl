@@ -2,7 +2,7 @@
 #define VULKAN_DEPTH_STENCIL_H_
 
 #include <vulkan/vulkan.h>
-#include "../types.h"
+#include "types.h"
 
 class VulkanDevice;
 

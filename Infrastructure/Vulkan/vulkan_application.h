@@ -4,7 +4,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include "../application.h"
+#include "application.h"
 #include <vector>
 #include "vulkan_window.h"
 #include "vulkan_physical_device.h"

@@ -1,0 +1,14 @@
+project(CoreInfrastructure)
+
+set(SOURCE_FILES application.cpp
+        application.h
+        entity.h
+        logger.h
+        resource.h
+        resource_manager.h
+        timer.h
+        types.h
+        window.cpp
+        window.h vertex.h mesh.h mesh.cpp math_utilities.h)
+
+add_library(CoreInfrastructure ${SOURCE_FILES})

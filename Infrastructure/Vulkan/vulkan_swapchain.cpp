@@ -1,5 +1,5 @@
 #include "vulkan_swapchain.h"
-#include "../logger.h"
+#include "logger.h"
 #include "vulkan_window.h"
 #include <algorithm>
 
@@ -151,7 +151,7 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	VkSwapchainKHR oldSwapChain = m_SwapChain;
 
 	// Get physical device surface properties and formats
-	VkSurfaceCapabilitiesKHR surfaceCapabilities;
+	VkSurfaceCapabilitiesKHR surfaceCapabilities{};
 	VkResult result{ vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, m_Surface, &surfaceCapabilities) };
 
 	if (result != VK_SUCCESS) {

@@ -61,6 +61,8 @@ public:
 
 	virtual i32 Run() noexcept = 0;
 
+	virtual void Update() noexcept = 0;
+
 	virtual void Draw() noexcept = 0;
 };
 

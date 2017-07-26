@@ -2,7 +2,7 @@
 #include <cstring>
 #include <limits>
 #include "vulkan_device.h"
-#include "../logger.h"
+#include "logger.h"
 
 // Private functions -------------------------------------------
 bool VulkanDevice::PickPhysicalDevice(VkInstance instance)
@@ -91,7 +91,6 @@ bool VulkanDevice::Initialize(VkInstance instance) noexcept
 		ERROR_LOG("Failed to pick physical device");
 		return false;
 	}
-
 
 	return true;
 }
@@ -203,6 +202,8 @@ bool VulkanDevice::CreateLogicalDevice(VkPhysicalDeviceFeatures featuresToEnable
 	m_EnabledFeatures = featuresToEnable;
 
 	vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.graphics, 0, &m_GraphicsQueue);
+	vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.transfer, 0, &m_TransferQueue);
+	vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.compute, 0, &m_ComputeQueue);
 
 	return true;
 }
@@ -222,7 +223,7 @@ ui32 VulkanDevice::GetMemoryTypeIndex(ui32 memoryTypeMask, VkMemoryPropertyFlags
 		}
 	}
 
-	ERROR_LOG("Could not find suitable memory type.");
+	ERROR_LOG("Could not find suitable m_Memory type.");
 	return std::numeric_limits<ui32>::max();
 }
 
@@ -247,7 +248,7 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 {
 	buffer.pLogicalDevice = m_LogicalDevice;
 
-	// Create the buffer handle
+	// Create the m_Buffer handle
 	VkBufferCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	createInfo.usage = usageFlags;
@@ -255,11 +256,11 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 	VkResult result{ vkCreateBuffer(m_LogicalDevice, &createInfo, nullptr, &buffer.buffer) };
 
 	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to create buffer.");
+		ERROR_LOG("Failed to create m_Buffer.");
 		return false;
 	}
 
-	VkMemoryRequirements memoryRequirements;
+	VkMemoryRequirements memoryRequirements{};
 	vkGetBufferMemoryRequirements(m_LogicalDevice, buffer.buffer, &memoryRequirements);
 
 	VkMemoryAllocateInfo allocateInfo{};
@@ -277,7 +278,7 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 	result = vkAllocateMemory(m_LogicalDevice, &allocateInfo, nullptr, &buffer.memory);
 
 	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to allocate buffer memory");
+		ERROR_LOG("Failed to allocate m_Buffer m_Memory");
 		return false;
 	}
 
@@ -290,7 +291,7 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 		result = buffer.Map();
 
 		if (result != VK_SUCCESS) {
-			ERROR_LOG("Failed to map buffer memory.");
+			ERROR_LOG("Failed to map m_Buffer m_Memory.");
 			return false;
 		}
 
@@ -303,9 +304,106 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 	result = buffer.Bind();
 
 	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to bind buffer memory");
+		ERROR_LOG("Failed to bind m_Buffer m_Memory");
 		return false;
 	}
+
+	return true;
+}
+
+VkCommandBuffer VulkanDevice::CreateCommandBuffer(VkCommandBufferLevel commandBufferLevel) const noexcept
+{
+	VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
+	commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	commandBufferAllocateInfo.commandBufferCount = 1;
+	commandBufferAllocateInfo.level = commandBufferLevel;
+	commandBufferAllocateInfo.pNext = nullptr;
+	commandBufferAllocateInfo.commandPool = m_CommandPool;
+
+	VkCommandBuffer commandBuffer{ nullptr };
+
+	VkResult result{ vkAllocateCommandBuffers(m_LogicalDevice, &commandBufferAllocateInfo, &commandBuffer) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to allocate command m_Buffer.");
+	}
+
+	return commandBuffer;
+}
+
+bool VulkanDevice::SubmitCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, VkFence fence) const noexcept
+{
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(queue, 1, &submitInfo, fence);
+
+	if (fence) {
+		VkResult result{ vkWaitForFences(m_LogicalDevice, 1, &fence, VK_TRUE, std::numeric_limits<ui64>::max()) };
+
+		if (result != VK_SUCCESS) {
+			ERROR_LOG("Wait for fences failed.");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool VulkanDevice::CopyBuffer(const VulkanBuffer& source,
+                              const VulkanBuffer& destination,
+                              VkQueue transferQueue,
+                              VkBufferCopy* copyRegion) const noexcept
+{
+	assert(destination.size <= source.size);
+	assert(source.buffer && destination.buffer);
+
+	VkCommandBuffer commandBuffer{ CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY) };
+
+	VkCommandBufferBeginInfo commandBufferBeginInfo{};
+	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+	VkResult result{ vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to begin command buffer. Buffer copy failed.");
+		return false;
+	}
+
+	VkBufferCopy bufferCopy{};
+	if (!copyRegion) {
+		bufferCopy.size = source.size;
+	} else {
+		bufferCopy = *copyRegion;
+	}
+
+	vkCmdCopyBuffer(commandBuffer, source.buffer, destination.buffer, 1, &bufferCopy);
+
+	vkEndCommandBuffer(commandBuffer);
+
+	VkFenceCreateInfo fenceCreateInfo{};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.flags = VK_NULL_HANDLE;
+
+	VkFence fence{ nullptr };
+
+	result = vkCreateFence(m_LogicalDevice, &fenceCreateInfo, nullptr, &fence);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create fence.");
+		return false;
+	}
+
+	if (!SubmitCommandBuffer(commandBuffer, transferQueue, fence)) {
+		ERROR_LOG("Command buffer submission failed.");
+		return false;
+	}
+
+	vkDestroyFence(m_LogicalDevice, fence, nullptr);
+
+	vkFreeCommandBuffers(m_LogicalDevice, m_CommandPool, 1, &commandBuffer);
 
 	return true;
 }
@@ -316,9 +414,10 @@ VkQueue VulkanDevice::GetQueue(QueueFamily queueFamily) const noexcept
 		case QueueFamily::GRAPHICS:
 		case QueueFamily::PRESENT:
 			return m_GraphicsQueue;
-		case QueueFamily::COMPUTE:
 		case QueueFamily::TRANSFER:
-			return nullptr;
+			return m_TransferQueue;
+		case QueueFamily::COMPUTE:
+			return m_ComputeQueue;
 	}
 }
 

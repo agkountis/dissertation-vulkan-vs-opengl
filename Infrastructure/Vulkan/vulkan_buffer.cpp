@@ -33,9 +33,9 @@ void VulkanBuffer::Fill(void* data, VkDeviceSize size) const noexcept
 
 void VulkanBuffer::InitializeDescriptor(VkDeviceSize range, VkDeviceSize offset) noexcept
 {
-	descriptor.buffer = buffer;
-	descriptor.range = range;
-	descriptor.offset = offset;
+	descriptorBufferInfo.buffer = buffer;
+	descriptorBufferInfo.range = range;
+	descriptorBufferInfo.offset = offset;
 }
 
 void VulkanBuffer::CleanUp() const noexcept

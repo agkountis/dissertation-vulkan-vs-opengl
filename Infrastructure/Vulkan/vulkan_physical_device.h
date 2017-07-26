@@ -4,7 +4,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <string>
-#include "../types.h"
+#include "types.h"
 
 struct VulkanPhysicalDevice {
 	VkPhysicalDevice device{ nullptr };

@@ -1,5 +1,5 @@
 #include "vulkan_debug.h"
-#include "../logger.h"
+#include "logger.h"
 
 VkBool32 VulkanDebug::DebugCallback(VkDebugReportFlagsEXT flags,
                                     VkDebugReportObjectTypeEXT objType,

@@ -1,6 +1,6 @@
 #include "vulkan_instance.h"
-#include "../types.h"
-#include "../logger.h"
+#include "types.h"
+#include "logger.h"
 
 VulkanInstance::~VulkanInstance()
 {

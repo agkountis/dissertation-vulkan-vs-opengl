@@ -1,6 +1,5 @@
 #include "vulkan_depth_stencil.h"
-#include "../logger.h"
-#include "../types.h"
+#include "logger.h"
 #include "vulkan_device.h"
 
 
@@ -72,14 +71,14 @@ bool VulkanDepthStencil::Create(const VulkanDevice& logicalDevice, const Vec2ui&
 	result = vkAllocateMemory(m_pLogicalDevice, &memoryAllocateInfo, nullptr, &m_Memory);
 
 	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to allocate depth stencil memory.");
+		ERROR_LOG("Failed to allocate depth stencil m_Memory.");
 		return false;
 	}
 
 	result = vkBindImageMemory(m_pLogicalDevice, m_Image, m_Memory, 0);
 
 	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to bind depth image memory.");
+		ERROR_LOG("Failed to bind depth image m_Memory.");
 		return false;
 	}
 

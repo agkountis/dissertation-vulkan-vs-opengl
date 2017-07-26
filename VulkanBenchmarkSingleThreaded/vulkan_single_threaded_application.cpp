@@ -1,7 +1,43 @@
 #include <iostream>
-#include <Vulkan/vulkan_shader.h>
+#include "vulkan_shader.h"
+#include "math_utilities.h"
 #include "vulkan_single_threaded_application.h"
-#include "logger.h"
+
+// Vulkan clip space has inverted Y and half Z.
+const Mat4f clipCorrectionMat{ 1.0f, 0.0f, 0.0f, 0.0f,
+                               0.0f, -1.0f, 0.0f, 0.0f,
+                               0.0f, 0.0f, 0.5f, 0.0f,
+                               0.0f, 0.0f, 0.5f, 1.0f };
+
+const std::vector<Vertex> vertices{
+		//front
+		{{ -0.5f, -0.5f, 0.5f },  { 0.0f,  0.0f, 1.0f },  { 1.0f,  0.0f, 0.0f },  { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f }},
+		{{ 0.5f,  -0.5f, 0.5f },  { 0.0f,  0.0f, 1.0f },  { 1.0f,  0.0f, 0.0f },  { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }},
+		{{ 0.5f,  0.5f,  0.5f },  { 0.0f,  0.0f, 1.0f },  { 1.0f,  0.0f, 0.0f },  { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }},
+		{{ -0.5f, 0.5f,  0.5f },  { 0.0f,  0.0f, 1.0f },  { 1.0f,  0.0f, 0.0f },  { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f }},
+
+		//back
+		{{ 0.5f,  -0.5f, -0.5f }, { 0.0f,  0.0f, -1.0f }, { -1.0f, 0.0f, 0.0f },  { 1.0f, 0.0f, 0.0f }, { 0.0,  1.0f }},
+		{{ -0.5f, -0.5f, -0.5f }, { 0.0f,  0.0f, -1.0f }, { -1.0f, 0.0f, 0.0f },  { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }},
+		{{ 0.5f,  0.5f,  -0.5f }, { 0.0f,  0.0f, -1.0f }, { -1.0f, 0.0f, 0.0f },  { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }},
+		{{ -0.5f, 0.5f,  -0.5f }, { 0.0f,  0.0f, -1.0f }, { -1.0f, 0.0f, 0.0f },  { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f }},
+
+		//right
+		{{ 0.5f,  -0.5f, 0.5f },  { 1.0f,  0.0f, 0.0f },  { 0.0f,  0.0f, 1.0f },  { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f }},
+		{{ 0.5f,  -0.5f, -0.5f }, { 1.0f,  0.0f, 0.0f },  { 0.0f,  0.0f, 1.0f },  { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }},
+		{{ 0.5f,  0.5f,  0.5f },  { 1.0f,  0.0f, 0.0f },  { 0.0f,  0.0f, 1.0f },  { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }},
+		{{ 0.5f,  0.5f,  -0.5f }, { 1.0f,  0.0f, 0.0f },  { 0.0f,  0.0f, 1.0f },  { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f }},
+
+		//left
+		{{ -0.5f, -0.5f, -0.5f }, { -1.0f, 0.0f, 0.0f },  { 0.0f,  0.0f, -1.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f }},
+		{{ -0.5f, -0.5f, 0.5f },  { -1.0f, 0.0f, 0.0f },  { 0.0f,  0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }},
+		{{ -0.5f, 0.5f,  -0.5f }, { -1.0f, 0.0f, 0.0f },  { 0.0f,  0.0f, -1.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }},
+		{{ -0.5f, 0.5f,  0.5f },  { -1.0f, 0.0f, 0.0f },  { 0.0f,  0.0f, -1.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f }}
+};
+
+const std::vector<ui32> indices{
+		0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 5, 7, 8, 9, 10, 10, 9, 11, 12, 13, 14, 14, 13, 15
+};
 
 bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 {
@@ -15,7 +51,7 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 	rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
-	rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizationState.flags = VK_NULL_HANDLE;
 	rasterizationState.depthClampEnable = VK_FALSE;
 	rasterizationState.rasterizerDiscardEnable = VK_FALSE;
@@ -39,8 +75,8 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 	colorBlendState.attachmentCount = 1;
 	colorBlendState.pAttachments = &colorBlendAttachmentState;
 
-	for (i32 i = 0; i < 4; ++i) {
-		colorBlendState.blendConstants[i] = 0.0f;
+	for (float& blendConstant : colorBlendState.blendConstants) {
+		blendConstant = 0.0f;
 	}
 
 	VkPipelineDepthStencilStateCreateInfo depthStencilState{};
@@ -121,18 +157,32 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages{ vertexShaderStage,
 	                                                           fragmentShaderStage };
 
-	//TODO: this is temporary. Create it properly.
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+
+	//Create the pipeline layout.
+	//Here we specify to the the pipeline if we use an push constants or descriptor sets.
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 0; // Optional
-	pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
-	pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-	pipelineLayoutInfo.pPushConstantRanges = 0; // Optional
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &m_DescriptorSetLayout;
+	pipelineLayoutInfo.pushConstantRangeCount = 0;
+	pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
 	if (vkCreatePipelineLayout(GetDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) {
 		ERROR_LOG("Failed to create pipeline layout.");
 		return false;
 	}
+
+	auto vertexInputBindingDescription = VulkanMesh::GetVertexInputBindingDescription();
+
+	auto vertexInputAttributeDescriptions = VulkanMesh::GetVertexInputAttributeDescriptions();
+
+	// Vertex binding information and attribute descriptions.
+	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<ui32>(vertexInputAttributeDescriptions.size());
+	vertexInputInfo.pVertexBindingDescriptions = &vertexInputBindingDescription;
+	vertexInputInfo.pVertexAttributeDescriptions = vertexInputAttributeDescriptions.data();
 
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
 	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -141,15 +191,6 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 	pipelineCreateInfo.flags = VK_NULL_HANDLE;
 	pipelineCreateInfo.basePipelineIndex = -1;
 	pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
-
-	//TODO: This is temporary. Create it properly.
-	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 0;
-	vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
-
 	pipelineCreateInfo.pVertexInputState = &vertexInputInfo;
 	pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
 	pipelineCreateInfo.pRasterizationState = &rasterizationState;
@@ -199,7 +240,7 @@ bool VulkanSingleThreadedApplication::BuildCommandBuffers() noexcept
 	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
 	VkClearValue clearValues[2];
-	clearValues[0].color = { 0.3f, 0.3f, 0.3f, 1.0f };
+	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 	clearValues[1].depthStencil = { 1.0f, 0 };
 
 	VkExtent2D swapChainExtent{ GetSwapChain().GetExtent() };
@@ -247,17 +288,17 @@ bool VulkanSingleThreadedApplication::BuildCommandBuffers() noexcept
 
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
 
-//		vkCmdBindDescriptorSets(commandBuffers[i],
-//		                        VK_PIPELINE_BIND_POINT_GRAPHICS,
-//		                        m_PipelineLayout,
-//		                        0,
-//		                        1,                //Descriptor set count.
-//		                        &m_DescriptorSet, //The descriptor set
-//		                        0,                //No Dynamic offsets.
-//		                        nullptr);         //No Dynamic offsets.
+		//Bind the uniforms.
+		vkCmdBindDescriptorSets(commandBuffers[i],
+		                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+		                        m_PipelineLayout,
+		                        0,
+		                        1,                //Descriptor set count.
+		                        &m_DescriptorSet, //The descriptor set
+		                        0,                //No Dynamic offsets.
+		                        nullptr);         //No Dynamic offsets.
 
-		vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
-		//TODO: Draw commands here.
+		mesh.Draw(commandBuffers[i]);
 
 		vkCmdEndRenderPass(commandBuffers[i]);
 
@@ -279,11 +320,19 @@ VulkanSingleThreadedApplication::VulkanSingleThreadedApplication(const Applicati
 
 VulkanSingleThreadedApplication::~VulkanSingleThreadedApplication()
 {
-	vkDestroyPipeline(GetDevice(), m_Pipeline, nullptr);
+	const auto& device = GetDevice();
 
-	vkDestroyPipeline(GetDevice(), m_WireframePipeline, nullptr);
+	//No need to free descriptor sets. They are taken care of by the Vulkan driver.
+	//Just destroy the descriptor set layout and the descriptor pool.
+	vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayout, nullptr);
 
-	vkDestroyPipelineLayout(GetDevice(), m_PipelineLayout, nullptr);
+	vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
+
+	vkDestroyPipeline(device, m_Pipeline, nullptr);
+
+	vkDestroyPipeline(device, m_WireframePipeline, nullptr);
+
+	vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
 }
 
 bool VulkanSingleThreadedApplication::Initialize() noexcept
@@ -292,11 +341,49 @@ bool VulkanSingleThreadedApplication::Initialize() noexcept
 		return false;
 	}
 
+	if (!CreateUniforms()) {
+		return false;
+	}
+
 	if (!CreatePipelines()) {
 		return false;
 	}
 
+	mesh.AddVertices(vertices);
+	mesh.AddIndices(indices);
+	mesh.CreateBuffers(GetDevice());
+
 	return BuildCommandBuffers();
+}
+
+void VulkanSingleThreadedApplication::Update() noexcept
+{
+	using namespace std::chrono;
+
+	static auto startTime = high_resolution_clock::now();
+
+	auto currentTime = high_resolution_clock::now();
+	f32 time{ duration_cast<milliseconds>(currentTime - startTime).count() / 1000.0f };
+
+	UniformBufferObject ubo{};
+	ubo.model = Translate(Mat4f{}, Vec3f{ 0.0f, 0.0f, -0.5f });
+	ubo.model = Rotate(ubo.model, time * ToRadians(15.0f), Vec3f{ 0.0f, 1.0f, 0.0f });
+	ubo.view = LookAt(Vec3f{ 0.0f, 0.0f, 2.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
+	ubo.time = time;
+
+	auto swapChainExtent = GetSwapChain().GetExtent();
+
+	f32 aspect{ static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height) };
+
+	ubo.projection = clipCorrectionMat * Perspective(ToRadians(45.0f), aspect, 0.1f, 10.0f);
+
+	ubo.inverseTransposeModelView = Transpose(Inverse(ubo.view * ubo.model));
+
+	m_Ubo.Map(sizeof m_Ubo, 0);
+
+	m_Ubo.Fill(&ubo, sizeof ubo);
+
+	m_Ubo.Unmap();
 }
 
 void VulkanSingleThreadedApplication::Draw() noexcept
@@ -324,14 +411,13 @@ void VulkanSingleThreadedApplication::Draw() noexcept
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &GetCommandBuffers()[imageIndex];
 
-	//TODO: Fix this. Graphics queue is NULL.
 	result = vkQueueSubmit(graphicsQueue,
 	                       1,
 	                       &submitInfo,
 	                       VK_NULL_HANDLE);
 
 	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to submit the command buffer.");
+		ERROR_LOG("Failed to submit the command m_Buffer.");
 		return;
 	}
 
@@ -345,6 +431,106 @@ void VulkanSingleThreadedApplication::Draw() noexcept
 	}
 
 	vkQueueWaitIdle(graphicsQueue);
+}
+
+bool VulkanSingleThreadedApplication::CreateUniforms() noexcept
+{
+	//First create a descriptor pool to allocate descriptors from.
+	//Descriptors a.k.a uniforms
+
+	// For now only a Uniform Buffer is needed (UBO: uniform m_Buffer object)
+	VkDescriptorPoolSize uniformBufferPoolSize{};
+	uniformBufferPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uniformBufferPoolSize.descriptorCount = 1;
+
+	std::vector<VkDescriptorPoolSize> descriptorPoolSizes{ uniformBufferPoolSize };
+
+	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
+	descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	descriptorPoolCreateInfo.maxSets = 1;
+	descriptorPoolCreateInfo.poolSizeCount = static_cast<ui32>(descriptorPoolSizes.size());
+	descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
+
+	const auto& device = GetDevice();
+
+	VkResult result{ vkCreateDescriptorPool(device,
+	                                        &descriptorPoolCreateInfo,
+	                                        nullptr,
+	                                        &m_DescriptorPool) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create descriptor pool.");
+		return false;
+	}
+
+	//Now a descriptor set has to be created, but before that, it's layout
+	//has to be defined.
+	//First the bindings have to be defined...
+	VkDescriptorSetLayoutBinding vertexShaderUbo{};
+	vertexShaderUbo.binding = 0; //bind at location 0.
+	vertexShaderUbo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; //It's a uniform m_Buffer
+	vertexShaderUbo.descriptorCount = 1; //1 descriptor.
+	vertexShaderUbo.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; //bound to the vertex shader stage
+
+	std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings{ vertexShaderUbo };
+
+	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};
+	descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	descriptorSetLayoutCreateInfo.bindingCount = static_cast<ui32>(descriptorSetLayoutBindings.size());
+	descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
+
+	result = vkCreateDescriptorSetLayout(device,
+	                                     &descriptorSetLayoutCreateInfo,
+	                                     nullptr,
+	                                     &m_DescriptorSetLayout);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create descriptor set layout.");
+		return false;
+	}
+
+	//Finally allocate a descriptor set from the descriptor pool.
+	VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
+	descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	descriptorSetAllocateInfo.descriptorPool = m_DescriptorPool; //Allocate from this pool.
+	descriptorSetAllocateInfo.descriptorSetCount = 1; //1 descriptor set.
+	descriptorSetAllocateInfo.pSetLayouts = &m_DescriptorSetLayout; //With this layout.
+
+	result = vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &m_DescriptorSet);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to allocate descriptor set.");
+		return false;
+	}
+
+	// Create the m_Buffer that will store the uniforms.
+	if (!device.CreateBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+	                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	                         m_Ubo,
+	                         sizeof(UniformBufferObject))) {
+		ERROR_LOG("Failed to create uniform m_Buffer.");
+		return false;
+	}
+
+	//Now that the descriptor set is allocated we have to write into it and update the uniforms.
+	VkWriteDescriptorSet uniformDescriptorWrite{};
+	uniformDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	uniformDescriptorWrite.dstSet = m_DescriptorSet;
+	uniformDescriptorWrite.dstBinding = 0;
+	uniformDescriptorWrite.dstArrayElement = 0;
+	uniformDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uniformDescriptorWrite.descriptorCount = 1;
+	uniformDescriptorWrite.pBufferInfo = &m_Ubo.descriptorBufferInfo;
+
+	std::vector<VkWriteDescriptorSet> writeDescriptorSets{ uniformDescriptorWrite };
+
+	vkUpdateDescriptorSets(device,
+	                       static_cast<ui32>(writeDescriptorSets.size()),
+	                       writeDescriptorSets.data(),
+	                       0,
+	                       nullptr);
+
+	return true;
 }
 
 void VulkanSingleThreadedApplication::EnableFeatures() noexcept

@@ -1,5 +1,4 @@
 #include "vulkan_application.h"
-#include "../logger.h"
 
 // Private functions -------------------------------
 bool VulkanApplication::CreateInstance() noexcept
@@ -25,8 +24,8 @@ bool VulkanApplication::CreateInstance() noexcept
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
 	LOG("|- AVAILABLE VULKAN LAYERS:");
-    for (int i = 0; i < availableLayers.size(); ++i) {
-	    LOG("\t |- " + std::string{ availableLayers[i].layerName });
+    for (auto& availableLayer : availableLayers) {
+	    LOG("\t |- " + std::string{ availableLayer.layerName });
     }
 #endif
 
@@ -89,7 +88,7 @@ bool VulkanApplication::CreateRenderPasses() noexcept
 	depthAttachmentReference.attachment = 1;
 	depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-	VkSubpassDescription subpassDescription = {};
+	VkSubpassDescription subpassDescription{};
 	subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpassDescription.colorAttachmentCount = 1;
 	subpassDescription.pColorAttachments = &colorAttachmentReference;
@@ -101,7 +100,7 @@ bool VulkanApplication::CreateRenderPasses() noexcept
 	subpassDescription.pResolveAttachments = nullptr;
 
 	// Subpass dependencies for layout transitions
-	std::array<VkSubpassDependency, 2> dependencies;
+	std::array<VkSubpassDependency, 2> dependencies{};
 
 	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependencies[0].dstSubpass = 0;
@@ -347,6 +346,7 @@ i32 VulkanApplication::Run() noexcept
 	while (!glfwWindowShouldClose(m_Window)) {
 		glfwPollEvents();
 
+		Update();
 		Draw();
 	}
 

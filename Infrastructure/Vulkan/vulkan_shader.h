@@ -2,7 +2,7 @@
 #define VULKAN_SHADER_H
 
 #include <vulkan/vulkan.h>
-#include "../resource.h"
+#include "resource.h"
 
 class VulkanShader : public Resource {
 private:

@@ -1,8 +1,6 @@
 #include "vulkan_utilities.h"
-#include <string>
-#include <vector>
 #include <set>
-#include "../logger.h"
+#include "logger.h"
 
 namespace VulkanUtilities
 {

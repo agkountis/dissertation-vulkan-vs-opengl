@@ -10,7 +10,7 @@ struct VulkanBuffer {
 
 	VkDeviceMemory memory{ VK_NULL_HANDLE };
 
-	VkDescriptorBufferInfo descriptor;
+	VkDescriptorBufferInfo descriptorBufferInfo{};
 
 	VkDeviceSize size{ VK_NULL_HANDLE };
 
@@ -35,7 +35,6 @@ struct VulkanBuffer {
 	void InitializeDescriptor(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) noexcept;
 
 	void CleanUp() const noexcept;
-
 };
 
 #endif //VULKAN_BUFFER_H_
