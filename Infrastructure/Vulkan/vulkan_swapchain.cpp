@@ -121,11 +121,7 @@ bool VulkanSwapChain::InitializeSurface(const VulkanWindow& window) noexcept
 
 VulkanSwapChain::~VulkanSwapChain()
 {
-	for (const auto& imageView : m_ImageViews) {
-		vkDestroyImageView(m_LogicalDevice, imageView, nullptr);
-	}
-
-	vkDestroySwapchainKHR(m_LogicalDevice, m_SwapChain, nullptr);
+	Destroy();
 
 	vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 }
@@ -302,7 +298,11 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 			vkDestroyImageView(m_LogicalDevice, m_ImageViews[i], nullptr);
 		}
 
+		m_ImageViews.clear();
+
 		vkDestroySwapchainKHR(m_LogicalDevice, oldSwapChain, nullptr);
+
+		m_Images.clear();
 	}
 
 	result = vkGetSwapchainImagesKHR(m_LogicalDevice, m_SwapChain, &imageCount, nullptr);
@@ -406,4 +406,13 @@ VkResult VulkanSwapChain::Present(VkQueue presentQueue, ui32 imageIndex, VkSemap
 	}
 
 	return vkQueuePresentKHR(presentQueue, &presentInfo);
+}
+
+void VulkanSwapChain::Destroy() const noexcept
+{
+	for (const auto& imageView : m_ImageViews) {
+		vkDestroyImageView(m_LogicalDevice, imageView, nullptr);
+	}
+
+	vkDestroySwapchainKHR(m_LogicalDevice, m_SwapChain, nullptr);
 }

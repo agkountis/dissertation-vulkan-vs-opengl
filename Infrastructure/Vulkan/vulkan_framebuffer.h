@@ -18,6 +18,8 @@ public:
 	            const Vec2ui& size,
 	            VkRenderPass renderPass) noexcept;
 
+	void Destroy() const noexcept;
+
 	operator VkFramebuffer() const noexcept;
 };
 

@@ -28,6 +28,8 @@ public:
 	VkFormat GetFormat() const noexcept;
 
 	bool Create(const VulkanDevice& logicalDevice, const Vec2ui& size, VkFormat format) noexcept;
+
+	void Destroy() const noexcept;
 };
 
 #endif //VULKAN_DEPTH_STENCIL_H_

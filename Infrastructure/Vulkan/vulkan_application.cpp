@@ -7,6 +7,7 @@ bool VulkanApplication::CreateInstance() noexcept
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pApplicationName = GetSettings().name.c_str();
 	appInfo.pEngineName = GetSettings().name.c_str();
+	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 54);
 
 	auto instanceExtensions = m_Window.GetExtensions();
 
@@ -14,7 +15,7 @@ bool VulkanApplication::CreateInstance() noexcept
 	instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif
 
-    std::vector<const char *> layers;
+	std::vector<const char*> layers;
 #if !NDEBUG
 	layers.push_back("VK_LAYER_LUNARG_standard_validation");
 	uint32_t layerCount{ 0 };
@@ -24,12 +25,12 @@ bool VulkanApplication::CreateInstance() noexcept
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
 	LOG("|- AVAILABLE VULKAN LAYERS:");
-    for (auto& availableLayer : availableLayers) {
-	    LOG("\t |- " + std::string{ availableLayer.layerName });
-    }
+	for (auto& availableLayer : availableLayers) {
+		LOG("\t |- " + std::string{ availableLayer.layerName });
+	}
 #endif
 
-    return m_Instance.Create(appInfo, instanceExtensions, layers);
+	return m_Instance.Create(appInfo, instanceExtensions, layers);
 }
 
 bool VulkanApplication::CreateCommandBuffers() noexcept
@@ -162,7 +163,7 @@ bool VulkanApplication::CreateFramebuffers() noexcept
 // -------------------------------------------------
 
 VulkanApplication::VulkanApplication(const ApplicationSettings& settings)
-	: Application{ settings }
+		: Application{ settings }
 {
 }
 
@@ -170,7 +171,7 @@ VulkanApplication::~VulkanApplication()
 {
 	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
 
-	for(auto shader : m_Shaders) {
+	for (auto shader : m_Shaders) {
 		DestroyResource(shader);
 	}
 }
@@ -220,24 +221,14 @@ VkRenderPass VulkanApplication::GetRenderPass() const noexcept
 	return m_RenderPass;
 }
 
-const VulkanDepthStencil& VulkanApplication::GetDepthStencil() const noexcept
-{
-	return m_DepthStencil;
-}
-
-const VulkanSemaphore& VulkanApplication::GetPresentCompleteSemaphore() const noexcept
-{
-	return m_PresentComplete;
-}
-
-const VulkanSemaphore& VulkanApplication::GetDrawCompleteSemaphore() const noexcept
-{
-	return m_DrawComplete;
-}
-
 VkSubmitInfo& VulkanApplication::GetSubmitInfo() noexcept
 {
 	return m_SubmitInfo;
+}
+
+ui32 VulkanApplication::GetCurrentBufferIndex() const noexcept
+{
+	return m_CurrentBuffer;
 }
 
 VulkanShader* VulkanApplication::LoadShader(const std::string& fileName) noexcept
@@ -251,6 +242,54 @@ VulkanShader* VulkanApplication::LoadShader(const std::string& fileName) noexcep
 	m_Shaders.push_back(shader);
 
 	return shader;
+}
+
+bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
+{
+	vkDeviceWaitIdle(m_Device);
+
+	m_SwapChain.Create(size, GetSettings().vsync);
+
+	m_DepthStencil.Destroy();
+
+	if (!m_DepthStencil.Create(m_Device,
+	                           size,
+	                           m_Device.GetPhysicalDevice().GetSupportedDepthFormat())) {
+		return false;
+	}
+
+	for (ui32 i = 0; i < m_SwapChainFrameBuffers.size(); ++i) {
+		m_SwapChainFrameBuffers[i].Destroy();
+
+		std::vector<VkImageView> imageViews{ m_SwapChain.GetImageViews()[i],
+		                                     m_DepthStencil.GetImageView() };
+
+		if (!m_SwapChainFrameBuffers[i].Create(m_Device,
+		                                       imageViews,
+		                                       size,
+		                                       m_RenderPass)) {
+			return false;
+		}
+	}
+
+	vkFreeCommandBuffers(m_Device,
+	                     m_CommandPool,
+	                     static_cast<ui32>(m_DrawCommandBuffers.size()),
+	                     m_DrawCommandBuffers.data());
+
+	if (!CreateCommandBuffers()) {
+		return false;
+	}
+
+	if (!BuildCommandBuffers()) {
+		return false;
+	}
+
+	vkDeviceWaitIdle(m_Device);
+
+	OnResize(size);
+
+	return true;
 }
 
 bool VulkanApplication::Initialize() noexcept
@@ -317,7 +356,6 @@ bool VulkanApplication::Initialize() noexcept
 	m_SubmitInfo.signalSemaphoreCount = 1;
 	m_SubmitInfo.pSignalSemaphores = &m_DrawComplete;
 
-	//TODO: The VulkanDevice class already has a command pool allocated. Do I need 2 of them?
 	if (!m_CommandPool.Create(m_Device, m_SwapChain.GetQueueIndex(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)) {
 		return false;
 	}
@@ -334,11 +372,7 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	if (!CreateFramebuffers()) {
-		return false;
-	}
-
-	return true;
+	return CreateFramebuffers();
 }
 
 i32 VulkanApplication::Run() noexcept
@@ -351,4 +385,35 @@ i32 VulkanApplication::Run() noexcept
 	}
 
 	return 0;
+}
+
+void VulkanApplication::PreDraw() noexcept
+{
+	VkResult result{ m_SwapChain.GetNextImageIndex(m_PresentComplete,
+	                                               m_CurrentBuffer) };
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		const auto& extent = m_SwapChain.GetExtent();
+		Reshape(Vec2i{extent.width, extent.height});
+		return;
+	}
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to acquire swap chain image.");
+		return;
+	}
+}
+
+void VulkanApplication::PostDraw() noexcept
+{
+	VkResult result{ m_SwapChain.Present(m_Device.GetQueue(QueueFamily::GRAPHICS),
+	                                     m_CurrentBuffer,
+	                                     m_DrawComplete) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to present swap chain image.");
+		return;
+	}
+
+	vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::GRAPHICS));
 }

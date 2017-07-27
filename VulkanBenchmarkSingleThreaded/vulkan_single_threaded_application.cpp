@@ -39,6 +39,121 @@ const std::vector<ui32> indices{
 		0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 5, 7, 8, 9, 10, 10, 9, 11, 12, 13, 14, 14, 13, 15
 };
 
+//Private functions ---------------------------------------------------------------------------
+void VulkanSingleThreadedApplication::EnableFeatures() noexcept
+{
+	const auto& physicalDevice = GetDevice().GetPhysicalDevice();
+
+	auto& featuresToEnable = GetFeaturesToEnable();
+	if (physicalDevice.features.samplerAnisotropy) {
+		featuresToEnable.samplerAnisotropy = VK_TRUE;
+	}
+
+	if (physicalDevice.features.fillModeNonSolid) {
+		featuresToEnable.fillModeNonSolid = VK_TRUE;
+	}
+}
+
+bool VulkanSingleThreadedApplication::CreateUniforms() noexcept
+{
+	//First create a descriptor pool to allocate descriptors from.
+	//Descriptors a.k.a uniforms
+
+	// For now only a Uniform Buffer is needed (UBO: uniform m_Buffer object)
+	VkDescriptorPoolSize uniformBufferPoolSize{};
+	uniformBufferPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uniformBufferPoolSize.descriptorCount = 1;
+
+	std::vector<VkDescriptorPoolSize> descriptorPoolSizes{ uniformBufferPoolSize };
+
+	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
+	descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	descriptorPoolCreateInfo.maxSets = 1;
+	descriptorPoolCreateInfo.poolSizeCount = static_cast<ui32>(descriptorPoolSizes.size());
+	descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
+
+	const auto& device = GetDevice();
+
+	VkResult result{ vkCreateDescriptorPool(device,
+	                                        &descriptorPoolCreateInfo,
+	                                        nullptr,
+	                                        &m_DescriptorPool) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create descriptor pool.");
+		return false;
+	}
+
+	//Now a descriptor set has to be created, but before that, it's layout
+	//has to be defined.
+	//First the bindings have to be defined...
+	VkDescriptorSetLayoutBinding vertexShaderUbo{};
+	vertexShaderUbo.binding = 0; //bind at location 0.
+	vertexShaderUbo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; //It's a uniform m_Buffer
+	vertexShaderUbo.descriptorCount = 1; //1 descriptor.
+	vertexShaderUbo.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; //bound to the vertex shader stage
+
+	std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings{ vertexShaderUbo };
+
+	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};
+	descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	descriptorSetLayoutCreateInfo.bindingCount = static_cast<ui32>(descriptorSetLayoutBindings.size());
+	descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
+
+	result = vkCreateDescriptorSetLayout(device,
+	                                     &descriptorSetLayoutCreateInfo,
+	                                     nullptr,
+	                                     &m_DescriptorSetLayout);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create descriptor set layout.");
+		return false;
+	}
+
+	//Finally allocate a descriptor set from the descriptor pool.
+	VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
+	descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	descriptorSetAllocateInfo.descriptorPool = m_DescriptorPool; //Allocate from this pool.
+	descriptorSetAllocateInfo.descriptorSetCount = 1; //1 descriptor set.
+	descriptorSetAllocateInfo.pSetLayouts = &m_DescriptorSetLayout; //With this layout.
+
+	result = vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &m_DescriptorSet);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to allocate descriptor set.");
+		return false;
+	}
+
+	// Create the m_Buffer that will store the uniforms.
+	if (!device.CreateBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+	                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	                         m_Ubo,
+	                         sizeof(UniformBufferObject))) {
+		ERROR_LOG("Failed to create uniform m_Buffer.");
+		return false;
+	}
+
+	//Now that the descriptor set is allocated we have to write into it and update the uniforms.
+	VkWriteDescriptorSet uniformDescriptorWrite{};
+	uniformDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	uniformDescriptorWrite.dstSet = m_DescriptorSet;
+	uniformDescriptorWrite.dstBinding = 0;
+	uniformDescriptorWrite.dstArrayElement = 0;
+	uniformDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uniformDescriptorWrite.descriptorCount = 1;
+	uniformDescriptorWrite.pBufferInfo = &m_Ubo.descriptorBufferInfo;
+
+	std::vector<VkWriteDescriptorSet> writeDescriptorSets{ uniformDescriptorWrite };
+
+	vkUpdateDescriptorSets(device,
+	                       static_cast<ui32>(writeDescriptorSets.size()),
+	                       writeDescriptorSets.data(),
+	                       0,
+	                       nullptr);
+
+	return true;
+}
+
 bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 {
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState{};
@@ -156,7 +271,6 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages{ vertexShaderStage,
 	                                                           fragmentShaderStage };
-
 
 	//Create the pipeline layout.
 	//Here we specify to the the pipeline if we use an push constants or descriptor sets.
@@ -313,6 +427,8 @@ bool VulkanSingleThreadedApplication::BuildCommandBuffers() noexcept
 	return true;
 }
 
+//---------------------------------------------------------------------------------------------
+
 VulkanSingleThreadedApplication::VulkanSingleThreadedApplication(const ApplicationSettings& settings)
 		: VulkanApplication{ settings }
 {
@@ -369,7 +485,6 @@ void VulkanSingleThreadedApplication::Update() noexcept
 	ubo.model = Translate(Mat4f{}, Vec3f{ 0.0f, 0.0f, -0.5f });
 	ubo.model = Rotate(ubo.model, time * ToRadians(15.0f), Vec3f{ 0.0f, 1.0f, 0.0f });
 	ubo.view = LookAt(Vec3f{ 0.0f, 0.0f, 2.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
-	ubo.time = time;
 
 	auto swapChainExtent = GetSwapChain().GetExtent();
 
@@ -388,161 +503,26 @@ void VulkanSingleThreadedApplication::Update() noexcept
 
 void VulkanSingleThreadedApplication::Draw() noexcept
 {
-	ui32 imageIndex;
-
-	const VulkanSwapChain& swapChain{ GetSwapChain() };
-
-	VkQueue graphicsQueue{ GetDevice().GetQueue(QueueFamily::GRAPHICS) };
-
-	VkResult result{ swapChain.GetNextImageIndex(GetPresentCompleteSemaphore(),
-	                                             imageIndex) };
-
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-		//recreate_swapchain();
-		return;
-	}
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to acquire swap chain image.");
-		return;
-	}
+	PreDraw();
 
 	auto& submitInfo = GetSubmitInfo();
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &GetCommandBuffers()[imageIndex];
+	submitInfo.pCommandBuffers = &GetCommandBuffers()[GetCurrentBufferIndex()];
 
-	result = vkQueueSubmit(graphicsQueue,
-	                       1,
-	                       &submitInfo,
-	                       VK_NULL_HANDLE);
+	VkResult result{ vkQueueSubmit(GetDevice().GetQueue(QueueFamily::GRAPHICS),
+	                               1,
+	                               &submitInfo,
+	                               VK_NULL_HANDLE) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to submit the command m_Buffer.");
 		return;
 	}
 
-	result = GetSwapChain().Present(graphicsQueue,
-	                                imageIndex,
-	                                GetDrawCompleteSemaphore());
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to present swap chain image.");
-		return;
-	}
-
-	vkQueueWaitIdle(graphicsQueue);
+	PostDraw();
 }
 
-bool VulkanSingleThreadedApplication::CreateUniforms() noexcept
+void VulkanSingleThreadedApplication::OnResize(const Vec2i& size) noexcept
 {
-	//First create a descriptor pool to allocate descriptors from.
-	//Descriptors a.k.a uniforms
-
-	// For now only a Uniform Buffer is needed (UBO: uniform m_Buffer object)
-	VkDescriptorPoolSize uniformBufferPoolSize{};
-	uniformBufferPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uniformBufferPoolSize.descriptorCount = 1;
-
-	std::vector<VkDescriptorPoolSize> descriptorPoolSizes{ uniformBufferPoolSize };
-
-	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
-	descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	descriptorPoolCreateInfo.maxSets = 1;
-	descriptorPoolCreateInfo.poolSizeCount = static_cast<ui32>(descriptorPoolSizes.size());
-	descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
-
-	const auto& device = GetDevice();
-
-	VkResult result{ vkCreateDescriptorPool(device,
-	                                        &descriptorPoolCreateInfo,
-	                                        nullptr,
-	                                        &m_DescriptorPool) };
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to create descriptor pool.");
-		return false;
-	}
-
-	//Now a descriptor set has to be created, but before that, it's layout
-	//has to be defined.
-	//First the bindings have to be defined...
-	VkDescriptorSetLayoutBinding vertexShaderUbo{};
-	vertexShaderUbo.binding = 0; //bind at location 0.
-	vertexShaderUbo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; //It's a uniform m_Buffer
-	vertexShaderUbo.descriptorCount = 1; //1 descriptor.
-	vertexShaderUbo.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; //bound to the vertex shader stage
-
-	std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings{ vertexShaderUbo };
-
-	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};
-	descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	descriptorSetLayoutCreateInfo.bindingCount = static_cast<ui32>(descriptorSetLayoutBindings.size());
-	descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
-
-	result = vkCreateDescriptorSetLayout(device,
-	                                     &descriptorSetLayoutCreateInfo,
-	                                     nullptr,
-	                                     &m_DescriptorSetLayout);
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to create descriptor set layout.");
-		return false;
-	}
-
-	//Finally allocate a descriptor set from the descriptor pool.
-	VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
-	descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	descriptorSetAllocateInfo.descriptorPool = m_DescriptorPool; //Allocate from this pool.
-	descriptorSetAllocateInfo.descriptorSetCount = 1; //1 descriptor set.
-	descriptorSetAllocateInfo.pSetLayouts = &m_DescriptorSetLayout; //With this layout.
-
-	result = vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &m_DescriptorSet);
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to allocate descriptor set.");
-		return false;
-	}
-
-	// Create the m_Buffer that will store the uniforms.
-	if (!device.CreateBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-	                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-	                         m_Ubo,
-	                         sizeof(UniformBufferObject))) {
-		ERROR_LOG("Failed to create uniform m_Buffer.");
-		return false;
-	}
-
-	//Now that the descriptor set is allocated we have to write into it and update the uniforms.
-	VkWriteDescriptorSet uniformDescriptorWrite{};
-	uniformDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	uniformDescriptorWrite.dstSet = m_DescriptorSet;
-	uniformDescriptorWrite.dstBinding = 0;
-	uniformDescriptorWrite.dstArrayElement = 0;
-	uniformDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uniformDescriptorWrite.descriptorCount = 1;
-	uniformDescriptorWrite.pBufferInfo = &m_Ubo.descriptorBufferInfo;
-
-	std::vector<VkWriteDescriptorSet> writeDescriptorSets{ uniformDescriptorWrite };
-
-	vkUpdateDescriptorSets(device,
-	                       static_cast<ui32>(writeDescriptorSets.size()),
-	                       writeDescriptorSets.data(),
-	                       0,
-	                       nullptr);
-
-	return true;
-}
-
-void VulkanSingleThreadedApplication::EnableFeatures() noexcept
-{
-	const auto& physicalDevice = GetDevice().GetPhysicalDevice();
-
-	auto& featuresToEnable = GetFeaturesToEnable();
-	if (physicalDevice.features.samplerAnisotropy) {
-		featuresToEnable.samplerAnisotropy = VK_TRUE;
-	}
-
-	if (physicalDevice.features.fillModeNonSolid) {
-		featuresToEnable.fillModeNonSolid = VK_TRUE;
-	}
+	LOG("RESIZE EVENT!");
 }

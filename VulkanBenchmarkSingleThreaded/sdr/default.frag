@@ -21,7 +21,7 @@ void main()
 
     float specLight = pow(max(dot(n, h), 0.0), 60.0);
 
-    vec4 diffColor = vec4(inVertexColor, 1.0);
+    vec4 diffColor = vec4(n * 0.5 + 0.5, 1.0);
 
     vec4 specColor = vec4(1.0);
 

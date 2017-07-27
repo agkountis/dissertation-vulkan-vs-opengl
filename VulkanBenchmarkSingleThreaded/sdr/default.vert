@@ -14,7 +14,6 @@ layout(binding = 0) uniform UniformBufferObject {
 	mat4 view;
 	mat4 projection;
 	mat4 inverseTransposeModelView;
-	float time;
 } ubo;
 
 out gl_PerVertex {
@@ -46,7 +45,7 @@ void main()
     v_OutViewDirection = -v_vertexPosition;
 
     //Move the light to view space.
-    vec3 v_lightPosition = (ubo.view * vec4(0.0, 0.0, 5.0, 1.0)).xyz;
+    vec3 v_lightPosition = (ubo.view * vec4(0.0, 0.0, 2.0, 1.0)).xyz;
 
     //Calculate and assign the light direction for output.
     v_OutlightDirection = v_lightPosition - v_vertexPosition;

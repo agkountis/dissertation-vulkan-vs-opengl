@@ -4,7 +4,7 @@
 
 VulkanFramebuffer::~VulkanFramebuffer()
 {
-	vkDestroyFramebuffer(m_pLogicalDevice, m_Framebuffer, nullptr);
+	Destroy();
 }
 
 bool VulkanFramebuffer::Create(VkDevice logicalDevice,
@@ -31,6 +31,11 @@ bool VulkanFramebuffer::Create(VkDevice logicalDevice,
 	}
 
 	return true;
+}
+
+void VulkanFramebuffer::Destroy() const noexcept
+{
+	vkDestroyFramebuffer(m_pLogicalDevice, m_Framebuffer, nullptr);
 }
 
 VulkanFramebuffer::operator VkFramebuffer() const noexcept

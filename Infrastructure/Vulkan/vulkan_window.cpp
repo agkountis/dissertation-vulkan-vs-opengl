@@ -9,10 +9,8 @@ void VulkanWindow::OnWindowResize(GLFWwindow* window, i32 width, i32 height) noe
 
 	app->GetWindow().SetSize(Vec2ui{ width, height });
 
-	//TODO: recreate the swapchain and resources that depend on it.
-	//TODO: call the application's reshape.
+	app->Reshape(Vec2i{width, height});
 }
-
 //----------------------------------------
 
 VulkanWindow::~VulkanWindow()

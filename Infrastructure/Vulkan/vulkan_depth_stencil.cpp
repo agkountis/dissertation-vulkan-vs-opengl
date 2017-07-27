@@ -5,11 +5,7 @@
 
 VulkanDepthStencil::~VulkanDepthStencil()
 {
-	vkDestroyImage(m_pLogicalDevice, m_Image, nullptr);
-
-	vkFreeMemory(m_pLogicalDevice, m_Memory, nullptr);
-
-	vkDestroyImageView(m_pLogicalDevice, m_ImageView, nullptr);
+	Destroy();
 }
 
 VkImageView VulkanDepthStencil::GetImageView() const noexcept
@@ -94,4 +90,13 @@ bool VulkanDepthStencil::Create(const VulkanDevice& logicalDevice, const Vec2ui&
 	m_Format = format;
 
 	return true;
+}
+
+void VulkanDepthStencil::Destroy() const noexcept
+{
+	vkDestroyImage(m_pLogicalDevice, m_Image, nullptr);
+
+	vkFreeMemory(m_pLogicalDevice, m_Memory, nullptr);
+
+	vkDestroyImageView(m_pLogicalDevice, m_ImageView, nullptr);
 }

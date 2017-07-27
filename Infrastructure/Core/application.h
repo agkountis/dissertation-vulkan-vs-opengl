@@ -24,7 +24,7 @@ private:
 	ResourceManager m_ResourceManager;
 
 public:
-	Application(const ApplicationSettings& settings);
+	explicit Application(const ApplicationSettings& settings);
 
 	Application(const Application& application) = delete;
 
@@ -63,7 +63,13 @@ public:
 
 	virtual void Update() noexcept = 0;
 
+	virtual void PreDraw() noexcept = 0;
+
 	virtual void Draw() noexcept = 0;
+
+	virtual void PostDraw() noexcept = 0;
+
+	virtual void OnResize(const Vec2i& size) noexcept = 0;
 };
 
 #endif // APPLICATION_H_

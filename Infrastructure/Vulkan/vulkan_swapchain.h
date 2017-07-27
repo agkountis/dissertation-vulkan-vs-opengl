@@ -59,6 +59,8 @@ public:
 	VkResult GetNextImageIndex(VkSemaphore presentComplete, ui32& index) const noexcept;
 
 	VkResult Present(VkQueue presentQueue, ui32 imageIndex, VkSemaphore waitSemaphore) const noexcept;
+
+	void Destroy() const noexcept;
 };
 
 #endif //VULKAN_SWAPCHAIN_H_

@@ -40,13 +40,15 @@ private:
 public:
 	explicit VulkanSingleThreadedApplication(const ApplicationSettings& settings);
 
-	~VulkanSingleThreadedApplication();
+	~VulkanSingleThreadedApplication() override;
 
 	bool Initialize() noexcept override;
 
 	void Update() noexcept override;
 
 	void Draw() noexcept override;
+
+	void OnResize(const Vec2i& size) noexcept override;
 };
 
 #endif // VULKAN_SINGLE_THREADED_APPLICATION_H_
