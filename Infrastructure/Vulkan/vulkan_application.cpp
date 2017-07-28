@@ -246,14 +246,13 @@ VulkanShader* VulkanApplication::LoadShader(const std::string& fileName) noexcep
 
 bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 {
-	vkDeviceWaitIdle(m_Device);
-
 	m_SwapChain.Create(size, GetSettings().vsync);
 
 	m_DepthStencil.Destroy();
 
+	VkExtent2D extent = m_SwapChain.GetExtent();
 	if (!m_DepthStencil.Create(m_Device,
-	                           size,
+	                           Vec2ui{extent.width, extent.height},
 	                           m_Device.GetPhysicalDevice().GetSupportedDepthFormat())) {
 		return false;
 	}
@@ -266,7 +265,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 
 		if (!m_SwapChainFrameBuffers[i].Create(m_Device,
 		                                       imageViews,
-		                                       size,
+		                                       Vec2ui{extent.width, extent.height},
 		                                       m_RenderPass)) {
 			return false;
 		}
@@ -276,6 +275,8 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 	                     m_CommandPool,
 	                     static_cast<ui32>(m_DrawCommandBuffers.size()),
 	                     m_DrawCommandBuffers.data());
+
+	m_DrawCommandBuffers.clear();
 
 	if (!CreateCommandBuffers()) {
 		return false;
@@ -287,7 +288,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 
 	vkDeviceWaitIdle(m_Device);
 
-	OnResize(size);
+	OnResize(Vec2ui{extent.width, extent.height});
 
 	return true;
 }
@@ -392,28 +393,25 @@ void VulkanApplication::PreDraw() noexcept
 	VkResult result{ m_SwapChain.GetNextImageIndex(m_PresentComplete,
 	                                               m_CurrentBuffer) };
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+	while(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		const auto& extent = m_SwapChain.GetExtent();
 		Reshape(Vec2i{extent.width, extent.height});
-		return;
-	}
 
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to acquire swap chain image.");
-		return;
+		result = m_SwapChain.GetNextImageIndex(m_PresentComplete,
+		                                       m_CurrentBuffer);
 	}
 }
 
 void VulkanApplication::PostDraw() noexcept
 {
-	VkResult result{ m_SwapChain.Present(m_Device.GetQueue(QueueFamily::GRAPHICS),
+	VkResult result{ m_SwapChain.Present(m_Device.GetQueue(QueueFamily::PRESENT),
 	                                     m_CurrentBuffer,
 	                                     m_DrawComplete) };
 
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to present swap chain image.");
-		return;
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		const auto& extent = m_SwapChain.GetExtent();
+		Reshape(Vec2i{extent.width, extent.height});
 	}
 
-	vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::GRAPHICS));
+	vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::PRESENT));
 }

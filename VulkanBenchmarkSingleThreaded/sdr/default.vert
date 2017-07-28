@@ -33,13 +33,14 @@ layout(location = 4) out vec3 outVertexColor;
 void main()
 {
     //Transform vertex to clipspace.
-    gl_Position = ubo.projection * ubo.view * ubo.model * vec4(inPosition, 1.0);
+    vec4 localVertexPosition = vec4(inPosition, 1.0);
+    gl_Position = ubo.projection * ubo.view * ubo.model * localVertexPosition;
 
     //Calculate the normal.
     outNormal = normalize(ubo.inverseTransposeModelView * vec4(inNormal, 0.0)).xyz;
 
     //Move the vertex in view space.
-    vec3 v_vertexPosition = (ubo.view * vec4(inPosition, 1.0)).xyz;
+    vec3 v_vertexPosition = (ubo.view * ubo.model * localVertexPosition).xyz;
 
     //Assign the view direction for output.
     v_OutViewDirection = -v_vertexPosition;

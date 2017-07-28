@@ -292,6 +292,8 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	// This also cleans up all the presentable images
 	if (oldSwapChain != VK_NULL_HANDLE) {
 
+		vkDeviceWaitIdle(m_LogicalDevice);
+
 		LOG("Destroying old swapchain.");
 
 		for (ui32 i = 0; i < imageCount; i++) {
