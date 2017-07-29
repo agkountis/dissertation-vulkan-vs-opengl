@@ -389,7 +389,7 @@ VkResult VulkanSwapChain::GetNextImageIndex(VkSemaphore presentComplete, ui32& i
 	                             m_SwapChain,
 	                             std::numeric_limits<ui64>::max(),
 	                             presentComplete,
-	                             nullptr,
+	                             VK_NULL_HANDLE,
 	                             &index);
 }
 
@@ -402,7 +402,7 @@ VkResult VulkanSwapChain::Present(VkQueue presentQueue, ui32 imageIndex, VkSemap
 	presentInfo.pSwapchains = &m_SwapChain;
 	presentInfo.pImageIndices = &imageIndex;
 
-	if (waitSemaphore != nullptr) {
+	if (waitSemaphore != VK_NULL_HANDLE) {
 		presentInfo.pWaitSemaphores = &waitSemaphore;
 		presentInfo.waitSemaphoreCount = 1;
 	}

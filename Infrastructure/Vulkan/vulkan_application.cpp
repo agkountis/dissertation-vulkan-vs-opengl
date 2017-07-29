@@ -1,4 +1,5 @@
 #include "vulkan_application.h"
+#include <array>
 
 // Private functions -------------------------------
 bool VulkanApplication::CreateInstance() noexcept

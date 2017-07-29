@@ -1,5 +1,3 @@
-project(VulkanInfrastructure)
-
 set(SOURCE_FILES vulkan_application.cpp
         vulkan_application.h
         vulkan_buffer.cpp
@@ -51,7 +49,13 @@ if(APPLE)
     set(VULKAN_LIB "/Users/gordath/Downloads/Molten-0.18.0/MoltenVK/macOS/libMoltenVK.dylib")
     set(LIBRARIES ${LIBRARIES} ${COCOA} ${METAL} ${QUARTZ_CORE} ${VULKAN_LIB})
 elseif(MSVC)
-    #setup visual studio paths
+	include_directories(C:/usr/include)
+    include_directories(C:/VulkanSDK/1.0.54.0/Include)
+
+	set(VULKAN_LIB C:/VulkanSDK/1.0.54.0/Lib32/vulkan-1.lib)
+	set(GLFW_LIB C:/usr/lib/glfw3.lib)
+
+	set(LIBRARIES ${LIBRARIES} ${VULKAN_LIB} ${GLFW_LIB})
 elseif(MINGW)
     #handle mingw
 else()

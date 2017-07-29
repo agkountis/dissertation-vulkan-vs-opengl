@@ -387,7 +387,7 @@ bool VulkanDevice::CopyBuffer(const VulkanBuffer& source,
 	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fenceCreateInfo.flags = VK_NULL_HANDLE;
 
-	VkFence fence{ nullptr };
+	VkFence fence{ VK_NULL_HANDLE };
 
 	result = vkCreateFence(m_LogicalDevice, &fenceCreateInfo, nullptr, &fence);
 
@@ -418,6 +418,8 @@ VkQueue VulkanDevice::GetQueue(QueueFamily queueFamily) const noexcept
 			return m_TransferQueue;
 		case QueueFamily::COMPUTE:
 			return m_ComputeQueue;
+		default:
+			return nullptr;
 	}
 }
 

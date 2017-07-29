@@ -8,7 +8,7 @@ class VulkanShader : public Resource {
 private:
 	VkDevice m_pLogicalDevice{ nullptr };
 
-	VkShaderModule m_ShaderModule{ nullptr };
+	VkShaderModule m_ShaderModule{ VK_NULL_HANDLE };
 
 public:
 	VulkanShader(VkDevice logicalDevice);

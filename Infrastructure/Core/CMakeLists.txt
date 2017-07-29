@@ -1,5 +1,3 @@
-project(CoreInfrastructure)
-
 set(SOURCE_FILES application.cpp
         application.h
         entity.h
@@ -10,5 +8,9 @@ set(SOURCE_FILES application.cpp
         types.h
         window.cpp
         window.h vertex.h mesh.h mesh.cpp math_utilities.h)
+
+if(MSVC)
+	include_directories(C:/usr/include)
+endif()
 
 add_library(CoreInfrastructure ${SOURCE_FILES})

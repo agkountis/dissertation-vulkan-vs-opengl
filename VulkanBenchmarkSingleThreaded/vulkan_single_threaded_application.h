@@ -13,17 +13,17 @@ struct UniformBufferObject {
 
 class VulkanSingleThreadedApplication : public VulkanApplication {
 private:
-	VkPipeline m_Pipeline{ nullptr };
+	VkPipeline m_Pipeline{ VK_NULL_HANDLE };
 
-	VkPipeline m_WireframePipeline{ nullptr };
+	VkPipeline m_WireframePipeline{ VK_NULL_HANDLE };
 
-	VkPipelineLayout m_PipelineLayout{ nullptr };
+	VkPipelineLayout m_PipelineLayout{ VK_NULL_HANDLE };
 
-	VkDescriptorPool m_DescriptorPool{ nullptr };
+	VkDescriptorPool m_DescriptorPool{ VK_NULL_HANDLE };
 
-	VkDescriptorSetLayout m_DescriptorSetLayout{ nullptr };
+	VkDescriptorSetLayout m_DescriptorSetLayout{ VK_NULL_HANDLE };
 
-	VkDescriptorSet m_DescriptorSet{ nullptr };
+	VkDescriptorSet m_DescriptorSet{ VK_NULL_HANDLE };
 
 	VulkanBuffer m_Ubo;
 

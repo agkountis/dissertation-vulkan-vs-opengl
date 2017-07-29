@@ -142,7 +142,7 @@ public:
 
 	VkCommandBuffer CreateCommandBuffer(VkCommandBufferLevel commandBufferLevel) const noexcept;
 
-	bool SubmitCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, VkFence fence = nullptr) const noexcept;
+	bool SubmitCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, VkFence fence = VK_NULL_HANDLE) const noexcept;
 
 	/**
 	 * \brief Copies the contents of the source buffer to the destination buffer.
