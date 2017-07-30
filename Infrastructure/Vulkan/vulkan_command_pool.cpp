@@ -1,21 +1,20 @@
 #include "vulkan_command_pool.h"
 #include "logger.h"
+#include "vulkan_infrastructure_context.h"
 
 
 VulkanCommandPool::~VulkanCommandPool()
 {
-	vkDestroyCommandPool(m_pLogicalDevice, m_CommandPool, nullptr);
+	vkDestroyCommandPool(G_VulkanDevice, m_CommandPool, nullptr);
 }
 
-bool VulkanCommandPool::Create(VkDevice logicalDevice, ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags) noexcept
+bool VulkanCommandPool::Create(ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags) noexcept
 {
-	m_pLogicalDevice = logicalDevice;
-
 	VkCommandPoolCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	createInfo.queueFamilyIndex = queueFamilyIndex;
 	createInfo.flags = createFlags;
-	VkResult result{ vkCreateCommandPool(m_pLogicalDevice, &createInfo, nullptr, &m_CommandPool) };
+	VkResult result{ vkCreateCommandPool(G_VulkanDevice, &createInfo, nullptr, &m_CommandPool) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create command pool.");

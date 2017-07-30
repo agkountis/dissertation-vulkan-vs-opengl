@@ -21,8 +21,6 @@ private:
 
 	ApplicationSettings m_Settings;
 
-	ResourceManager m_ResourceManager;
-
 public:
 	explicit Application(const ApplicationSettings& settings);
 
@@ -41,21 +39,6 @@ public:
 	const ApplicationSettings& GetSettings() const noexcept;
 
 	void SetSettings(const ApplicationSettings& settings) noexcept;
-
-	template<typename T, typename... Args>
-	T* GetResource(const std::string fileName, Args&&... args) noexcept
-	{
-		return m_ResourceManager.Get<T>(fileName, std::forward<Args>(args)...);
-	}
-
-	void RegisterResource(Resource* resource, const std::string& name) noexcept
-	{
-		m_ResourceManager.RegisterResource(resource, name);
-	}
-
-	void DestroyResource(const std::string& name) noexcept;
-
-	void DestroyResource(Resource* resource) noexcept;
 
 	virtual bool Initialize() noexcept = 0;
 

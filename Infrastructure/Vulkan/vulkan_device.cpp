@@ -71,7 +71,7 @@ bool VulkanDevice::PickPhysicalDevice(VkInstance instance)
 		}
 
 		for (const auto& extension : extensions) {
-			m_PhysicalDevice.supportedExtensions.push_back(std::string{ extension.extensionName });
+			m_PhysicalDevice.supportedExtensions.emplace_back(extension.extensionName);
 		}
 	}
 
@@ -96,7 +96,7 @@ bool VulkanDevice::Initialize(VkInstance instance) noexcept
 }
 
 bool VulkanDevice::CreateLogicalDevice(VkPhysicalDeviceFeatures featuresToEnable,
-                                       std::vector<const char *> extensionsToEnable,
+                                       std::vector<const char*> extensionsToEnable,
                                        bool useSwapChain,
                                        VkQueueFlags requestedQueueTypes)
 {
@@ -168,7 +168,7 @@ bool VulkanDevice::CreateLogicalDevice(VkPhysicalDeviceFeatures featuresToEnable
 		m_QueueFamilyIndices.transfer = m_QueueFamilyIndices.graphics;
 	}
 
-	std::vector<const char *> deviceExtensions{ std::move(extensionsToEnable) };
+	std::vector<const char*> deviceExtensions{ std::move(extensionsToEnable) };
 	if (useSwapChain) {
 		// If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
 		deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
@@ -227,7 +227,8 @@ ui32 VulkanDevice::GetMemoryTypeIndex(ui32 memoryTypeMask, VkMemoryPropertyFlags
 	return std::numeric_limits<ui32>::max();
 }
 
-VkCommandPool VulkanDevice::CreateCommandPool(ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags) const noexcept
+VkCommandPool
+VulkanDevice::CreateCommandPool(ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags) const noexcept
 {
 	VkCommandPoolCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -244,10 +245,8 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
                                 VkMemoryPropertyFlags memoryPropertyFlags,
                                 VulkanBuffer& buffer,
                                 VkDeviceSize size,
-                                void *data) const noexcept
+                                void* data) const noexcept
 {
-	buffer.pLogicalDevice = m_LogicalDevice;
-
 	// Create the m_Buffer handle
 	VkBufferCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -263,9 +262,9 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 	VkMemoryRequirements memoryRequirements{};
 	vkGetBufferMemoryRequirements(m_LogicalDevice, buffer.buffer, &memoryRequirements);
 
-	VkMemoryAllocateInfo allocateInfo{};
-	allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocateInfo.allocationSize = memoryRequirements.size;
+	VkMemoryAllocateInfo memoryAllocateInfo{};
+	memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	memoryAllocateInfo.allocationSize = memoryRequirements.size;
 
 	ui32 memoryTypeIndex{ GetMemoryTypeIndex(memoryRequirements.memoryTypeBits, memoryPropertyFlags) };
 
@@ -273,9 +272,9 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 		return false;
 	}
 
-	allocateInfo.memoryTypeIndex = memoryTypeIndex;
+	memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
 
-	result = vkAllocateMemory(m_LogicalDevice, &allocateInfo, nullptr, &buffer.memory);
+	result = vkAllocateMemory(m_LogicalDevice, &memoryAllocateInfo, nullptr, &buffer.memory);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to allocate m_Buffer m_Memory");
@@ -283,7 +282,7 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 	}
 
 	buffer.memoryAlignment = memoryRequirements.alignment;
-	buffer.size = allocateInfo.allocationSize;
+	buffer.size = memoryAllocateInfo.allocationSize;
 	buffer.usageFlags = usageFlags;
 	buffer.memoryPropertyFlags = memoryPropertyFlags;
 
@@ -304,9 +303,66 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 	result = buffer.Bind();
 
 	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to bind m_Buffer m_Memory");
+		ERROR_LOG("Failed to bind buffer memory");
 		return false;
 	}
+
+	return true;
+}
+
+bool VulkanDevice::CreateImage(const Vec2ui& imageDimensions,
+                               VkFormat format,
+                               VkImageTiling imageTiling,
+                               VkImageUsageFlags imageUsageFlags,
+                               VkMemoryPropertyFlags memoryPropertyFlags,
+                               VkImage& image,
+                               VkDeviceMemory& imageMemory) const noexcept
+{
+	VkImageCreateInfo imageCreateInfo{};
+	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageCreateInfo.extent.width = imageDimensions.x;
+	imageCreateInfo.extent.height = imageDimensions.y;
+	imageCreateInfo.extent.depth = 1;
+	imageCreateInfo.mipLevels = 1;
+	imageCreateInfo.arrayLayers = 1;
+	imageCreateInfo.format = format;
+	imageCreateInfo.tiling = imageTiling;
+	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
+	imageCreateInfo.usage = imageUsageFlags;
+	imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	VkResult result{ vkCreateImage(m_LogicalDevice, &imageCreateInfo, nullptr, &image) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create image.");
+		return false;
+	}
+
+	VkMemoryRequirements memoryRequirements{};
+	vkGetImageMemoryRequirements(m_LogicalDevice, image, &memoryRequirements);
+
+	VkMemoryAllocateInfo memoryAllocateInfo{};
+	memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	memoryAllocateInfo.allocationSize = memoryRequirements.size;
+
+	ui32 memoryTypeIndex{ GetMemoryTypeIndex(memoryRequirements.memoryTypeBits, memoryPropertyFlags) };
+
+	if (memoryTypeIndex == std::numeric_limits<ui32>::max()) {
+		return false;
+	}
+
+	memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+
+	result = vkAllocateMemory(m_LogicalDevice, &memoryAllocateInfo, nullptr, &imageMemory);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to allocate image memory.");
+		return false;
+	}
+
+	vkBindImageMemory(m_LogicalDevice, image, imageMemory, 0);
 
 	return true;
 }
@@ -408,6 +464,207 @@ bool VulkanDevice::CopyBuffer(const VulkanBuffer& source,
 	return true;
 }
 
+bool VulkanDevice::CopyBufferToImage(const VulkanBuffer& source,
+                                     VkImage destination,
+                                     const Vec2ui& imageDimensions) const noexcept
+{
+
+	VkCommandBuffer commandBuffer{ CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY) };
+
+	VkBufferImageCopy region{};
+	region.bufferOffset = 0;
+	region.bufferRowLength = 0;
+	region.bufferImageHeight = 0;
+
+	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = 1;
+
+	region.imageOffset = VkOffset3D{ 0, 0, 0 };
+	region.imageExtent = VkExtent3D{ imageDimensions.x, imageDimensions.y, 1 };
+
+	VkCommandBufferBeginInfo commandBufferBeginInfo{};
+	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+
+	vkCmdCopyBufferToImage(
+			commandBuffer,
+			source.buffer,
+			destination,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			1,
+			&region
+	);
+
+	vkEndCommandBuffer(commandBuffer);
+
+	VkFenceCreateInfo fenceCreateInfo{};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.flags = VK_NULL_HANDLE;
+
+	VkFence fence{ VK_NULL_HANDLE };
+
+	VkResult result{ vkCreateFence(m_LogicalDevice, &fenceCreateInfo, nullptr, &fence) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create fence.");
+		return false;
+	}
+
+	if (!SubmitCommandBuffer(commandBuffer, m_TransferQueue, fence)) {
+		ERROR_LOG("Command buffer submission failed.");
+		return false;
+	}
+
+	vkDestroyFence(m_LogicalDevice, fence, nullptr);
+
+	vkFreeCommandBuffers(m_LogicalDevice, m_CommandPool, 1, &commandBuffer);
+
+	return true;
+}
+
+bool VulkanDevice::TransitionImageLayout(VkImage image,
+                                         VkFormat imageFormat,
+                                         VkImageLayout oldLayout,
+                                         VkImageLayout newLayout,
+                                         VkPipelineStageFlags sourceStageFlags,
+                                         VkPipelineStageFlags destinationStageFlags) const noexcept
+{
+	VkCommandBuffer commandBuffer{ CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY) };
+
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.oldLayout = oldLayout;
+	barrier.newLayout = newLayout;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = image;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = 1;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = 1;
+
+	if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+		std::vector<VkFormat> depthFormatsWithStencil{
+				VK_FORMAT_D32_SFLOAT_S8_UINT,
+				VK_FORMAT_D24_UNORM_S8_UINT,
+				VK_FORMAT_D16_UNORM_S8_UINT,
+		};
+
+		for (auto& depthFormat : depthFormatsWithStencil) {
+			if (depthFormat == imageFormat) {
+				barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+			}
+		}
+
+	} else {
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	}
+
+	// The srcAccessMask of the image memory barrier shows which operation
+	// must be completed using the old layout, before the transition to the
+	// new one happens.
+	switch (oldLayout) {
+		case VK_IMAGE_LAYOUT_UNDEFINED:
+			barrier.srcAccessMask = 0;
+			break;
+		case VK_IMAGE_LAYOUT_PREINITIALIZED:
+			barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+			barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+			barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+			barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			break;
+		default:
+			ERROR_LOG("Image layout transition failed: Initial layout not supported.");
+			return false;
+	}
+
+	// Destination access mask controls the dependency for the new image layout
+	switch (newLayout) {
+		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+			barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+			barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+			if (barrier.srcAccessMask == 0) {
+				barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+			}
+
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			break;
+		default:
+			ERROR_LOG("Image layout transition failed: Target layout not supported.");
+			return false;
+	}
+
+	VkCommandBufferBeginInfo commandBufferBeginInfo{};
+	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+	vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+
+	// Put barrier inside setup command buffer
+	vkCmdPipelineBarrier(commandBuffer,
+	                     sourceStageFlags,
+	                     destinationStageFlags,
+	                     0,
+	                     0,
+	                     nullptr,
+	                     0,
+	                     nullptr,
+	                     1,
+	                     &barrier);
+
+	vkEndCommandBuffer(commandBuffer);
+
+	VkFenceCreateInfo fenceCreateInfo{};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.flags = VK_NULL_HANDLE;
+
+	VkFence fence{ VK_NULL_HANDLE };
+
+	VkResult result{ vkCreateFence(m_LogicalDevice, &fenceCreateInfo, nullptr, &fence) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create fence.");
+		return false;
+	}
+
+	if (!SubmitCommandBuffer(commandBuffer, m_TransferQueue, fence)) {
+		ERROR_LOG("Command buffer submission failed.");
+		return false;
+	}
+
+	vkDestroyFence(m_LogicalDevice, fence, nullptr);
+
+	vkFreeCommandBuffers(m_LogicalDevice, m_CommandPool, 1, &commandBuffer);
+
+	return true;
+}
+
 VkQueue VulkanDevice::GetQueue(QueueFamily queueFamily) const noexcept
 {
 	switch (queueFamily) {
@@ -427,3 +684,4 @@ VulkanDevice::operator VkDevice() const noexcept
 {
 	return m_LogicalDevice;
 }
+

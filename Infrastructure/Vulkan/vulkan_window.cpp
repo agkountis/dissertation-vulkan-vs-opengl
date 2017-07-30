@@ -9,7 +9,7 @@ void VulkanWindow::OnWindowResize(GLFWwindow* window, i32 width, i32 height) noe
 
 	app->GetWindow().SetSize(Vec2ui{ width, height });
 
-	app->Reshape(Vec2i{width, height});
+	app->Reshape(Vec2i{ width, height });
 }
 //----------------------------------------
 
@@ -32,7 +32,7 @@ std::vector<const char*> VulkanWindow::GetExtensions() noexcept
 	return std::move(extensions);
 }
 
-bool VulkanWindow::Create(const std::string title,
+bool VulkanWindow::Create(const std::string& title,
                           const Vec2ui& size,
                           const Vec2i& position,
                           Application* application) noexcept

@@ -1,5 +1,5 @@
-#include <cstring>
 #include "mesh.h"
+#include <cstring>
 
 void Mesh::AddVertex(const Vertex& vertex) noexcept
 {

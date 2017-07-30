@@ -28,7 +28,7 @@ public:
 
 	virtual ~Window() = default;
 
-	virtual bool Create(const std::string title,
+	virtual bool Create(const std::string& title,
 	                    const Vec2ui& size,
 	                    const Vec2i& position,
 	                    Application* application) noexcept = 0;

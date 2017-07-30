@@ -18,8 +18,6 @@ set(SOURCE_FILES vulkan_application.cpp
         vulkan_physical_device.h
         vulkan_pipeline_cache.cpp
         vulkan_pipeline_cache.h
-        vulkan_renderer.cpp
-        vulkan_renderer.h
         vulkan_semaphore.cpp
         vulkan_semaphore.h
         vulkan_shader.cpp
@@ -28,10 +26,12 @@ set(SOURCE_FILES vulkan_application.cpp
         vulkan_swapchain.h
         vulkan_utilities.cpp
         vulkan_utilities.h
-        vulkan_vbo.cpp
-        vulkan_vbo.h
         vulkan_window.cpp
-        vulkan_window.h vulkan_mesh.h mesh.cpp)
+        vulkan_window.h
+        vulkan_mesh.h
+        vulkan_mesh.cpp
+        vulkan_texture.h
+        vulkan_texture.cpp vulkan_infrastructure_context.h vulkan_infrastructure_context.cpp)
 
 include_directories(../Core)
 

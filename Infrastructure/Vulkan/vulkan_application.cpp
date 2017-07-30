@@ -1,4 +1,5 @@
 #include "vulkan_application.h"
+#include "vulkan_infrastructure_context.h"
 #include <array>
 
 // Private functions -------------------------------
@@ -19,6 +20,7 @@ bool VulkanApplication::CreateInstance() noexcept
 	std::vector<const char*> layers;
 #if !NDEBUG
 	layers.push_back("VK_LAYER_LUNARG_standard_validation");
+
 	uint32_t layerCount{ 0 };
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -31,7 +33,7 @@ bool VulkanApplication::CreateInstance() noexcept
 	}
 #endif
 
-	return m_Instance.Create(appInfo, instanceExtensions, layers);
+	return G_VulkanInstance.Create(appInfo, instanceExtensions, layers);
 }
 
 bool VulkanApplication::CreateCommandBuffers() noexcept
@@ -44,7 +46,9 @@ bool VulkanApplication::CreateCommandBuffers() noexcept
 	commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	commandBufferAllocateInfo.commandBufferCount = static_cast<ui32>(m_DrawCommandBuffers.size());
 
-	VkResult result{ vkAllocateCommandBuffers(m_Device, &commandBufferAllocateInfo, m_DrawCommandBuffers.data()) };
+	VkResult result{ vkAllocateCommandBuffers(G_VulkanDevice,
+	                                          &commandBufferAllocateInfo,
+	                                          m_DrawCommandBuffers.data()) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to allocate command buffers.");
@@ -129,7 +133,10 @@ bool VulkanApplication::CreateRenderPasses() noexcept
 	renderPassInfo.dependencyCount = static_cast<ui32>(dependencies.size());
 	renderPassInfo.pDependencies = dependencies.data();
 
-	VkResult result{ vkCreateRenderPass(GetDevice(), &renderPassInfo, nullptr, &m_RenderPass) };
+	VkResult result{ vkCreateRenderPass(G_VulkanDevice,
+	                                    &renderPassInfo,
+	                                    nullptr,
+	                                    &m_RenderPass) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create render pass.");
@@ -150,8 +157,7 @@ bool VulkanApplication::CreateFramebuffers() noexcept
 	for (int i = 0; i < swapChainImageViews.size(); ++i) {
 		std::vector<VkImageView> attachments{ swapChainImageViews[i], m_DepthStencil.GetImageView() };
 
-		if (!m_SwapChainFrameBuffers[i].Create(m_Device,
-		                                       attachments,
+		if (!m_SwapChainFrameBuffers[i].Create(attachments,
 		                                       Vec2ui{ swapChainExtent.width, swapChainExtent.height },
 		                                       m_RenderPass)) {
 			return false;
@@ -170,26 +176,12 @@ VulkanApplication::VulkanApplication(const ApplicationSettings& settings)
 
 VulkanApplication::~VulkanApplication()
 {
-	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
-
-	for (auto shader : m_Shaders) {
-		DestroyResource(shader);
-	}
+	vkDestroyRenderPass(G_VulkanDevice, m_RenderPass, nullptr);
 }
 
 VulkanWindow& VulkanApplication::GetWindow() noexcept
 {
 	return m_Window;
-}
-
-const VulkanInstance& VulkanApplication::GetVulkanInstance() const noexcept
-{
-	return m_Instance;
-}
-
-const VulkanDevice& VulkanApplication::GetDevice() const noexcept
-{
-	return m_Device;
 }
 
 VkPhysicalDeviceFeatures& VulkanApplication::GetFeaturesToEnable() noexcept
@@ -232,19 +224,6 @@ ui32 VulkanApplication::GetCurrentBufferIndex() const noexcept
 	return m_CurrentBuffer;
 }
 
-VulkanShader* VulkanApplication::LoadShader(const std::string& fileName) noexcept
-{
-	VulkanShader* shader{ GetResource<VulkanShader>(fileName, m_Device) };
-
-	if (!shader) {
-		return nullptr;
-	}
-
-	m_Shaders.push_back(shader);
-
-	return shader;
-}
-
 bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 {
 	m_SwapChain.Create(size, GetSettings().vsync);
@@ -252,9 +231,8 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 	m_DepthStencil.Destroy();
 
 	VkExtent2D extent = m_SwapChain.GetExtent();
-	if (!m_DepthStencil.Create(m_Device,
-	                           Vec2ui{extent.width, extent.height},
-	                           m_Device.GetPhysicalDevice().GetSupportedDepthFormat())) {
+	if (!m_DepthStencil.Create(Vec2ui{extent.width, extent.height},
+	                           G_VulkanDevice.GetPhysicalDevice().GetSupportedDepthFormat())) {
 		return false;
 	}
 
@@ -264,15 +242,14 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 		std::vector<VkImageView> imageViews{ m_SwapChain.GetImageViews()[i],
 		                                     m_DepthStencil.GetImageView() };
 
-		if (!m_SwapChainFrameBuffers[i].Create(m_Device,
-		                                       imageViews,
+		if (!m_SwapChainFrameBuffers[i].Create(imageViews,
 		                                       Vec2ui{extent.width, extent.height},
 		                                       m_RenderPass)) {
 			return false;
 		}
 	}
 
-	vkFreeCommandBuffers(m_Device,
+	vkFreeCommandBuffers(G_VulkanDevice,
 	                     m_CommandPool,
 	                     static_cast<ui32>(m_DrawCommandBuffers.size()),
 	                     m_DrawCommandBuffers.data());
@@ -287,7 +264,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 		return false;
 	}
 
-	vkDeviceWaitIdle(m_Device);
+	vkDeviceWaitIdle(G_VulkanDevice);
 
 	OnResize(Vec2ui{extent.width, extent.height});
 
@@ -309,22 +286,22 @@ bool VulkanApplication::Initialize() noexcept
 	}
 
 #if !defined(NDEBUG) && !defined(__APPLE__)
-	if (!m_VulkanDebug.Initialize(m_Instance)) {
-		return false;
-	}
+//	if (!G_VulkanDebug.Initialize()) {
+//		return false;
+//	}
 #endif
 
-	if (!m_Device.Initialize(m_Instance)) {
+	if (!G_VulkanDevice.Initialize(G_VulkanInstance)) {
 		return false;
 	}
 
 	EnableFeatures();
 
-	if (!m_Device.CreateLogicalDevice(m_FeaturesToEnable, m_ExtensionsToEnable)) {
+	if (!G_VulkanDevice.CreateLogicalDevice(m_FeaturesToEnable, m_ExtensionsToEnable)) {
 		return false;
 	}
 
-	if (!m_SwapChain.Initialize(m_Instance, m_Device.GetPhysicalDevice(), m_Device, m_Window)) {
+	if (!m_SwapChain.Initialize(m_Window)) {
 		return false;
 	}
 
@@ -332,33 +309,33 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	VkFormat depthStencilFormat{ m_Device.GetPhysicalDevice().GetSupportedDepthFormat() };
+	VkFormat depthStencilFormat{ G_VulkanDevice.GetPhysicalDevice().GetSupportedDepthFormat() };
 
 	if (depthStencilFormat == VK_FORMAT_UNDEFINED) {
 		ERROR_LOG("Could not find supported depth format.");
 		return false;
 	}
 
-	if (!m_DepthStencil.Create(m_Device, m_Window.GetSize(), depthStencilFormat)) {
+	if (!m_DepthStencil.Create(m_Window.GetSize(), depthStencilFormat)) {
 		return false;
 	}
 
-	if (!m_PresentComplete.Create(m_Device)) {
+	if (!m_PresentComplete.Create()) {
 		return false;
 	}
 
-	if (!m_DrawComplete.Create(m_Device)) {
+	if (!m_DrawComplete.Create()) {
 		return false;
 	}
 
 	m_SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	m_SubmitInfo.pWaitDstStageMask = &m_PipelineStageFlags;
 	m_SubmitInfo.waitSemaphoreCount = 1;
-	m_SubmitInfo.pWaitSemaphores = &m_PresentComplete;
+	m_SubmitInfo.pWaitSemaphores = m_PresentComplete.Get();
 	m_SubmitInfo.signalSemaphoreCount = 1;
-	m_SubmitInfo.pSignalSemaphores = &m_DrawComplete;
+	m_SubmitInfo.pSignalSemaphores = m_DrawComplete.Get();
 
-	if (!m_CommandPool.Create(m_Device, m_SwapChain.GetQueueIndex(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)) {
+	if (!m_CommandPool.Create(m_SwapChain.GetQueueIndex(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)) {
 		return false;
 	}
 
@@ -366,7 +343,7 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	if (!m_PipelineCache.Create(m_Device)) {
+	if (!m_PipelineCache.Create()) {
 		return false;
 	}
 
@@ -405,7 +382,7 @@ void VulkanApplication::PreDraw() noexcept
 
 void VulkanApplication::PostDraw() noexcept
 {
-	VkResult result{ m_SwapChain.Present(m_Device.GetQueue(QueueFamily::PRESENT),
+	VkResult result{ m_SwapChain.Present(G_VulkanDevice.GetQueue(QueueFamily::PRESENT),
 	                                     m_CurrentBuffer,
 	                                     m_DrawComplete) };
 
@@ -414,5 +391,5 @@ void VulkanApplication::PostDraw() noexcept
 		Reshape(Vec2i{extent.width, extent.height});
 	}
 
-	vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::PRESENT));
+	vkQueueWaitIdle(G_VulkanDevice.GetQueue(QueueFamily::PRESENT));
 }

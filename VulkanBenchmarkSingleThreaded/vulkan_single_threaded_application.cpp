@@ -1,4 +1,6 @@
 #include <iostream>
+#include <vulkan_texture.h>
+#include <vulkan_infrastructure_context.h>
 #include "vulkan_shader.h"
 #include "math_utilities.h"
 #include "vulkan_single_threaded_application.h"
@@ -39,10 +41,12 @@ const std::vector<ui32> indices{
 		0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 5, 7, 8, 9, 10, 10, 9, 11, 12, 13, 14, 14, 13, 15
 };
 
+static VulkanTexture* s_Diffuse{ nullptr };
+
 //Private functions ---------------------------------------------------------------------------
 void VulkanSingleThreadedApplication::EnableFeatures() noexcept
 {
-	const auto& physicalDevice = GetDevice().GetPhysicalDevice();
+	const auto& physicalDevice = G_VulkanDevice.GetPhysicalDevice();
 
 	auto& featuresToEnable = GetFeaturesToEnable();
 	if (physicalDevice.features.samplerAnisotropy) {
@@ -72,7 +76,7 @@ bool VulkanSingleThreadedApplication::CreateUniforms() noexcept
 	descriptorPoolCreateInfo.poolSizeCount = static_cast<ui32>(descriptorPoolSizes.size());
 	descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
 
-	const auto& device = GetDevice();
+	const auto& device = G_VulkanDevice;
 
 	VkResult result{ vkCreateDescriptorPool(device,
 	                                        &descriptorPoolCreateInfo,
@@ -243,14 +247,14 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 
 	// Solid rendering pipeline
 	// Load shaders
-	VulkanShader* vertexShader{ LoadShader("sdr/default.vert.spv") };
+	VulkanShader* vertexShader{ G_ResourceManager.Get<VulkanShader>("sdr/default.vert.spv") };
 
 	if (!vertexShader) {
 		ERROR_LOG("Failed to load vertex shader.");
 		return false;
 	}
 
-	VulkanShader* fragmentShader{ LoadShader("sdr/default.frag.spv") };
+	VulkanShader* fragmentShader{ G_ResourceManager.Get<VulkanShader>("sdr/default.frag.spv") };
 
 	if (!fragmentShader) {
 		ERROR_LOG("Failed to load fragment shader.");
@@ -274,14 +278,14 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 
 	//Create the pipeline layout.
 	//Here we specify to the the pipeline if we use an push constants or descriptor sets.
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &m_DescriptorSetLayout;
-	pipelineLayoutInfo.pushConstantRangeCount = 0;
-	pipelineLayoutInfo.pPushConstantRanges = nullptr;
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutCreateInfo.setLayoutCount = 1;
+	pipelineLayoutCreateInfo.pSetLayouts = &m_DescriptorSetLayout;
+	pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+	pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
-	if (vkCreatePipelineLayout(GetDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) {
+	if (vkCreatePipelineLayout(G_VulkanDevice, &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) {
 		ERROR_LOG("Failed to create pipeline layout.");
 		return false;
 	}
@@ -316,7 +320,7 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 	pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
 	pipelineCreateInfo.pStages = shaderStages.data();
 
-	VkResult result{ vkCreateGraphicsPipelines(GetDevice(),
+	VkResult result{ vkCreateGraphicsPipelines(G_VulkanDevice,
 	                                           GetPipelineCache(),
 	                                           1,
 	                                           &pipelineCreateInfo,
@@ -329,10 +333,12 @@ bool VulkanSingleThreadedApplication::CreatePipelines() noexcept
 	}
 
 	//Wire frame pipeline
-	if (GetDevice().GetPhysicalDevice().features.fillModeNonSolid) {
+	if (G_VulkanDevice.GetPhysicalDevice().features.fillModeNonSolid) {
+
 		rasterizationState.polygonMode = VK_POLYGON_MODE_LINE;
 		rasterizationState.lineWidth = 1.0f;
-		result = vkCreateGraphicsPipelines(GetDevice(),
+
+		result = vkCreateGraphicsPipelines(G_VulkanDevice,
 		                                   GetPipelineCache(),
 		                                   1,
 		                                   &pipelineCreateInfo,
@@ -436,7 +442,7 @@ VulkanSingleThreadedApplication::VulkanSingleThreadedApplication(const Applicati
 
 VulkanSingleThreadedApplication::~VulkanSingleThreadedApplication()
 {
-	const auto& device = GetDevice();
+	const auto& device = G_VulkanDevice;
 
 	//No need to free descriptor sets. They are taken care of by the Vulkan driver.
 	//Just destroy the descriptor set layout and the descriptor pool.
@@ -467,7 +473,12 @@ bool VulkanSingleThreadedApplication::Initialize() noexcept
 
 	mesh.AddVertices(vertices);
 	mesh.AddIndices(indices);
-	mesh.CreateBuffers(GetDevice());
+	mesh.CreateBuffers();
+
+	s_Diffuse = G_ResourceManager.Get<VulkanTexture>("textures/vulkan.jpg",
+	                                                 TEX_DIFFUSE,
+	                                                 VK_FORMAT_R8G8B8A8_UNORM,
+	                                                 VK_IMAGE_ASPECT_COLOR_BIT);
 
 	return BuildCommandBuffers();
 }
@@ -509,7 +520,7 @@ void VulkanSingleThreadedApplication::Draw() noexcept
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &GetCommandBuffers()[GetCurrentBufferIndex()];
 
-	VkResult result{ vkQueueSubmit(GetDevice().GetQueue(QueueFamily::GRAPHICS),
+	VkResult result{ vkQueueSubmit(G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
 	                               1,
 	                               &submitInfo,
 	                               VK_NULL_HANDLE) };

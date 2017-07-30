@@ -22,23 +22,9 @@
 class VulkanApplication : public Application {
 private:
 	/**
-	 * \brief The Vulkan instance. Manages per-application states.
-	 */
-	VulkanInstance m_Instance;
-
-	/**
 	 * \brief The application's window.
 	 */
 	VulkanWindow m_Window;
-
-	/**
-	 * \brief Encapsulates both the physical and the logical device.
-	 */
-	VulkanDevice m_Device;
-
-#if !defined(NDEBUG) && !defined(__APPLE__)
-	VulkanDebug m_VulkanDebug;
-#endif
 
 	/**
 	 * \brief The physical device features to be enabled for this application.
@@ -81,11 +67,6 @@ private:
 	 *  Vulkan depth stencil.
 	 */
 	VulkanDepthStencil m_DepthStencil;
-
-	/**
-	 * \brief The shader stages to be used in the pipeline.
-	 */
-	std::vector<VulkanShader*> m_Shaders;
 
 	/**
 	 * \brief Pipeline cache object used to accelerate pipeline creation.
@@ -192,18 +173,6 @@ public:
 	VulkanWindow& GetWindow() noexcept;
 
 	/**
-	 * \brief Returns the application's Vulkan instance.
-	 * \return The application's VulkanInstance.
-	 */
-	const VulkanInstance& GetVulkanInstance() const noexcept;
-
-	/**
-	 * \brief Returns the vulkan device instance.
-	 * \return The vulkan device instance.
-	 */
-	const VulkanDevice& GetDevice() const noexcept;
-
-	/**
 	 * \brief Returns a reference to the VkPhysicalDeviceFeatures struct
 	 * in order for features to be turned on and/or off.
 	 * \return A reference to the VkPhysicalDeviceFeatures struct.
@@ -223,8 +192,6 @@ public:
 	VkSubmitInfo& GetSubmitInfo() noexcept;
 
 	ui32 GetCurrentBufferIndex() const noexcept;
-
-	VulkanShader* LoadShader(const std::string& fileName) noexcept;
 
 	bool Reshape(const Vec2ui& size) noexcept;
 

@@ -97,7 +97,7 @@ public:
 	 * \return TRUE if successful, FALSE otherwise.
 	 */
 	bool CreateLogicalDevice(VkPhysicalDeviceFeatures featuresToEnable,
-	                         std::vector<const char *> extensionsToEnable,
+	                         std::vector<const char*> extensionsToEnable,
 	                         bool useSwapChain = true,
 	                         VkQueueFlags requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
 
@@ -138,11 +138,21 @@ public:
 	                  VkMemoryPropertyFlags memoryPropertyFlags,
 	                  VulkanBuffer& buffer,
 	                  VkDeviceSize size,
-	                  void *data = nullptr) const noexcept;
+	                  void* data = nullptr) const noexcept;
+
+	bool CreateImage(const Vec2ui& imageDimensions,
+	                 VkFormat format,
+	                 VkImageTiling imageTiling,
+	                 VkImageUsageFlags imageUsageFlags,
+	                 VkMemoryPropertyFlags memoryPropertyFlags,
+	                 VkImage& image,
+	                 VkDeviceMemory& imageMemory) const noexcept;
 
 	VkCommandBuffer CreateCommandBuffer(VkCommandBufferLevel commandBufferLevel) const noexcept;
 
-	bool SubmitCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, VkFence fence = VK_NULL_HANDLE) const noexcept;
+	bool SubmitCommandBuffer(VkCommandBuffer commandBuffer,
+	                         VkQueue queue,
+	                         VkFence fence = VK_NULL_HANDLE) const noexcept;
 
 	/**
 	 * \brief Copies the contents of the source buffer to the destination buffer.
@@ -156,6 +166,24 @@ public:
 	                const VulkanBuffer& destination,
 	                VkQueue transferQueue,
 	                VkBufferCopy* copyRegion = nullptr) const noexcept;
+
+	/**
+	 * \brief Copies the contents of a buffer into an image.
+	 * \param source The source buffer.
+	 * \param destination The destination image.
+	 * \param imageDimensions The dimensions of the image.
+	 * \return TRUE if successful, FALSE otherwise.
+	 */
+	bool CopyBufferToImage(const VulkanBuffer& source,
+	                       VkImage destination,
+	                       const Vec2ui& imageDimensions) const noexcept;
+
+	bool TransitionImageLayout(VkImage image,
+	                           VkFormat imageFormat,
+	                           VkImageLayout oldLayout,
+	                           VkImageLayout newLayout,
+	                           VkPipelineStageFlags sourceStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+	                           VkPipelineStageFlags destinationStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT) const noexcept;
 
 	/**
 	 * \brief Returns the requested QueueFamily.

@@ -5,20 +5,18 @@
 
 class VulkanSemaphore {
 private:
-	VkDevice m_pLogicalDevice{ nullptr };
-
 	VkSemaphore m_Semaphore{ VK_NULL_HANDLE };
 
 public:
 	~VulkanSemaphore();
 
-	bool Create(VkDevice logicalDevice) noexcept;
+	bool Create() noexcept;
 
 	void Destroy() const noexcept;
 
 	operator VkSemaphore() const noexcept;
 
-	const VkSemaphore* operator&() const noexcept;
+	const VkSemaphore* Get() const noexcept;
 
 };
 

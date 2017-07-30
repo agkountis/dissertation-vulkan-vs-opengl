@@ -5,14 +5,12 @@
 
 class VulkanPipelineCache {
 private:
-	VkDevice m_pLogicalDevice{ nullptr };
-
 	VkPipelineCache m_PipelineCache{ VK_NULL_HANDLE };
 
 public:
 	~VulkanPipelineCache();
 
-	bool Create(VkDevice logicalDevice) noexcept;
+	bool Create() noexcept;
 
 	operator VkPipelineCache() const noexcept;
 };

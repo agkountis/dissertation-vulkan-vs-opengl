@@ -17,7 +17,7 @@ public:
 
 	static std::array<VkVertexInputAttributeDescription, 5> GetVertexInputAttributeDescriptions() noexcept;
 
-	bool CreateBuffers(const VulkanDevice& device) noexcept;
+	bool CreateBuffers() noexcept;
 
 	void Draw(VkCommandBuffer commandBuffer) noexcept;
 };

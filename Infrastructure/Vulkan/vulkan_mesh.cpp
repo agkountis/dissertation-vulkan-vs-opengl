@@ -1,6 +1,7 @@
 #include <array>
 #include "logger.h"
 #include "vulkan_mesh.h"
+#include "vulkan_infrastructure_context.h"
 
 VkVertexInputBindingDescription VulkanMesh::GetVertexInputBindingDescription() noexcept
 {
@@ -44,7 +45,7 @@ std::array<VkVertexInputAttributeDescription, 5> VulkanMesh::GetVertexInputAttri
 	return attributeDescriptions;
 }
 
-bool VulkanMesh::CreateBuffers(const VulkanDevice& device) noexcept
+bool VulkanMesh::CreateBuffers() noexcept
 {
 	VulkanBuffer stagingBuffer;
 
@@ -52,11 +53,11 @@ bool VulkanMesh::CreateBuffers(const VulkanDevice& device) noexcept
 
 	//Create and fill a staging buffer.
 	//Used to save the data locally so it can be copied to device local memory for optimal performance.
-	if (!device.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-	                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-	                         stagingBuffer,
-	                         vertexBufferSize,
-	                         GetVertexDataPtr())) {
+	if (!G_VulkanDevice.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	                                 stagingBuffer,
+	                                 vertexBufferSize,
+	                                 GetVertexDataPtr())) {
 		ERROR_LOG("| VulkanMesh buffer creation failed:");
 		ERROR_LOG("|-- Failed to create staging buffer.");
 		return false;
@@ -64,18 +65,18 @@ bool VulkanMesh::CreateBuffers(const VulkanDevice& device) noexcept
 
 	//Create the vertex buffer with device local memory properties.
 	//Additional mark the buffer a transfer destination so we can optimally copy data into it.
-	if (!device.CreateBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-	                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-	                         m_Vbo,
-	                         vertexBufferSize,
-	                         nullptr)) {
+	if (!G_VulkanDevice.CreateBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+	                                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+	                                 m_Vbo,
+	                                 vertexBufferSize,
+	                                 nullptr)) {
 		ERROR_LOG("| VulkanMesh buffer creation failed:");
 		ERROR_LOG("|-- Failed to create vertex buffer.");
 		return false;
 	}
 
 	// Copy the staging buffer to the vertex buffer.
-	if (!device.CopyBuffer(stagingBuffer, m_Vbo, device.GetQueue(QueueFamily::TRANSFER))) {
+	if (!G_VulkanDevice.CopyBuffer(stagingBuffer, m_Vbo, G_VulkanDevice.GetQueue(QueueFamily::TRANSFER))) {
 		ERROR_LOG("| VulkanMesh buffer creation failed:");
 		ERROR_LOG("|-- Failed to transfer data from the staging buffer to the vertex buffer");
 		return false;
@@ -88,28 +89,28 @@ bool VulkanMesh::CreateBuffers(const VulkanDevice& device) noexcept
 		stagingBuffer.CleanUp();
 
 		// Re-create the staging buffer with the index data.
-		if (!device.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		                         stagingBuffer,
-		                         indexBufferSize,
-		                         GetIndexDataPtr())) {
+		if (!G_VulkanDevice.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                                 stagingBuffer,
+		                                 indexBufferSize,
+		                                 GetIndexDataPtr())) {
 			ERROR_LOG("| VulkanMesh buffer creation failed:");
 			ERROR_LOG("|-- Failed to create staging buffer.");
 			return false;
 		}
 
 		// Create the index buffer.
-		if (!device.CreateBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		                         m_Ibo,
-		                         indexBufferSize,
-		                         nullptr)) {
+		if (!G_VulkanDevice.CreateBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		                                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		                                 m_Ibo,
+		                                 indexBufferSize,
+		                                 nullptr)) {
 			ERROR_LOG("| VulkanMesh buffer creation failed:");
 			ERROR_LOG("|-- Failed to create index buffer.");
 			return false;
 		}
 
-		if (!device.CopyBuffer(stagingBuffer, m_Ibo, device.GetQueue(QueueFamily::TRANSFER))) {
+		if (!G_VulkanDevice.CopyBuffer(stagingBuffer, m_Ibo, G_VulkanDevice.GetQueue(QueueFamily::TRANSFER))) {
 			ERROR_LOG("| VulkanMesh buffer creation failed:");
 			ERROR_LOG("|-- Failed to transfer data from the staging buffer to the index buffer");
 			return false;

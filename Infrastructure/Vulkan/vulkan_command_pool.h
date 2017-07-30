@@ -6,14 +6,12 @@
 
 class VulkanCommandPool {
 private:
-	VkDevice m_pLogicalDevice{ nullptr };
-
 	VkCommandPool m_CommandPool{ VK_NULL_HANDLE };
 
 public:
 	~VulkanCommandPool();
 
-	bool Create(VkDevice logicalDevice, ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags) noexcept;
+	bool Create(ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags) noexcept;
 
 	operator VkCommandPool() const noexcept;
 

@@ -8,8 +8,6 @@ class VulkanDevice;
 
 class VulkanDepthStencil {
 private:
-	VkDevice m_pLogicalDevice{ nullptr };
-
 	VkImage m_Image{ VK_NULL_HANDLE };
 
 	VkDeviceMemory m_Memory{ VK_NULL_HANDLE };
@@ -27,7 +25,7 @@ public:
 
 	VkFormat GetFormat() const noexcept;
 
-	bool Create(const VulkanDevice& logicalDevice, const Vec2ui& size, VkFormat format) noexcept;
+	bool Create(const Vec2ui& size, VkFormat format) noexcept;
 
 	void Destroy() const noexcept;
 };

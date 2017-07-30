@@ -30,13 +30,3 @@ void Application::SetSettings(const ApplicationSettings& settings) noexcept
 {
 	m_Settings = settings;
 }
-
-void Application::DestroyResource(const std::string& name) noexcept
-{
-	m_ResourceManager.DestroyResource(name);
-}
-
-void Application::DestroyResource(Resource* resource) noexcept
-{
-	m_ResourceManager.DestroyResource(resource);
-}

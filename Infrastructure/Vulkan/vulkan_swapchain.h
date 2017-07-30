@@ -12,12 +12,6 @@ class VulkanWindow;
 
 class VulkanSwapChain {
 private:
-	VkInstance m_Instance{ nullptr };
-
-	VkDevice m_LogicalDevice{ nullptr };
-
-	VkPhysicalDevice m_PhysicalDevice{ nullptr };
-
 	VkSurfaceKHR m_Surface{ VK_NULL_HANDLE };
 
 	VkFormat m_Format{ VK_FORMAT_UNDEFINED };
@@ -39,10 +33,7 @@ private:
 public:
 	~VulkanSwapChain();
 
-	bool Initialize(VkInstance instance,
-	                VkPhysicalDevice physicalDevice,
-	                VkDevice logicalDevice,
-	                const VulkanWindow& window) noexcept;
+	bool Initialize(const VulkanWindow& window) noexcept;
 
 	bool Create(const Vec2i& size, bool vsync) noexcept;
 

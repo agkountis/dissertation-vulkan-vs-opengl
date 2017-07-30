@@ -1,12 +1,13 @@
 #include "vulkan_swapchain.h"
 #include "logger.h"
 #include "vulkan_window.h"
+#include "vulkan_infrastructure_context.h"
 #include <algorithm>
 
 // Private functions ------------------------------------------
 bool VulkanSwapChain::InitializeSurface(const VulkanWindow& window) noexcept
 {
-	VkResult result{ glfwCreateWindowSurface(m_Instance, window, nullptr, &m_Surface) };
+	VkResult result{ glfwCreateWindowSurface(G_VulkanInstance, window, nullptr, &m_Surface) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create Vulkan Surface.");
@@ -14,7 +15,7 @@ bool VulkanSwapChain::InitializeSurface(const VulkanWindow& window) noexcept
 	}
 
 	ui32 queueCount{ 0 };
-	vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &queueCount, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(G_VulkanDevice.GetPhysicalDevice(), &queueCount, nullptr);
 
 	if (!queueCount) {
 		ERROR_LOG("No available queue families.");
@@ -22,7 +23,7 @@ bool VulkanSwapChain::InitializeSurface(const VulkanWindow& window) noexcept
 	}
 
 	std::vector<VkQueueFamilyProperties> queueProperties{ queueCount };
-	vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &queueCount, queueProperties.data());
+	vkGetPhysicalDeviceQueueFamilyProperties(G_VulkanDevice.GetPhysicalDevice(), &queueCount, queueProperties.data());
 
 	// Iterate over each queue to learn whether it supports presenting:
 	// Find a queue with present support
@@ -30,7 +31,7 @@ bool VulkanSwapChain::InitializeSurface(const VulkanWindow& window) noexcept
 	std::vector<VkBool32> supportsPresent;
 	supportsPresent.resize(queueCount);
 	for (ui32 i = 0; i < queueCount; ++i) {
-		vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice, i, m_Surface, &supportsPresent[i]);
+		vkGetPhysicalDeviceSurfaceSupportKHR(G_VulkanDevice.GetPhysicalDevice(), i, m_Surface, &supportsPresent[i]);
 	}
 
 	// Search for a graphics and a present queue in the array of queue
@@ -68,12 +69,14 @@ bool VulkanSwapChain::InitializeSurface(const VulkanWindow& window) noexcept
 		return false;
 	}
 
-	//TODO: rename the member variable to something that makes sense. This queue supports both graphics and presentation.
 	m_GraphicsAndPresentQueueIndex = graphicsQueueIndex;
 
 	// Get list of supported surface formats
 	ui32 formatCount{ 0 };
-	result = vkGetPhysicalDeviceSurfaceFormatsKHR(m_PhysicalDevice, m_Surface, &formatCount, nullptr);
+	result = vkGetPhysicalDeviceSurfaceFormatsKHR(G_VulkanDevice.GetPhysicalDevice(),
+	                                              m_Surface,
+	                                              &formatCount,
+	                                              nullptr);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Could not get the surface format count.");
@@ -86,7 +89,10 @@ bool VulkanSwapChain::InitializeSurface(const VulkanWindow& window) noexcept
 	}
 
 	std::vector<VkSurfaceFormatKHR> surfaceFormats{ formatCount };
-	vkGetPhysicalDeviceSurfaceFormatsKHR(m_PhysicalDevice, m_Surface, &formatCount, surfaceFormats.data());
+	vkGetPhysicalDeviceSurfaceFormatsKHR(G_VulkanDevice.GetPhysicalDevice(),
+	                                     m_Surface,
+	                                     &formatCount,
+	                                     surfaceFormats.data());
 
 	// If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
 	// there is no preferred format, so we assume VK_FORMAT_B8G8R8A8_UNORM
@@ -123,18 +129,11 @@ VulkanSwapChain::~VulkanSwapChain()
 {
 	Destroy();
 
-	vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
+	vkDestroySurfaceKHR(G_VulkanInstance, m_Surface, nullptr);
 }
 
-bool VulkanSwapChain::Initialize(VkInstance instance,
-                                 VkPhysicalDevice physicalDevice,
-                                 VkDevice logicalDevice,
-                                 const VulkanWindow& window) noexcept
+bool VulkanSwapChain::Initialize(const VulkanWindow& window) noexcept
 {
-	m_Instance = instance;
-	m_PhysicalDevice = physicalDevice;
-	m_LogicalDevice = logicalDevice;
-
 	if (!InitializeSurface(window)) {
 		return false;
 	}
@@ -148,7 +147,9 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 
 	// Get physical device surface properties and formats
 	VkSurfaceCapabilitiesKHR surfaceCapabilities{};
-	VkResult result{ vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, m_Surface, &surfaceCapabilities) };
+	VkResult result{ vkGetPhysicalDeviceSurfaceCapabilitiesKHR(G_VulkanDevice.GetPhysicalDevice(),
+	                                                           m_Surface,
+	                                                           &surfaceCapabilities) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to get physical device surface capabilities.");
@@ -157,7 +158,10 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 
 	// Get available present modes
 	ui32 presentModeCount;
-	result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface, &presentModeCount, nullptr);
+	result = vkGetPhysicalDeviceSurfacePresentModesKHR(G_VulkanDevice.GetPhysicalDevice(),
+	                                                   m_Surface,
+	                                                   &presentModeCount,
+	                                                   nullptr);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to get physical device surface present modes.");
@@ -170,7 +174,7 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	}
 
 	std::vector<VkPresentModeKHR> presentModes{ presentModeCount };
-	result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice,
+	result = vkGetPhysicalDeviceSurfacePresentModesKHR(G_VulkanDevice.GetPhysicalDevice(),
 	                                                   m_Surface,
 	                                                   &presentModeCount,
 	                                                   presentModes.data());
@@ -274,12 +278,13 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 
 	// Set additional usage flag for blitting from the swapchain images if supported
 	VkFormatProperties formatProperties;
-	vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, m_Format, &formatProperties);
+	vkGetPhysicalDeviceFormatProperties(G_VulkanDevice.GetPhysicalDevice(), m_Format, &formatProperties);
+
 	if (formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT) {
 		swapChainCreateInfo.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 	}
 
-	result = vkCreateSwapchainKHR(m_LogicalDevice, &swapChainCreateInfo, nullptr, &m_SwapChain);
+	result = vkCreateSwapchainKHR(G_VulkanDevice, &swapChainCreateInfo, nullptr, &m_SwapChain);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create swap chain.");
@@ -292,22 +297,22 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 	// This also cleans up all the presentable images
 	if (oldSwapChain != VK_NULL_HANDLE) {
 
-		vkDeviceWaitIdle(m_LogicalDevice);
+		vkDeviceWaitIdle(G_VulkanDevice);
 
 		LOG("Destroying old swapchain.");
 
 		for (ui32 i = 0; i < imageCount; i++) {
-			vkDestroyImageView(m_LogicalDevice, m_ImageViews[i], nullptr);
+			vkDestroyImageView(G_VulkanDevice, m_ImageViews[i], nullptr);
 		}
 
 		m_ImageViews.clear();
 
-		vkDestroySwapchainKHR(m_LogicalDevice, oldSwapChain, nullptr);
+		vkDestroySwapchainKHR(G_VulkanDevice, oldSwapChain, nullptr);
 
 		m_Images.clear();
 	}
 
-	result = vkGetSwapchainImagesKHR(m_LogicalDevice, m_SwapChain, &imageCount, nullptr);
+	result = vkGetSwapchainImagesKHR(G_VulkanDevice, m_SwapChain, &imageCount, nullptr);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to get swap chain image count.");
@@ -316,7 +321,7 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 
 	// Get the swap chain images
 	m_Images.resize(imageCount);
-	result = vkGetSwapchainImagesKHR(m_LogicalDevice, m_SwapChain, &imageCount, m_Images.data());
+	result = vkGetSwapchainImagesKHR(G_VulkanDevice, m_SwapChain, &imageCount, m_Images.data());
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to get the swap chain images.");
@@ -345,7 +350,7 @@ bool VulkanSwapChain::Create(const Vec2i& size, bool vsync) noexcept
 		createInfo.flags = 0;
 		createInfo.image = m_Images[i];
 
-		result = vkCreateImageView(m_LogicalDevice, &createInfo, nullptr, &m_ImageViews[i]);
+		result = vkCreateImageView(G_VulkanDevice, &createInfo, nullptr, &m_ImageViews[i]);
 
 		if (result != VK_SUCCESS) {
 			ERROR_LOG("Failed to create swap chain image view");
@@ -385,7 +390,7 @@ const VkExtent2D& VulkanSwapChain::GetExtent() const noexcept
 
 VkResult VulkanSwapChain::GetNextImageIndex(VkSemaphore presentComplete, ui32& index) const noexcept
 {
-	return vkAcquireNextImageKHR(m_LogicalDevice,
+	return vkAcquireNextImageKHR(G_VulkanDevice,
 	                             m_SwapChain,
 	                             std::numeric_limits<ui64>::max(),
 	                             presentComplete,
@@ -413,8 +418,8 @@ VkResult VulkanSwapChain::Present(VkQueue presentQueue, ui32 imageIndex, VkSemap
 void VulkanSwapChain::Destroy() const noexcept
 {
 	for (const auto& imageView : m_ImageViews) {
-		vkDestroyImageView(m_LogicalDevice, imageView, nullptr);
+		vkDestroyImageView(G_VulkanDevice, imageView, nullptr);
 	}
 
-	vkDestroySwapchainKHR(m_LogicalDevice, m_SwapChain, nullptr);
+	vkDestroySwapchainKHR(G_VulkanDevice, m_SwapChain, nullptr);
 }

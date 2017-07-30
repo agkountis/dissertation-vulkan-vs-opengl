@@ -2,15 +2,11 @@
 #include <fstream>
 #include "vulkan_shader.h"
 #include "logger.h"
-
-VulkanShader::VulkanShader(VkDevice logicalDevice)
-		: m_pLogicalDevice{ logicalDevice }
-{
-}
+#include "vulkan_infrastructure_context.h"
 
 VulkanShader::~VulkanShader()
 {
-	vkDestroyShaderModule(m_pLogicalDevice, m_ShaderModule, nullptr);
+	vkDestroyShaderModule(G_VulkanDevice, m_ShaderModule, nullptr);
 }
 
 VulkanShader::operator VkShaderModule() noexcept
@@ -44,7 +40,7 @@ bool VulkanShader::Load(const std::string& fileName) noexcept
 	shaderModuleCreateInfo.codeSize = static_cast<ui32>(buffer.size());
 	shaderModuleCreateInfo.pCode = reinterpret_cast<const ui32*>(buffer.data());
 
-	VkResult result{ vkCreateShaderModule(m_pLogicalDevice, &shaderModuleCreateInfo, nullptr, &m_ShaderModule) };
+	VkResult result{ vkCreateShaderModule(G_VulkanDevice, &shaderModuleCreateInfo, nullptr, &m_ShaderModule) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to load vulkan shader: " + fileName +". Reason: Failed to create shader module.");

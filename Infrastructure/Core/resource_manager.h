@@ -32,7 +32,7 @@ private:
 public:
 	~ResourceManager()
 	{
-		for (auto resource : m_ResourcesByName) {
+		for (auto& resource : m_ResourcesByName) {
 			delete resource.second;
 		}
 
@@ -138,10 +138,10 @@ public:
 				itByName = m_ResourcesByName.erase(itByName);
 				itById = m_ResourcesById.erase(itById);
 				return;
-			} else {
-				++itByName;
-				++itById;
 			}
+
+			++itByName;
+			++itById;
 		}
 
 		WARNING_LOG("Resource not registered.");

@@ -8,8 +8,6 @@ class VulkanDebug {
 private:
 	VkDebugReportCallbackEXT m_DebugReportCallback{VK_NULL_HANDLE};
 
-	VkInstance m_InstanceHandle{nullptr};
-
 	static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT flags,
 														VkDebugReportObjectTypeEXT objType,
 														uint64_t obj,
@@ -20,7 +18,7 @@ private:
 														void *userData);
 
 public:
-	bool Initialize(VkInstance instance) noexcept;
+	bool Initialize() noexcept;
 
 	~VulkanDebug();
 };

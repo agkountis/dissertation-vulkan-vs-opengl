@@ -4,8 +4,6 @@
 #include <vulkan/vulkan.h>
 
 struct VulkanBuffer {
-	VkDevice pLogicalDevice{ nullptr };
-
 	VkBuffer buffer{ VK_NULL_HANDLE };
 
 	VkDeviceMemory memory{ VK_NULL_HANDLE };

@@ -6,15 +6,12 @@
 
 class VulkanFramebuffer {
 private:
-	VkDevice m_pLogicalDevice{ nullptr };
-
 	VkFramebuffer m_Framebuffer{ VK_NULL_HANDLE };
 
 public:
 	~VulkanFramebuffer();
 
-	bool Create(VkDevice logicalDevice,
-	            const std::vector<VkImageView>& imageViews,
+	bool Create(const std::vector<VkImageView>& imageViews,
 	            const Vec2ui& size,
 	            VkRenderPass renderPass) noexcept;
 

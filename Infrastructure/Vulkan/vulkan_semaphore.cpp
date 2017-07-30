@@ -1,19 +1,18 @@
 #include "vulkan_semaphore.h"
 #include "logger.h"
+#include "vulkan_infrastructure_context.h"
 
 VulkanSemaphore::~VulkanSemaphore()
 {
 	Destroy();
 }
 
-bool VulkanSemaphore::Create(VkDevice logicalDevice) noexcept
+bool VulkanSemaphore::Create() noexcept
 {
-	m_pLogicalDevice = logicalDevice;
-
 	VkSemaphoreCreateInfo semaphoreCreateInfo{};
 	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-	VkResult result{ vkCreateSemaphore(m_pLogicalDevice, &semaphoreCreateInfo, nullptr, &m_Semaphore) };
+	VkResult result{ vkCreateSemaphore(G_VulkanDevice, &semaphoreCreateInfo, nullptr, &m_Semaphore) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create semaphore");
@@ -25,9 +24,7 @@ bool VulkanSemaphore::Create(VkDevice logicalDevice) noexcept
 
 void VulkanSemaphore::Destroy() const noexcept
 {
-	if (m_pLogicalDevice) {
-		vkDestroySemaphore(m_pLogicalDevice, m_Semaphore, nullptr);
-	}
+	vkDestroySemaphore(G_VulkanDevice, m_Semaphore, nullptr);
 }
 
 VulkanSemaphore::operator VkSemaphore() const noexcept
@@ -35,7 +32,7 @@ VulkanSemaphore::operator VkSemaphore() const noexcept
 	return m_Semaphore;
 }
 
-const VkSemaphore* VulkanSemaphore::operator&() const noexcept
+const VkSemaphore* VulkanSemaphore::Get() const noexcept
 {
 	return &m_Semaphore;
 }

@@ -7,7 +7,13 @@ set(SOURCE_FILES application.cpp
         timer.h
         types.h
         window.cpp
-        window.h vertex.h mesh.h mesh.cpp math_utilities.h)
+        window.h
+		vertex.h
+		mesh.h
+		mesh.cpp
+		math_utilities.h
+		texture.h
+		stb_image.h)
 
 if(MSVC)
 	include_directories(C:/usr/include)

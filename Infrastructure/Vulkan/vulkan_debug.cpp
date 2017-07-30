@@ -1,5 +1,6 @@
 #include "vulkan_debug.h"
 #include "logger.h"
+#include "vulkan_infrastructure_context.h"
 
 VkBool32 VulkanDebug::DebugCallback(VkDebugReportFlagsEXT flags,
                                     VkDebugReportObjectTypeEXT objType,
@@ -15,29 +16,25 @@ VkBool32 VulkanDebug::DebugCallback(VkDebugReportFlagsEXT flags,
 	return VK_FALSE;
 }
 
-bool VulkanDebug::Initialize(VkInstance instance) noexcept
+bool VulkanDebug::Initialize() noexcept
 {
-	if (!instance) {
-		ERROR_LOG("Could not initialize VulkanDebug. VkInstance was nullptr");
-		return false;
-	}
-
 	VkDebugReportCallbackCreateInfoEXT createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
 	createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
 	createInfo.pfnCallback = DebugCallback;
 
-	m_InstanceHandle = instance;
-
 	//Because vkCreateDebugReportCallbackEXT is an extension function....we have to look up its address ourselves.
-	auto vkCreateDebugReportCallbackEXT = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_InstanceHandle, "vkCreateDebugReportCallbackEXT"));
+	auto vkCreateDebugReportCallbackEXT =
+			reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(
+					vkGetInstanceProcAddr(G_VulkanInstance, "vkCreateDebugReportCallbackEXT")
+			);
 
 	if (!vkCreateDebugReportCallbackEXT) {
 		ERROR_LOG("Cannot setup debug callback. Extension not present.");
 		return false;
 	}
 
-	VkResult result{ vkCreateDebugReportCallbackEXT(m_InstanceHandle, &createInfo, nullptr, &m_DebugReportCallback) };
+	VkResult result{ vkCreateDebugReportCallbackEXT(G_VulkanInstance, &createInfo, nullptr, &m_DebugReportCallback) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create debug report callback.");
@@ -50,9 +47,12 @@ bool VulkanDebug::Initialize(VkInstance instance) noexcept
 
 VulkanDebug::~VulkanDebug()
 {
-	auto vkDestroyDebugReportCallbackEXT = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_InstanceHandle, "vkDestroyDebugReportCallbackEXT"));
+	auto vkDestroyDebugReportCallbackEXT =
+			reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(
+					vkGetInstanceProcAddr(G_VulkanInstance, "vkDestroyDebugReportCallbackEXT")
+			);
 
 	if (vkDestroyDebugReportCallbackEXT) {
-		vkDestroyDebugReportCallbackEXT(m_InstanceHandle, m_DebugReportCallback, nullptr);
+		vkDestroyDebugReportCallbackEXT(G_VulkanInstance, m_DebugReportCallback, nullptr);
 	}
 }

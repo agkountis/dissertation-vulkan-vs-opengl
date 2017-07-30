@@ -1,6 +1,7 @@
 #include "vulkan_depth_stencil.h"
 #include "logger.h"
 #include "vulkan_device.h"
+#include "vulkan_infrastructure_context.h"
 
 
 VulkanDepthStencil::~VulkanDepthStencil()
@@ -23,10 +24,8 @@ VkFormat VulkanDepthStencil::GetFormat() const noexcept
 	return m_Format;
 }
 
-bool VulkanDepthStencil::Create(const VulkanDevice& logicalDevice, const Vec2ui& size, VkFormat format) noexcept
+bool VulkanDepthStencil::Create(const Vec2ui& size, VkFormat format) noexcept
 {
-	m_pLogicalDevice = logicalDevice;
-
 	VkImageCreateInfo imageCreateInfo{};
 	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -49,29 +48,30 @@ bool VulkanDepthStencil::Create(const VulkanDevice& logicalDevice, const Vec2ui&
 	depthStencilView.subresourceRange.baseArrayLayer = 0;
 	depthStencilView.subresourceRange.layerCount = 1;
 
-	VkResult result{ vkCreateImage(m_pLogicalDevice, &imageCreateInfo, nullptr, &m_Image) };
+	VkResult result{ vkCreateImage(G_VulkanDevice, &imageCreateInfo, nullptr, &m_Image) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create depth image.");
 		return false;
 	}
 
-	VkMemoryRequirements memoryRequirements;
-	vkGetImageMemoryRequirements(m_pLogicalDevice, m_Image, &memoryRequirements);
+	VkMemoryRequirements memoryRequirements{};
+	vkGetImageMemoryRequirements(G_VulkanDevice, m_Image, &memoryRequirements);
 
 	VkMemoryAllocateInfo memoryAllocateInfo{};
 	memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	memoryAllocateInfo.allocationSize = memoryRequirements.size;
-	memoryAllocateInfo.memoryTypeIndex = logicalDevice.GetMemoryTypeIndex(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	memoryAllocateInfo.memoryTypeIndex = G_VulkanDevice.GetMemoryTypeIndex(memoryRequirements.memoryTypeBits,
+	                                                                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	result = vkAllocateMemory(m_pLogicalDevice, &memoryAllocateInfo, nullptr, &m_Memory);
+	result = vkAllocateMemory(G_VulkanDevice, &memoryAllocateInfo, nullptr, &m_Memory);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to allocate depth stencil m_Memory.");
 		return false;
 	}
 
-	result = vkBindImageMemory(m_pLogicalDevice, m_Image, m_Memory, 0);
+	result = vkBindImageMemory(G_VulkanDevice, m_Image, m_Memory, 0);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to bind depth image m_Memory.");
@@ -80,7 +80,7 @@ bool VulkanDepthStencil::Create(const VulkanDevice& logicalDevice, const Vec2ui&
 
 	depthStencilView.image = m_Image;
 
-	result = vkCreateImageView(m_pLogicalDevice, &depthStencilView, nullptr, &m_ImageView);
+	result = vkCreateImageView(G_VulkanDevice, &depthStencilView, nullptr, &m_ImageView);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create depth image view.");
@@ -94,9 +94,9 @@ bool VulkanDepthStencil::Create(const VulkanDevice& logicalDevice, const Vec2ui&
 
 void VulkanDepthStencil::Destroy() const noexcept
 {
-	vkDestroyImage(m_pLogicalDevice, m_Image, nullptr);
+	vkDestroyImage(G_VulkanDevice, m_Image, nullptr);
 
-	vkFreeMemory(m_pLogicalDevice, m_Memory, nullptr);
+	vkFreeMemory(G_VulkanDevice, m_Memory, nullptr);
 
-	vkDestroyImageView(m_pLogicalDevice, m_ImageView, nullptr);
+	vkDestroyImageView(G_VulkanDevice, m_ImageView, nullptr);
 }
