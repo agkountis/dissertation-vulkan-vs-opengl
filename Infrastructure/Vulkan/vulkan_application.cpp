@@ -286,9 +286,9 @@ bool VulkanApplication::Initialize() noexcept
 	}
 
 #if !defined(NDEBUG) && !defined(__APPLE__)
-//	if (!G_VulkanDebug.Initialize()) {
-//		return false;
-//	}
+	if (!G_VulkanDebug.Initialize()) {
+		return false;
+	}
 #endif
 
 	if (!G_VulkanDevice.Initialize(G_VulkanInstance)) {

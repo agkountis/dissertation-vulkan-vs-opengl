@@ -24,7 +24,7 @@ private:
 public:
 	explicit VulkanTexture(TextureType textureType,
 	                       VkFormat format,
-	                       VkImageAspectFlags imageAspectFlags);
+	                       VkImageAspectFlagBits imageAspectFlagBits);
 
 	~VulkanTexture() override;
 

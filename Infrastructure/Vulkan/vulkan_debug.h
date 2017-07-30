@@ -2,7 +2,6 @@
 #define VULKAN_DEBUG_H_
 
 #include "vulkan_instance.h"
-#include <memory>
 
 class VulkanDebug {
 private:

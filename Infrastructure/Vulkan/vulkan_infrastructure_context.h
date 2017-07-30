@@ -35,7 +35,7 @@ public:
 
 #define G_VulkanInstance VulkanInfrastructureContext::GetVulkanInstance()
 #define G_VulkanDevice VulkanInfrastructureContext::GetVulkanDevice()
-//#define G_VulkanDebug VulkanInfrastructureContext::GetVulkanDebug()
+#define G_VulkanDebug VulkanInfrastructureContext::GetVulkanDebug()
 #define G_ResourceManager VulkanInfrastructureContext::GetResourceManager()
 
 #endif //VULKAN_INFRASTRUCTURE_CONTEXT_H_

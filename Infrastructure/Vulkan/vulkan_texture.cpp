@@ -8,11 +8,11 @@
 
 VulkanTexture::VulkanTexture(TextureType textureType,
                              VkFormat format,
-                             VkImageAspectFlags imageAspectFlags)
+                             VkImageAspectFlagBits imageAspectFlagBits)
 		: Texture{ textureType },
-		  m_Format{ format },
-		  m_ImageAspectFlags{ imageAspectFlags }
+		  m_Format{ format }
 {
+	m_ImageAspectFlags |= imageAspectFlagBits;
 }
 
 VulkanTexture::~VulkanTexture()
