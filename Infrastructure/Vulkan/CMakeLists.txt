@@ -31,39 +31,12 @@ set(SOURCE_FILES vulkan_application.cpp
         vulkan_mesh.h
         vulkan_mesh.cpp
         vulkan_texture.h
-        vulkan_texture.cpp vulkan_infrastructure_context.h vulkan_infrastructure_context.cpp)
+        vulkan_texture.cpp
+        vulkan_infrastructure_context.h
+        vulkan_infrastructure_context.cpp)
 
 include_directories(../Core)
 
-set(LIBRARIES CoreInfrastructure)
-
-if(APPLE)
-    include_directories(~/Downloads/Molten-0.18.0/MoltenVK/include)
-    link_directories(~/Downloads/Molten-0.18.0/MoltenVK/macOS)
-
-    find_library(COCOA Cocoa REQUIRED)
-    find_library(METAL Metal REQUIRED)
-    find_library(QUARTZ_CORE QuartzCore REQUIRED)
-    find_package(glfw3 3.3 REQUIRED)
-
-    set(VULKAN_LIB "/Users/gordath/Downloads/Molten-0.18.0/MoltenVK/macOS/libMoltenVK.dylib")
-    set(LIBRARIES ${LIBRARIES} ${COCOA} ${METAL} ${QUARTZ_CORE} ${VULKAN_LIB})
-elseif(MSVC)
-	include_directories(C:/usr/include)
-    include_directories(C:/VulkanSDK/1.0.54.0/Include)
-
-	set(VULKAN_LIB C:/VulkanSDK/1.0.54.0/Lib32/vulkan-1.lib)
-	set(GLFW_LIB C:/usr/lib/glfw3.lib)
-
-	set(LIBRARIES ${LIBRARIES} ${VULKAN_LIB} ${GLFW_LIB})
-elseif(MINGW)
-    #handle mingw
-else()
-    set(VULKAN_LIB vulkan)
-    find_package(glfw3 3.2 REQUIRED)
-    set(LIBRARIES ${LIBRARIES} ${VULKAN_LIB} glfw)
-endif()
-
 add_library(VulkanInfrastructure ${SOURCE_FILES})
 
-target_link_libraries(VulkanInfrastructure ${LIBRARIES})
+target_link_libraries(VulkanInfrastructure CoreInfrastructure ${VULKAN_APP_LIBRARIES})
