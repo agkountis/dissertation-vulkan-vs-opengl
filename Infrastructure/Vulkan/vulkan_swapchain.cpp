@@ -127,6 +127,7 @@ bool VulkanSwapChain::InitializeSurface(const VulkanWindow& window) noexcept
 
 VulkanSwapChain::~VulkanSwapChain()
 {
+	LOG("Cleaning up VulkanSwapchain(destroying surface)");
 	Destroy();
 
 	vkDestroySurfaceKHR(G_VulkanInstance, m_Surface, nullptr);

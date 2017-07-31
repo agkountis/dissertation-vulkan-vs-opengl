@@ -5,6 +5,7 @@
 
 VulkanCommandPool::~VulkanCommandPool()
 {
+	LOG("Cleaning up VulkanCommandPool");
 	vkDestroyCommandPool(G_VulkanDevice, m_CommandPool, nullptr);
 }
 

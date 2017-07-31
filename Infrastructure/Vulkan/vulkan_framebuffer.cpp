@@ -5,6 +5,7 @@
 
 VulkanFramebuffer::~VulkanFramebuffer()
 {
+	LOG("Cleaning up VulkanFramebuffer");
 	Destroy();
 }
 

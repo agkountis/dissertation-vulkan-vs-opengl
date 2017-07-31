@@ -4,6 +4,7 @@
 
 VulkanSemaphore::~VulkanSemaphore()
 {
+	LOG("Cleaning up VulkanSemaphore");
 	Destroy();
 }
 

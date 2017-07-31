@@ -5,6 +5,7 @@
 
 VulkanBuffer::~VulkanBuffer()
 {
+	LOG("Cleaning up VulkanBuffer");
 	CleanUp();
 }
 

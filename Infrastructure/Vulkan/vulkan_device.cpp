@@ -81,6 +81,7 @@ bool VulkanDevice::PickPhysicalDevice(VkInstance instance)
 
 VulkanDevice::~VulkanDevice()
 {
+	LOG("Cleaning up VulkanDevice");
 	vkDestroyCommandPool(m_LogicalDevice, m_CommandPool, nullptr);
 	vkDestroyDevice(m_LogicalDevice, nullptr);
 }

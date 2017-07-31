@@ -6,6 +6,7 @@
 
 VulkanDepthStencil::~VulkanDepthStencil()
 {
+	LOG("Cleaning up VulkanDepthStencil");
 	Destroy();
 }
 

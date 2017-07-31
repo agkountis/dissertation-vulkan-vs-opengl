@@ -4,6 +4,7 @@
 
 VulkanPipelineCache::~VulkanPipelineCache()
 {
+	LOG("Cleaning up VulkanPipelineCache");
 	vkDestroyPipelineCache(G_VulkanDevice, m_PipelineCache, nullptr);
 }
 

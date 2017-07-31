@@ -4,6 +4,7 @@
 
 VulkanInstance::~VulkanInstance()
 {
+	LOG("Cleaning up VulkanInstance");
 	vkDestroyInstance(m_Instance, nullptr);
 }
 

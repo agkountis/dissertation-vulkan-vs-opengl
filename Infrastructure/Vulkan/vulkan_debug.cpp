@@ -47,6 +47,7 @@ bool VulkanDebug::Initialize() noexcept
 
 VulkanDebug::~VulkanDebug()
 {
+	LOG("Cleaning up VulkanDebug");
 	auto vkDestroyDebugReportCallbackEXT =
 			reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(
 					vkGetInstanceProcAddr(G_VulkanInstance, "vkDestroyDebugReportCallbackEXT")

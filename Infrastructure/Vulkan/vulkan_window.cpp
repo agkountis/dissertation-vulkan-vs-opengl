@@ -15,6 +15,7 @@ void VulkanWindow::OnWindowResize(GLFWwindow* window, i32 width, i32 height) noe
 
 VulkanWindow::~VulkanWindow()
 {
+	LOG("Cleaning up VulkanWindow (terminating glfw)");
 	glfwTerminate();
 }
 

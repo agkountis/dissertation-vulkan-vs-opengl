@@ -6,6 +6,7 @@
 
 VulkanShader::~VulkanShader()
 {
+	LOG("Cleaning up VulkanShader");
 	vkDestroyShaderModule(G_VulkanDevice, m_ShaderModule, nullptr);
 }
 

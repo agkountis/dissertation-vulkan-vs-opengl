@@ -17,6 +17,7 @@ VulkanTexture::VulkanTexture(TextureType textureType,
 
 VulkanTexture::~VulkanTexture()
 {
+	LOG("Cleaning up VulkanTexture");
 	vkDestroyImageView(G_VulkanDevice, m_ImageView, nullptr);
 	vkDestroyImage(G_VulkanDevice, m_Image, nullptr);
 	vkFreeMemory(G_VulkanDevice, m_ImageMemory, nullptr);
