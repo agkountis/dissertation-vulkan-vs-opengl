@@ -2,40 +2,21 @@
 #define VULKAN_INFRASTRUCTURE_CONTEXT_H_
 
 #include <resource_manager.h>
-#include "vulkan_device.h"
-#include "vulkan_instance.h"
-
-#if !defined(NDEBUG) && !defined(__APPLE__)
-#include "vulkan_debug.h"
-#endif
+#include "vulkan_application.h"
 
 class VulkanInfrastructureContext {
 private:
-	static VulkanInstance s_Instance;
-
-	static VulkanDevice s_Device;
-
-#if !defined(NDEBUG) && !defined(__APPLE__)
-	static VulkanDebug s_VulkanDebug;
-#endif
-
-	static ResourceManager s_ResourceManager;
+	static VulkanApplication* s_VulkanApplication;
 
 public:
-	static VulkanInstance& GetVulkanInstance() noexcept;
+	static void RegisterApplication(VulkanApplication* application) noexcept;
 
-	static VulkanDevice& GetVulkanDevice() noexcept;
-
-#if !defined(NDEBUG) && !defined(__APPLE__)
-	static VulkanDebug& GetVulkanDebug() noexcept;
-#endif
-
-	static ResourceManager& GetResourceManager() noexcept;
+	static VulkanApplication* GetApplication() noexcept;
 };
 
-#define G_VulkanInstance VulkanInfrastructureContext::GetVulkanInstance()
-#define G_VulkanDevice VulkanInfrastructureContext::GetVulkanDevice()
-#define G_VulkanDebug VulkanInfrastructureContext::GetVulkanDebug()
-#define G_ResourceManager VulkanInfrastructureContext::GetResourceManager()
+#define G_VulkanInstance VulkanInfrastructureContext::GetApplication()->GetVulkanInstance()
+#define G_VulkanDevice VulkanInfrastructureContext::GetApplication()->GetVulkanDevice()
+#define G_VulkanDebug VulkanInfrastructureContext::GetApplication()->GetVulkanDebug()
+#define G_ResourceManager VulkanInfrastructureContext::GetApplication()->GetResourceManager()
 
 #endif //VULKAN_INFRASTRUCTURE_CONTEXT_H_

@@ -291,7 +291,7 @@ bool VulkanDevice::CreateBuffer(VkBufferUsageFlags usageFlags,
 		result = buffer.Map();
 
 		if (result != VK_SUCCESS) {
-			ERROR_LOG("Failed to map m_Buffer m_Memory.");
+			ERROR_LOG("Failed to map buffer memory.");
 			return false;
 		}
 
@@ -496,8 +496,7 @@ bool VulkanDevice::CopyBufferToImage(const VulkanBuffer& source,
 			destination,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1,
-			&region
-	);
+			&region);
 
 	vkEndCommandBuffer(commandBuffer);
 

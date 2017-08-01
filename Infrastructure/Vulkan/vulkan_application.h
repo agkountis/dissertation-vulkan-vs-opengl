@@ -9,7 +9,11 @@
 #include <vector>
 #include "vulkan_window.h"
 #include "vulkan_physical_device.h"
+
+#if !defined(NDEBUG) && !defined(__APPLE__)
 #include "vulkan_debug.h"
+#endif
+
 #include "vulkan_swapchain.h"
 #include "vulkan_device.h"
 #include "vulkan_depth_stencil.h"
@@ -25,6 +29,16 @@ private:
 	 * \brief The application's window.
 	 */
 	VulkanWindow m_Window;
+
+	VulkanInstance m_Instance;
+
+	VulkanDevice m_Device;
+
+#if !defined(NDEBUG) && !defined(__APPLE__)
+	VulkanDebug m_VulkanDebug;
+#endif
+
+	ResourceManager m_ResourceManager;
 
 	/**
 	 * \brief The physical device features to be enabled for this application.
@@ -214,6 +228,28 @@ public:
 	void PreDraw() noexcept override;
 
 	void PostDraw() noexcept override;
+
+	VulkanInstance& GetVulkanInstance() noexcept
+	{
+		return m_Instance;
+	}
+
+	VulkanDevice& GetVulkanDevice() noexcept
+	{
+		return m_Device;
+	}
+
+#if !defined(NDEBUG) && !defined(__APPLE__)
+	VulkanDebug& GetVulkanDebug() noexcept
+	{
+		return m_VulkanDebug;
+	}
+#endif
+
+	ResourceManager& GetResourceManager() noexcept
+	{
+		return m_ResourceManager;
+	}
 };
 
 #endif // VULKAN_APPLICATION_H_

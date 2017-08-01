@@ -273,6 +273,8 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 
 bool VulkanApplication::Initialize() noexcept
 {
+	VulkanInfrastructureContext::RegisterApplication(this);
+
 	const auto& settings = GetSettings();
 	if (!m_Window.Create(settings.name,
 	                     settings.windowResolution,
