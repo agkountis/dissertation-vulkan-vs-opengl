@@ -33,7 +33,7 @@ bool VulkanApplication::CreateInstance() noexcept
 	}
 #endif
 
-	return G_VulkanInstance.Create(appInfo, instanceExtensions, layers);
+	return m_Instance.Create(appInfo, instanceExtensions, layers);
 }
 
 bool VulkanApplication::CreateCommandBuffers() noexcept
@@ -46,7 +46,7 @@ bool VulkanApplication::CreateCommandBuffers() noexcept
 	commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	commandBufferAllocateInfo.commandBufferCount = static_cast<ui32>(m_DrawCommandBuffers.size());
 
-	VkResult result{ vkAllocateCommandBuffers(G_VulkanDevice,
+	VkResult result{ vkAllocateCommandBuffers(m_Device,
 	                                          &commandBufferAllocateInfo,
 	                                          m_DrawCommandBuffers.data()) };
 
@@ -133,7 +133,7 @@ bool VulkanApplication::CreateRenderPasses() noexcept
 	renderPassInfo.dependencyCount = static_cast<ui32>(dependencies.size());
 	renderPassInfo.pDependencies = dependencies.data();
 
-	VkResult result{ vkCreateRenderPass(G_VulkanDevice,
+	VkResult result{ vkCreateRenderPass(m_Device,
 	                                    &renderPassInfo,
 	                                    nullptr,
 	                                    &m_RenderPass) };
@@ -176,7 +176,7 @@ VulkanApplication::VulkanApplication(const ApplicationSettings& settings)
 
 VulkanApplication::~VulkanApplication()
 {
-	vkDestroyRenderPass(G_VulkanDevice, m_RenderPass, nullptr);
+	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
 }
 
 VulkanWindow& VulkanApplication::GetWindow() noexcept
@@ -232,7 +232,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 
 	VkExtent2D extent = m_SwapChain.GetExtent();
 	if (!m_DepthStencil.Create(Vec2ui{extent.width, extent.height},
-	                           G_VulkanDevice.GetPhysicalDevice().GetSupportedDepthFormat())) {
+	                           m_Device.GetPhysicalDevice().GetSupportedDepthFormat())) {
 		return false;
 	}
 
@@ -249,7 +249,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 		}
 	}
 
-	vkFreeCommandBuffers(G_VulkanDevice,
+	vkFreeCommandBuffers(m_Device,
 	                     m_CommandPool,
 	                     static_cast<ui32>(m_DrawCommandBuffers.size()),
 	                     m_DrawCommandBuffers.data());
@@ -264,7 +264,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 		return false;
 	}
 
-	vkDeviceWaitIdle(G_VulkanDevice);
+	vkDeviceWaitIdle(m_Device);
 
 	OnResize(Vec2ui{extent.width, extent.height});
 
@@ -273,7 +273,9 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 
 bool VulkanApplication::Initialize() noexcept
 {
-	VulkanInfrastructureContext::RegisterApplication(this);
+	VulkanInfrastructureContext::Register(&m_Instance,
+	                                      &m_Device,
+	                                      &m_ResourceManager);
 
 	const auto& settings = GetSettings();
 	if (!m_Window.Create(settings.name,
@@ -288,18 +290,18 @@ bool VulkanApplication::Initialize() noexcept
 	}
 
 #if !defined(NDEBUG) && !defined(__APPLE__)
-	if (!G_VulkanDebug.Initialize()) {
+	if (!m_VulkanDebug.Initialize()) {
 		return false;
 	}
 #endif
 
-	if (!G_VulkanDevice.Initialize(G_VulkanInstance)) {
+	if (!m_Device.Initialize(m_Instance)) {
 		return false;
 	}
 
 	EnableFeatures();
 
-	if (!G_VulkanDevice.CreateLogicalDevice(m_FeaturesToEnable, m_ExtensionsToEnable)) {
+	if (!m_Device.CreateLogicalDevice(m_FeaturesToEnable, m_ExtensionsToEnable)) {
 		return false;
 	}
 
@@ -311,7 +313,7 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	VkFormat depthStencilFormat{ G_VulkanDevice.GetPhysicalDevice().GetSupportedDepthFormat() };
+	VkFormat depthStencilFormat{ m_Device.GetPhysicalDevice().GetSupportedDepthFormat() };
 
 	if (depthStencilFormat == VK_FORMAT_UNDEFINED) {
 		ERROR_LOG("Could not find supported depth format.");
@@ -384,7 +386,7 @@ void VulkanApplication::PreDraw() noexcept
 
 void VulkanApplication::PostDraw() noexcept
 {
-	VkResult result{ m_SwapChain.Present(G_VulkanDevice.GetQueue(QueueFamily::PRESENT),
+	VkResult result{ m_SwapChain.Present(m_Device.GetQueue(QueueFamily::PRESENT),
 	                                     m_CurrentBuffer,
 	                                     m_DrawComplete) };
 
@@ -393,5 +395,5 @@ void VulkanApplication::PostDraw() noexcept
 		Reshape(Vec2i{extent.width, extent.height});
 	}
 
-	vkQueueWaitIdle(G_VulkanDevice.GetQueue(QueueFamily::PRESENT));
+	vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::PRESENT));
 }

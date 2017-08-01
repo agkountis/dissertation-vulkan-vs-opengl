@@ -1,13 +1,38 @@
 #include "vulkan_infrastructure_context.h"
 
-VulkanApplication* VulkanInfrastructureContext::s_VulkanApplication{ nullptr };
+VulkanInstance* VulkanInfrastructureContext::s_pInstance{ nullptr };
 
-void VulkanInfrastructureContext::RegisterApplication(VulkanApplication* application) noexcept
+VulkanDevice* VulkanInfrastructureContext::s_pDevice{ nullptr };
+
+ResourceManager* VulkanInfrastructureContext::s_pResourceManager{ nullptr };
+
+VulkanInstance& VulkanInfrastructureContext::GetVulkanInstance() noexcept
 {
-	s_VulkanApplication = application;
+	return *s_pInstance;
 }
 
-VulkanApplication* VulkanInfrastructureContext::GetApplication() noexcept
+VulkanDevice& VulkanInfrastructureContext::GetVulkanDevice() noexcept
 {
-	return s_VulkanApplication;
+	return *s_pDevice;
 }
+
+ResourceManager& VulkanInfrastructureContext::GetResourceManager() noexcept
+{
+	return *s_pResourceManager;
+}
+
+void VulkanInfrastructureContext::Register(VulkanInstance* instance,
+                                           VulkanDevice* device,
+                                           ResourceManager* resourceManager) noexcept
+{
+	assert(instance);
+	assert(device);
+	assert(resourceManager);
+
+	s_pInstance = instance;
+
+	s_pDevice = device;
+
+	s_pResourceManager = resourceManager;
+}
+

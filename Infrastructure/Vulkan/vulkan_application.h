@@ -228,28 +228,6 @@ public:
 	void PreDraw() noexcept override;
 
 	void PostDraw() noexcept override;
-
-	VulkanInstance& GetVulkanInstance() noexcept
-	{
-		return m_Instance;
-	}
-
-	VulkanDevice& GetVulkanDevice() noexcept
-	{
-		return m_Device;
-	}
-
-#if !defined(NDEBUG) && !defined(__APPLE__)
-	VulkanDebug& GetVulkanDebug() noexcept
-	{
-		return m_VulkanDebug;
-	}
-#endif
-
-	ResourceManager& GetResourceManager() noexcept
-	{
-		return m_ResourceManager;
-	}
 };
 
 #endif // VULKAN_APPLICATION_H_

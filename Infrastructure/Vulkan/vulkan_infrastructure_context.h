@@ -6,17 +6,26 @@
 
 class VulkanInfrastructureContext {
 private:
-	static VulkanApplication* s_VulkanApplication;
+	static VulkanInstance* s_pInstance;
+
+	static VulkanDevice* s_pDevice;
+
+	static ResourceManager* s_pResourceManager;
 
 public:
-	static void RegisterApplication(VulkanApplication* application) noexcept;
+	static VulkanInstance& GetVulkanInstance() noexcept;
 
-	static VulkanApplication* GetApplication() noexcept;
+	static VulkanDevice& GetVulkanDevice() noexcept;
+
+	static ResourceManager& GetResourceManager() noexcept;
+
+	static void Register(VulkanInstance* instance,
+	                     VulkanDevice* device,
+	                     ResourceManager* resourceManager) noexcept;
 };
 
-#define G_VulkanInstance VulkanInfrastructureContext::GetApplication()->GetVulkanInstance()
-#define G_VulkanDevice VulkanInfrastructureContext::GetApplication()->GetVulkanDevice()
-#define G_VulkanDebug VulkanInfrastructureContext::GetApplication()->GetVulkanDebug()
-#define G_ResourceManager VulkanInfrastructureContext::GetApplication()->GetResourceManager()
+#define G_VulkanInstance VulkanInfrastructureContext::GetVulkanInstance()
+#define G_VulkanDevice VulkanInfrastructureContext::GetVulkanDevice()
+#define G_ResourceManager VulkanInfrastructureContext::GetResourceManager()
 
 #endif //VULKAN_INFRASTRUCTURE_CONTEXT_H_
