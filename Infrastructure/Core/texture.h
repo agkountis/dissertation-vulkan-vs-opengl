@@ -6,7 +6,8 @@
 enum TextureType {
 	TEX_DIFFUSE,
 	TEX_SPECULAR,
-	TEX_NORMAL
+	TEX_NORMAL,
+	SUPPORTED_TEX_COUNT
 };
 
 class Texture : public Resource {

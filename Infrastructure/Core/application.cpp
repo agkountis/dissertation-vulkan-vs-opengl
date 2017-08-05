@@ -16,7 +16,7 @@ bool Application::ShouldTerminate() const noexcept
 	return m_Terminate;
 }
 
-const Timer& Application::GetTimer() const noexcept
+Timer& Application::GetTimer() noexcept
 {
 	return m_Timer;
 }

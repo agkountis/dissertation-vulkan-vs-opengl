@@ -7,11 +7,20 @@ layout(location = 2) in vec2 inTexcoord;
 layout(location = 3) in vec3 inNormal;
 layout(location = 4) in vec3 inVertexColor;
 
+layout(push_constant) uniform PushContstants {
+    layout(offset = 64) vec4 diffuse;
+    layout(offset = 80)vec4 specular;
+} pcs;
+
+layout(set = 1, binding = 0) uniform sampler2D diffuseSampler;
+layout(set = 1, binding = 1) uniform sampler2D specularSampler;
+layout(set = 1, binding = 2) uniform sampler2D normalSampler;
+
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
-    vec3 n = normalize(inNormal);
+    vec3 n = normalize(texture(normalSampler, inTexcoord).rgb * 2.0 - 1.0);
     vec3 v = normalize(v_InViewDirection);
     vec3 l = normalize(v_InLightDirection);
 
@@ -21,9 +30,9 @@ void main()
 
     float specLight = pow(max(dot(n, h), 0.0), 60.0);
 
-    vec4 diffColor = vec4(inVertexColor, 1.0);
+    vec4 diffTexel = texture(diffuseSampler, inTexcoord);
+    vec4 specTexel = texture(specularSampler, inTexcoord);
 
-    vec4 specColor = vec4(1.0);
-
-	outColor = diffColor * diffLight + specColor * specLight;
+	outColor = diffTexel * pcs.diffuse  * diffLight
+	            + specTexel * pcs.specular * specLight;
 }

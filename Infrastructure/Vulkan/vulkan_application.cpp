@@ -204,11 +204,6 @@ const std::vector<VulkanFramebuffer>& VulkanApplication::GetFramebuffers() const
 	return m_SwapChainFrameBuffers;
 }
 
-const VulkanPipelineCache& VulkanApplication::GetPipelineCache() const noexcept
-{
-	return m_PipelineCache;
-}
-
 VkRenderPass VulkanApplication::GetRenderPass() const noexcept
 {
 	return m_RenderPass;
@@ -273,6 +268,8 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 
 bool VulkanApplication::Initialize() noexcept
 {
+	GetTimer().Start();
+
 	VulkanInfrastructureContext::Register(&m_Instance,
 	                                      &m_Device,
 	                                      &m_ResourceManager);
@@ -347,10 +344,6 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	if (!m_PipelineCache.Create()) {
-		return false;
-	}
-
 	if (!CreateRenderPasses()) {
 		return false;
 	}
@@ -363,8 +356,18 @@ i32 VulkanApplication::Run() noexcept
 	while (!glfwWindowShouldClose(m_Window)) {
 		glfwPollEvents();
 
+		static f64 prev = 0.0;
+		static ui64 frames = 0;
 		Update();
+
 		Draw();
+
+		auto now = GetTimer().GetSec();
+
+		std::cout << "frame: " << frames << " " << "ms/frame: " << (now - prev) * 1000.0 << " running time:" << now << std::endl;
+
+		prev = now;
+		++frames;
 	}
 
 	return 0;

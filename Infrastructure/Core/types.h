@@ -1,7 +1,9 @@
 #ifndef TYPES_H_
 #define TYPES_H_
-#include "glm/glm.hpp"
+
 #include <cstdint>
+#include "glm/glm.hpp"
+#include "glm/gtx/quaternion.hpp"
 
 using Vec2f = glm::vec2;
 using Vec3f = glm::vec3;

@@ -19,7 +19,6 @@
 #include "vulkan_depth_stencil.h"
 #include "vulkan_semaphore.h"
 #include "vulkan_command_pool.h"
-#include "vulkan_pipeline_cache.h"
 #include "vulkan_framebuffer.h"
 #include "vulkan_shader.h"
 
@@ -83,11 +82,6 @@ private:
 	VulkanDepthStencil m_DepthStencil;
 
 	/**
-	 * \brief Pipeline cache object used to accelerate pipeline creation.
-	 */
-	VulkanPipelineCache m_PipelineCache;
-
-	/**
 	 * \brief The default render pass.
 	 */
 	VkRenderPass m_RenderPass{ VK_NULL_HANDLE };
@@ -136,13 +130,6 @@ private:
 	 * \details Must be called after the physical device has been picked.
 	 */
 	virtual void EnableFeatures() noexcept = 0;
-
-	/**
-	 * \brief Function for derived classes to override to set up the application
-	 * specific pipelines.
-	 * \return TRUE if successful, FALSE otherwise.
-	 */
-	virtual bool CreatePipelines() noexcept = 0;
 
 	/**
  	 * \brief Creates the command buffers used to record rendering commands.
@@ -198,8 +185,6 @@ public:
 	const std::vector<VkCommandBuffer>& GetCommandBuffers() const noexcept;
 
 	const std::vector<VulkanFramebuffer>& GetFramebuffers() const noexcept;
-
-	const VulkanPipelineCache& GetPipelineCache() const noexcept;
 
 	VkRenderPass GetRenderPass() const noexcept;
 

@@ -17,9 +17,9 @@ private:
 
 	VkImageAspectFlags m_ImageAspectFlags{ VK_NULL_HANDLE };
 
-	Vec2ui m_Size;
+	VkImageLayout m_ImageLayout{ VK_IMAGE_LAYOUT_PREINITIALIZED };
 
-	VkDescriptorImageInfo m_Descriptor{};
+	Vec2ui m_Size;
 
 public:
 	explicit VulkanTexture(TextureType textureType,
@@ -27,6 +27,10 @@ public:
 	                       VkImageAspectFlagBits imageAspectFlagBits);
 
 	~VulkanTexture() override;
+
+	VkImageView GetImageView() const noexcept;
+
+	VkImageLayout GetImageLayout() const noexcept;
 
 	bool Load(const std::string& fileName) noexcept override;
 };

@@ -11,9 +11,8 @@ set(SOURCE_FILES application.cpp
 		vertex.h
 		mesh.h
 		mesh.cpp
-		math_utilities.h
 		texture.h
-		stb_image.h)
+		stb_image.h entity.cpp)
 
 if(MSVC)
 	include_directories(C:/usr/include)

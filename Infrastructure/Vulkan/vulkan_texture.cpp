@@ -23,6 +23,16 @@ VulkanTexture::~VulkanTexture()
 	vkFreeMemory(G_VulkanDevice, m_ImageMemory, nullptr);
 }
 
+VkImageView VulkanTexture::GetImageView() const noexcept
+{
+	return m_ImageView;
+}
+
+VkImageLayout VulkanTexture::GetImageLayout() const noexcept
+{
+	return m_ImageLayout;
+}
+
 bool VulkanTexture::Load(const std::string& fileName) noexcept
 {
 	Vec2i size;
@@ -73,11 +83,13 @@ bool VulkanTexture::Load(const std::string& fileName) noexcept
 	// transfer destination optimal to copy the pixels from the staging buffer.
 	if (!G_VulkanDevice.TransitionImageLayout(m_Image,
 	                                      m_Format,
-	                                      VK_IMAGE_LAYOUT_PREINITIALIZED,
+	                                      m_ImageLayout,
 	                                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)) {
 		ERROR_LOG("Failed to transition image layout.");
 		return false;
 	}
+
+	m_ImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
 	// Copy the data from the staging buffer to the image.
 	if (!G_VulkanDevice.CopyBufferToImage(stagingBuffer,
@@ -90,11 +102,13 @@ bool VulkanTexture::Load(const std::string& fileName) noexcept
 	// Transition the image layout to shader read only optimal for optimal shader sampling.
 	if (!G_VulkanDevice.TransitionImageLayout(m_Image,
 	                                      m_Format,
-	                                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+	                                      m_ImageLayout,
 	                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)) {
 		ERROR_LOG("Failed to transition image layout.");
 		return false;
 	}
+
+	m_ImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 	// Create the image view
 	VkImageViewCreateInfo viewInfo{};

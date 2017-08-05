@@ -34,7 +34,7 @@ public:
 
 	bool ShouldTerminate() const noexcept;
 
-	const Timer& GetTimer() const noexcept;
+	Timer& GetTimer() noexcept;
 
 	const ApplicationSettings& GetSettings() const noexcept;
 
