@@ -1,8 +1,8 @@
-#include "vulkan_single_threaded_application.h"
+#include "static_scene_low_poly_application.h"
 #include <vulkan_infrastructure_context.h>
 
 //Private functions ---------------------------------------------------------------------------
-void VulkanSingleThreadedApplication::EnableFeatures() noexcept
+void StaticSceneLowPolyApplication::EnableFeatures() noexcept
 {
 	const auto& physicalDevice = G_VulkanDevice.GetPhysicalDevice();
 
@@ -16,7 +16,7 @@ void VulkanSingleThreadedApplication::EnableFeatures() noexcept
 	}
 }
 
-bool VulkanSingleThreadedApplication::BuildCommandBuffers() noexcept
+bool StaticSceneLowPolyApplication::BuildCommandBuffers() noexcept
 {
 	VkCommandBufferBeginInfo commandBufferBeginInfo{};
 	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -85,12 +85,12 @@ bool VulkanSingleThreadedApplication::BuildCommandBuffers() noexcept
 
 //---------------------------------------------------------------------------------------------
 
-VulkanSingleThreadedApplication::VulkanSingleThreadedApplication(const ApplicationSettings& settings)
+StaticSceneLowPolyApplication::StaticSceneLowPolyApplication(const ApplicationSettings& settings)
 		: VulkanApplication{ settings }
 {
 }
 
-bool VulkanSingleThreadedApplication::Initialize() noexcept
+bool StaticSceneLowPolyApplication::Initialize() noexcept
 {
 	if (!VulkanApplication::Initialize()) {
 		return false;
@@ -103,14 +103,14 @@ bool VulkanSingleThreadedApplication::Initialize() noexcept
 	return BuildCommandBuffers();
 }
 
-void VulkanSingleThreadedApplication::Update() noexcept
+void StaticSceneLowPolyApplication::Update() noexcept
 {
 	m_DemoScene.Update(GetSwapChain().GetExtent(),
 	                   GetTimer().GetMsec(),
 	                   GetTimer().GetDelta());
 }
 
-void VulkanSingleThreadedApplication::Draw() noexcept
+void StaticSceneLowPolyApplication::Draw() noexcept
 {
 	PreDraw();
 
@@ -118,20 +118,22 @@ void VulkanSingleThreadedApplication::Draw() noexcept
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &GetCommandBuffers()[GetCurrentBufferIndex()];
 
+	w1 = GetTimer().GetSec();
+
 	VkResult result{ vkQueueSubmit(G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
 	                               1,
 	                               &submitInfo,
 	                               VK_NULL_HANDLE) };
 
 	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to submit the command m_Buffer.");
+		ERROR_LOG("Failed to submit the command buffer.");
 		return;
 	}
 
 	PostDraw();
 }
 
-void VulkanSingleThreadedApplication::OnResize(const Vec2i& size) noexcept
+void StaticSceneLowPolyApplication::OnResize(const Vec2i& size) noexcept
 {
 	LOG("RESIZE EVENT!");
 }

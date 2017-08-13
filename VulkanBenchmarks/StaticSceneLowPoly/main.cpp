@@ -1,4 +1,4 @@
-#include "vulkan_single_threaded_application.h"
+#include "static_scene_low_poly_application.h"
 
 int main(int argc, char* argv[])
 {
@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
 	applicationSettings.windowResolution = Vec2i{ 1024, 768 };
 	applicationSettings.vsync = false;
 
-	VulkanSingleThreadedApplication app{ applicationSettings };
+	StaticSceneLowPolyApplication app{ applicationSettings };
 
 	if (!app.Initialize()) {
 		return 1;

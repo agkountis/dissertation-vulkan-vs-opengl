@@ -14,6 +14,7 @@
 #include "vulkan_debug.h"
 #endif
 
+#include "vulkan_instance.h"
 #include "vulkan_swapchain.h"
 #include "vulkan_device.h"
 #include "vulkan_depth_stencil.h"
@@ -29,14 +30,38 @@ private:
 	 */
 	VulkanWindow m_Window;
 
+	/**
+	 * \brief The Vulkan instance.
+	 */
 	VulkanInstance m_Instance;
 
+	/**
+	 * \brief The vulkan device.
+	 * \details This class encapsulates both the physical
+	 * and the logical device. Many actions such is enabling
+	 * physical device features, creating and copying buffers or
+	 * creating and copying images are performed using this class.
+	 */
 	VulkanDevice m_Device;
 
 #if !defined(NDEBUG) && !defined(__APPLE__)
+	/**
+	 * \brief The Vulkan debug instance.
+	 * \details This class is responsible for creating the
+	 * Vulkan debug callback as well as destroying it.
+	 * It handles and prints messages from the validation layer
+	 * to the console for debugging.
+	 */
 	VulkanDebug m_VulkanDebug;
 #endif
 
+	/**
+ 	 * \brief The resource manager.
+ 	 * \details This class handles the loading of resources.
+ 	 * It loads and manages any class that is a Resource.
+ 	 * \note If a Resource has already been loaded and registered to the
+ 	 * manager the manager will not reload the Resource.
+ 	 */
 	ResourceManager m_ResourceManager;
 
 	/**
@@ -66,6 +91,12 @@ private:
 
 	/**
 	 * \brief The command buffers to use for drawing.
+	 * \details This vector will contain 1 command buffer per
+	 * swap chain image. This is convenient when command buffer recording
+	 * is done on initialization. That way the gpu doesn't have to wait for an
+	 * available command buffer.
+	 * \note If command buffers are recorded per frame then 1 command buffer is
+	 * sufficient since it will be prepared every frame and is immediately available.
 	 */
 	std::vector<VkCommandBuffer> m_DrawCommandBuffers;
 
@@ -155,6 +186,7 @@ private:
 	virtual bool CreateFramebuffers() noexcept;
 
 public:
+	double w1, w2;
 	/**
 	 * \brief VulkanApplication's constructor.
 	 * \param settings The settings of the application.

@@ -388,7 +388,11 @@ VkCommandBuffer VulkanDevice::CreateCommandBuffer(VkCommandBufferLevel commandBu
 	return commandBuffer;
 }
 
-bool VulkanDevice::SubmitCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, VkFence fence) const noexcept
+bool VulkanDevice::SubmitCommandBuffer(VkCommandBuffer commandBuffer,
+                                       VkQueue queue,
+                                       VkFence fence,
+                                       bool freeCommandBuffer,
+                                       bool destroyFence) const noexcept
 {
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -404,6 +408,14 @@ bool VulkanDevice::SubmitCommandBuffer(VkCommandBuffer commandBuffer, VkQueue qu
 			ERROR_LOG("Wait for fences failed.");
 			return false;
 		}
+
+		if (destroyFence) {
+			vkDestroyFence(m_LogicalDevice, fence, nullptr);
+		}
+	}
+
+	if (freeCommandBuffer) {
+		vkFreeCommandBuffers(m_LogicalDevice, m_CommandPool, 1, &commandBuffer);
 	}
 
 	return true;
@@ -457,10 +469,6 @@ bool VulkanDevice::CopyBuffer(const VulkanBuffer& source,
 		ERROR_LOG("Command buffer submission failed.");
 		return false;
 	}
-
-	vkDestroyFence(m_LogicalDevice, fence, nullptr);
-
-	vkFreeCommandBuffers(m_LogicalDevice, m_CommandPool, 1, &commandBuffer);
 
 	return true;
 }
@@ -517,10 +525,6 @@ bool VulkanDevice::CopyBufferToImage(const VulkanBuffer& source,
 		ERROR_LOG("Command buffer submission failed.");
 		return false;
 	}
-
-	vkDestroyFence(m_LogicalDevice, fence, nullptr);
-
-	vkFreeCommandBuffers(m_LogicalDevice, m_CommandPool, 1, &commandBuffer);
 
 	return true;
 }
@@ -657,10 +661,6 @@ bool VulkanDevice::TransitionImageLayout(VkImage image,
 		ERROR_LOG("Command buffer submission failed.");
 		return false;
 	}
-
-	vkDestroyFence(m_LogicalDevice, fence, nullptr);
-
-	vkFreeCommandBuffers(m_LogicalDevice, m_CommandPool, 1, &commandBuffer);
 
 	return true;
 }

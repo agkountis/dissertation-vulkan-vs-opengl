@@ -152,7 +152,9 @@ public:
 
 	bool SubmitCommandBuffer(VkCommandBuffer commandBuffer,
 	                         VkQueue queue,
-	                         VkFence fence = VK_NULL_HANDLE) const noexcept;
+	                         VkFence fence = VK_NULL_HANDLE,
+	                         bool freeCommandBuffer = true,
+	                         bool destroyFence = true) const noexcept;
 
 	/**
 	 * \brief Copies the contents of the source buffer to the destination buffer.

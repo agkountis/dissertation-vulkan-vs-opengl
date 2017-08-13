@@ -35,6 +35,5 @@ else()
     set(VULKAN_APP_LIBRARIES ${LIBRARIES} ${Vulkan_LIBRARY} glfw)
 endif()
 
-add_subdirectory(Infrastructure/Core)
-add_subdirectory(Infrastructure/Vulkan)
-add_subdirectory(VulkanBenchmarkSingleThreaded)
+add_subdirectory(Infrastructure)
+add_subdirectory(VulkanBenchmarks)

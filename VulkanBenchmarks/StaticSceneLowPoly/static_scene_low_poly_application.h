@@ -5,8 +5,9 @@
 #include "demo_entity.h"
 #include "demo_scene.h"
 #include <memory>
+#include <vulkan_infrastructure_context.h>
 
-class VulkanSingleThreadedApplication : public VulkanApplication {
+class StaticSceneLowPolyApplication : public VulkanApplication {
 private:
 	DemoScene m_DemoScene;
 
@@ -15,7 +16,7 @@ private:
 	bool BuildCommandBuffers() noexcept override;
 
 public:
-	explicit VulkanSingleThreadedApplication(const ApplicationSettings& settings);
+	explicit StaticSceneLowPolyApplication(const ApplicationSettings& settings);
 
 	bool Initialize() noexcept override;
 

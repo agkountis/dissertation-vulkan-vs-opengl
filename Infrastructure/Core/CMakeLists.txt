@@ -12,7 +12,7 @@ set(SOURCE_FILES application.cpp
 		mesh.h
 		mesh.cpp
 		texture.h
-		stb_image.h entity.cpp)
+		stb_image.h entity.cpp mesh_utilities.h mesh_utilities.cpp)
 
 if(MSVC)
 	include_directories(C:/usr/include)

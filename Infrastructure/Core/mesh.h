@@ -5,6 +5,11 @@
 #include "vertex.h"
 #include "resource.h"
 
+enum class VertexWinding {
+	CLOCKWISE,
+	COUNTERCLOCKWISE
+};
+
 class Mesh : public Resource {
 private:
 	std::vector<Vertex> m_Vertices;
@@ -27,6 +32,12 @@ public:
 	Vertex* GetVertexDataPtr() noexcept;
 
 	ui32* GetIndexDataPtr() noexcept;
+
+	void FlipNormals() noexcept;
+
+	void GenerateIndices(VertexWinding vertexWinding) noexcept;
+
+	virtual bool CreateBuffers() noexcept = 0;
 
 	bool Load(const std::string& fileName) noexcept override;
 };

@@ -7,7 +7,7 @@ Infrastructure/Release - Vulkan/
 VulkanBenchmark/Debug - Vulkan/
 VulkanBenchmark/Release - Vulkan/
 Release - Vulkan/
-VulkanBenchmarkSingleThreaded/Debug - Vulkan/
+VulkanBenchmarks/Debug - Vulkan/
 Dissertation.VC.db
 CMakeSettings.json
 build/

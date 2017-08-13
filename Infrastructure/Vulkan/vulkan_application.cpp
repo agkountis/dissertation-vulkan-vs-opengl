@@ -32,7 +32,7 @@ bool VulkanApplication::CreateInstance() noexcept
 		LOG("\t |- " + std::string{ availableLayer.layerName });
 	}
 #endif
-
+//	layers.push_back("VK_LAYER_RENDERDOC_Capture");
 	return m_Instance.Create(appInfo, instanceExtensions, layers);
 }
 
@@ -358,13 +358,17 @@ i32 VulkanApplication::Run() noexcept
 
 		static f64 prev = 0.0;
 		static ui64 frames = 0;
-		Update();
 
+		Update();
 		Draw();
 
 		auto now = GetTimer().GetSec();
 
-		std::cout << "frame: " << frames << " " << "ms/frame: " << (now - prev) * 1000.0 << " running time:" << now << std::endl;
+		auto wholeFrame = (now - prev) * 1000.0;
+		auto gpuTime = (w2 - w1) * 1000.0;
+		auto cpuTime = wholeFrame - gpuTime;
+
+		std::cout << "frame: " << frames << " " << "ms/frame: " << wholeFrame << " " << "Cpu: " << cpuTime << "ms" << " Gpu: " << gpuTime << "ms" << " running time:" << now << std::endl;
 
 		prev = now;
 		++frames;
@@ -399,4 +403,5 @@ void VulkanApplication::PostDraw() noexcept
 	}
 
 	vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::PRESENT));
+	w2 = GetTimer().GetSec();
 }

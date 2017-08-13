@@ -1,5 +1,4 @@
 #include "entity.h"
-//#include "math_utilities.h"
 #include "glm/gtc/matrix_transform.hpp"
 
 Entity::~Entity()

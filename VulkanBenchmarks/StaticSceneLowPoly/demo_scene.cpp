@@ -1,9 +1,11 @@
 #include <logger.h>
 #include <vulkan_infrastructure_context.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <random>
+#include <mesh_utilities.h>
 #include "demo_scene.h"
 
-#define ENTITY_COUNT 3
+#define ENTITY_COUNT 5000
 
 // Vulkan clip space has inverted Y and half Z.
 static const Mat4f s_ClipCorrectionMat{ 1.0f, 0.0f, 0.0f, 0.0f,
@@ -11,76 +13,48 @@ static const Mat4f s_ClipCorrectionMat{ 1.0f, 0.0f, 0.0f, 0.0f,
                                         0.0f, 0.0f, 0.5f, 0.0f,
                                         0.0f, 0.0f, 0.5f, 1.0f };
 
-static const std::vector<Vertex> s_CubeVertices{
-		//front
-		{{ -0.5f, -0.5f, 0.5f },  { 0.0f,  0.0f, 1.0f },  { 1.0f,  0.0f, 0.0f },  { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f }},
-		{{ 0.5f,  -0.5f, 0.5f },  { 0.0f,  0.0f, 1.0f },  { 1.0f,  0.0f, 0.0f },  { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }},
-		{{ 0.5f,  0.5f,  0.5f },  { 0.0f,  0.0f, 1.0f },  { 1.0f,  0.0f, 0.0f },  { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f }},
-		{{ -0.5f, 0.5f,  0.5f },  { 0.0f,  0.0f, 1.0f },  { 1.0f,  0.0f, 0.0f },  { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f }},
-
-		//back
-		{{ 0.5f,  -0.5f, -0.5f }, { 0.0f,  0.0f, -1.0f }, { -1.0f, 0.0f, 0.0f },  { 1.0f, 0.0f, 0.0f }, { 0.0,  1.0f }},
-		{{ -0.5f, -0.5f, -0.5f }, { 0.0f,  0.0f, -1.0f }, { -1.0f, 0.0f, 0.0f },  { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }},
-		{{ 0.5f,  0.5f,  -0.5f }, { 0.0f,  0.0f, -1.0f }, { -1.0f, 0.0f, 0.0f },  { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }},
-		{{ -0.5f, 0.5f,  -0.5f }, { 0.0f,  0.0f, -1.0f }, { -1.0f, 0.0f, 0.0f },  { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f }},
-
-		//right
-		{{ 0.5f,  -0.5f, 0.5f },  { 1.0f,  0.0f, 0.0f },  { 0.0f,  0.0f, 1.0f },  { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f }},
-		{{ 0.5f,  -0.5f, -0.5f }, { 1.0f,  0.0f, 0.0f },  { 0.0f,  0.0f, 1.0f },  { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }},
-		{{ 0.5f,  0.5f,  0.5f },  { 1.0f,  0.0f, 0.0f },  { 0.0f,  0.0f, 1.0f },  { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }},
-		{{ 0.5f,  0.5f,  -0.5f }, { 1.0f,  0.0f, 0.0f },  { 0.0f,  0.0f, 1.0f },  { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f }},
-
-		//left
-		{{ -0.5f, -0.5f, -0.5f }, { -1.0f, 0.0f, 0.0f },  { 0.0f,  0.0f, -1.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f }},
-		{{ -0.5f, -0.5f, 0.5f },  { -1.0f, 0.0f, 0.0f },  { 0.0f,  0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }},
-		{{ -0.5f, 0.5f,  -0.5f }, { -1.0f, 0.0f, 0.0f },  { 0.0f,  0.0f, -1.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f }},
-		{{ -0.5f, 0.5f,  0.5f },  { -1.0f, 0.0f, 0.0f },  { 0.0f,  0.0f, -1.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f }}
-};
-
-static const std::vector<ui32> s_CubeIndices{
-		0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 5, 7, 8, 9, 10, 10, 9, 11, 12, 13, 14, 14, 13, 15
-};
-
 // Private functions -------------------------------------------------
 bool DemoScene::GenerateEntities() noexcept
 {
-	m_CubeMesh.AddVertices(s_CubeVertices);
-	m_CubeMesh.AddIndices(s_CubeIndices);
-
-	if (!m_CubeMesh.CreateBuffers()) {
+	if (!GenerateCube(&m_CubeMesh, 1.0f)) {
 		return false;
 	}
 
-	std::vector<Vec3f> positions{ Vec3f{ -1.0f, 0.0f, 0.0f },
-	                              Vec3f{},
-	                              Vec3f{ 1.0f, 0.0f, 0.0f }};
+	using namespace std::chrono;
+	auto seed = high_resolution_clock::now().time_since_epoch().count();
+	std::mt19937 rng{ seed };
 
-	std::vector<Vec4f> colors{ Vec4f{ 1.0f, 0.0f, 0.0f, 1.0f },
-	                           Vec4f{ 0.0f, 1.0f, 0.0f, 1.0f },
-	                           Vec4f{ 0.0f, 0.0f, 1.0f, 1.0f }};
+	auto realRangeRng = [&rng](float rangeBegin, float rangeEnd) {
+		std::uniform_real_distribution<float> r(rangeBegin, rangeEnd);
+
+		return r(rng);
+	};
 
 	for (int i = 0; i < ENTITY_COUNT; ++i) {
+
 		auto entity = std::make_unique<DemoEntity>(&m_CubeMesh);
-		entity->SetPosition(positions[i]);
+
+		entity->SetPosition(Vec3f{ realRangeRng(-20.0f, 20.0f),
+		                           realRangeRng(-20.0f, 20.0f),
+		                           realRangeRng(-20.0f, 20.0f) });
+
 
 		auto& material = entity->GetMaterial();
 
-		material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan.jpg",
+		material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelDiff5.png",
 		                                                                      TEX_DIFFUSE,
 		                                                                      VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                      VK_IMAGE_ASPECT_COLOR_BIT);
 
-		material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan_spec.png",
+		material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelSpec5.png",
 		                                                                       TEX_SPECULAR,
 		                                                                       VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                       VK_IMAGE_ASPECT_COLOR_BIT);
 
-		material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan_norm.png",
+		material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelNorm5.png",
 		                                                                     TEX_NORMAL,
 		                                                                     VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                     VK_IMAGE_ASPECT_COLOR_BIT);
-
-		material.diffuse = colors[i];
 
 		entity->Update(0.0f);
 
@@ -631,12 +605,13 @@ bool DemoScene::Initialize(VkExtent2D swapChainExtent, VkRenderPass renderPass) 
 void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 {
 	UniformBufferObject ubo{};
-	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 4.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
-	ubo.view = glm::rotate(ubo.view, (msec / 1000.0f) * glm::radians(15.0f), Vec3f{ 0.0f, 1.0f, 0.0f });
+	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 80.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
+
+	ubo.view = glm::rotate(ubo.view, msec / 1000.0f * glm::radians(5.0f), Vec3f{ 1.0f, 1.0f, 1.0f });
 
 	f32 aspect{ static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height) };
 
-	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
+	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 200.0f);
 
 	m_MatricesUbo.Map(sizeof m_MatricesUbo, 0);
 
@@ -685,4 +660,6 @@ void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
 		entity->Draw(commandBuffer);
 	}
 }
+
+
 
