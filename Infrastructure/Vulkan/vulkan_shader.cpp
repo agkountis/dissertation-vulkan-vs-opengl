@@ -28,7 +28,7 @@ bool VulkanShader::Load(const std::string& fileName) noexcept
 
 	assert(fileSize > 0);
 
-	std::vector<Byte> buffer;
+	std::vector<byte> buffer;
 	buffer.resize(fileSize);
 
 	file.seekg(0);

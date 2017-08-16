@@ -228,8 +228,8 @@ ui32 VulkanDevice::GetMemoryTypeIndex(ui32 memoryTypeMask, VkMemoryPropertyFlags
 	return std::numeric_limits<ui32>::max();
 }
 
-VkCommandPool
-VulkanDevice::CreateCommandPool(ui32 queueFamilyIndex, VkCommandPoolCreateFlags createFlags) const noexcept
+VkCommandPool VulkanDevice::CreateCommandPool(ui32 queueFamilyIndex,
+                                              VkCommandPoolCreateFlags createFlags) const noexcept
 {
 	VkCommandPoolCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -678,6 +678,11 @@ VkQueue VulkanDevice::GetQueue(QueueFamily queueFamily) const noexcept
 		default:
 			return nullptr;
 	}
+}
+
+VkCommandPool VulkanDevice::GetCommandPool() const noexcept
+{
+	return m_CommandPool;
 }
 
 VulkanDevice::operator VkDevice() const noexcept

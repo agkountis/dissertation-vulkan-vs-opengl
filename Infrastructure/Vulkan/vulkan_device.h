@@ -194,6 +194,8 @@ public:
 	 */
 	VkQueue GetQueue(QueueFamily queueFamily) const noexcept;
 
+	VkCommandPool GetCommandPool() const noexcept;
+
 	/**
 	 * \brief Automatic conversion to Vk device.
 	 * \details Utility that allows this class to be used directly in Vulkan functions.

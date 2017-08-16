@@ -32,7 +32,6 @@ bool VulkanApplication::CreateInstance() noexcept
 		LOG("\t |- " + std::string{ availableLayer.layerName });
 	}
 #endif
-//	layers.push_back("VK_LAYER_RENDERDOC_Capture");
 	return m_Instance.Create(appInfo, instanceExtensions, layers);
 }
 
@@ -226,7 +225,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 	m_DepthStencil.Destroy();
 
 	VkExtent2D extent = m_SwapChain.GetExtent();
-	if (!m_DepthStencil.Create(Vec2ui{extent.width, extent.height},
+	if (!m_DepthStencil.Create(Vec2ui{ extent.width, extent.height },
 	                           m_Device.GetPhysicalDevice().GetSupportedDepthFormat())) {
 		return false;
 	}
@@ -238,7 +237,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 		                                     m_DepthStencil.GetImageView() };
 
 		if (!m_SwapChainFrameBuffers[i].Create(imageViews,
-		                                       Vec2ui{extent.width, extent.height},
+		                                       Vec2ui{ extent.width, extent.height },
 		                                       m_RenderPass)) {
 			return false;
 		}
@@ -261,7 +260,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 
 	vkDeviceWaitIdle(m_Device);
 
-	OnResize(Vec2ui{extent.width, extent.height});
+	OnResize(Vec2ui{ extent.width, extent.height });
 
 	return true;
 }
@@ -348,6 +347,12 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
+	queryPools.resize(m_SwapChain.GetImages().size());
+
+	for (auto& queryPool : queryPools) {
+		queryPool.Initialize(VK_QUERY_TYPE_TIMESTAMP, 2, VK_NULL_HANDLE);
+	}
+
 	return CreateFramebuffers();
 }
 
@@ -363,12 +368,39 @@ i32 VulkanApplication::Run() noexcept
 		Draw();
 
 		auto now = GetTimer().GetSec();
-
 		auto wholeFrame = (now - prev) * 1000.0;
-		auto gpuTime = (w2 - w1) * 1000.0;
+
+		VkCommandBuffer commandBuffer{ G_VulkanDevice.CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY) };
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo{};
+		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+
+		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPools[m_CurrentBuffer], 1);
+
+		vkEndCommandBuffer(commandBuffer);
+
+		VkFenceCreateInfo fenceCreateInfo{};
+		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
+		VkFence fence{ VK_NULL_HANDLE };
+		vkCreateFence(G_VulkanDevice, &fenceCreateInfo, nullptr, &fence);
+
+		G_VulkanDevice.SubmitCommandBuffer(commandBuffer,
+		                                   G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
+		                                   fence);
+
+		std::vector<ui64> gpuResults;
+		queryPools[m_CurrentBuffer].GetResults(gpuResults);
+
+		float nanosInAnIncrement{ m_Device.GetPhysicalDevice().properties.limits.timestampPeriod };
+
+		auto gpuTime = (gpuResults[1] - gpuResults[0]) * nanosInAnIncrement * 1e-6;
 		auto cpuTime = wholeFrame - gpuTime;
 
-		std::cout << "frame: " << frames << " " << "ms/frame: " << wholeFrame << " " << "Cpu: " << cpuTime << "ms" << " Gpu: " << gpuTime << "ms" << " running time:" << now << std::endl;
+		std::cout << "frame: " << frames << " " << "ms/frame: " << wholeFrame << " " << "Cpu: " << cpuTime << "ms"
+		          << " Gpu: " << gpuTime << "ms" << " running time:" << GetTimer().GetSec() * 1000.0 << std::endl;
 
 		prev = now;
 		++frames;
@@ -382,9 +414,9 @@ void VulkanApplication::PreDraw() noexcept
 	VkResult result{ m_SwapChain.GetNextImageIndex(m_PresentComplete,
 	                                               m_CurrentBuffer) };
 
-	while(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+	while (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		const auto& extent = m_SwapChain.GetExtent();
-		Reshape(Vec2i{extent.width, extent.height});
+		Reshape(Vec2i{ extent.width, extent.height });
 
 		result = m_SwapChain.GetNextImageIndex(m_PresentComplete,
 		                                       m_CurrentBuffer);
@@ -399,7 +431,7 @@ void VulkanApplication::PostDraw() noexcept
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		const auto& extent = m_SwapChain.GetExtent();
-		Reshape(Vec2i{extent.width, extent.height});
+		Reshape(Vec2i{ extent.width, extent.height });
 	}
 
 	vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::PRESENT));

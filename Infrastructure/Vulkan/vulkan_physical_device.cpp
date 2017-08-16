@@ -50,7 +50,7 @@ VkFormat VulkanPhysicalDevice::GetSupportedDepthFormat() const noexcept
 {
 	for (const auto& depthFormat : s_DepthFormats) {
 
-		VkFormatProperties formatProperties;
+		VkFormatProperties formatProperties{};
 		vkGetPhysicalDeviceFormatProperties(device, depthFormat, &formatProperties);
 
 		if (formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {

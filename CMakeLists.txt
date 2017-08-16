@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 
 project(dissertation)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(VULKAN_APP_LIBRARIES)
 set(OPENGL_APP_LIBRARIES)

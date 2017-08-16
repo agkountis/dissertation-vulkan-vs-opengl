@@ -22,6 +22,7 @@
 #include "vulkan_command_pool.h"
 #include "vulkan_framebuffer.h"
 #include "vulkan_shader.h"
+#include "vulkan_query_pool.h"
 
 class VulkanApplication : public Application {
 private:
@@ -186,6 +187,9 @@ private:
 	virtual bool CreateFramebuffers() noexcept;
 
 public:
+	
+	std::vector<VulkanQueryPool> queryPools;
+	
 	double w1, w2;
 	/**
 	 * \brief VulkanApplication's constructor.

@@ -3,9 +3,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <random>
 #include <mesh_utilities.h>
+#include <vulkan_shader.h>
 #include "demo_scene.h"
 
-#define ENTITY_COUNT 5000
+#define ENTITY_COUNT 20000
 
 // Vulkan clip space has inverted Y and half Z.
 static const Mat4f s_ClipCorrectionMat{ 1.0f, 0.0f, 0.0f, 0.0f,

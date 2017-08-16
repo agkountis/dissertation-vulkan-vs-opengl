@@ -54,6 +54,10 @@ bool StaticSceneLowPolyApplication::BuildCommandBuffers() noexcept
 			return false;
 		}
 
+		vkCmdResetQueryPool(commandBuffers[i], queryPools[i], 0, 2);
+
+		vkCmdWriteTimestamp(commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPools[i], 0);
+
 		vkCmdBeginRenderPass(commandBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		VkViewport viewport{};
