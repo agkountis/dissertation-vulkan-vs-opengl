@@ -184,8 +184,8 @@ public:
 	                           VkFormat imageFormat,
 	                           VkImageLayout oldLayout,
 	                           VkImageLayout newLayout,
-	                           VkPipelineStageFlags sourceStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-	                           VkPipelineStageFlags destinationStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT) const noexcept;
+	                           VkPipelineStageFlags sourceStageFlags = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+	                           VkPipelineStageFlags destinationStageFlags = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT) const noexcept;
 
 	/**
 	 * \brief Returns the requested QueueFamily.

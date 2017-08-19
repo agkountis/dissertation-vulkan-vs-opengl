@@ -29,7 +29,7 @@ elseif(MSVC)
 elseif(MINGW)
     #handle mingw
 else()
-    find_package(Vulkan 1.0.54.0 REQUIRED)
+    find_package(Vulkan 1.0.57.0 REQUIRED)
     include_directories(${Vulkan_INCLUDE_DIR})
 
     set(VULKAN_APP_LIBRARIES ${LIBRARIES} ${Vulkan_LIBRARY} glfw)
