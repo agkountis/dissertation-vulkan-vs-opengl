@@ -20,9 +20,9 @@ if(APPLE)
     set(VULKAN_APP_LIBRARIES ${LIBRARIES} ${COCOA} ${METAL} ${QUARTZ_CORE} ${VULKAN_LIB})
 elseif(MSVC)
     include_directories(C:/usr/include)
-    include_directories(C:/VulkanSDK/1.0.54.0/Include)
+    include_directories(C:/VulkanSDK/1.0.57.0/Include)
 
-    set(VULKAN_LIB C:/VulkanSDK/1.0.54.0/Lib/vulkan-1.lib)
+    set(VULKAN_LIB C:/VulkanSDK/1.0.57.0/Lib/vulkan-1.lib)
     set(GLFW_LIB C:/usr/lib/glfw3x64.lib)
 
     set(VULKAN_APP_LIBRARIES ${LIBRARIES} ${VULKAN_LIB} ${GLFW_LIB})

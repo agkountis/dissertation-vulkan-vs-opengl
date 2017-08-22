@@ -6,7 +6,7 @@
 #include <vulkan_shader.h>
 #include "demo_scene.h"
 
-#define ENTITY_COUNT 200000
+#define ENTITY_COUNT 20000
 
 // Vulkan clip space has inverted Y and half Z.
 static const Mat4f s_ClipCorrectionMat{ 1.0f, 0.0f, 0.0f, 0.0f,
@@ -23,7 +23,7 @@ bool DemoScene::GenerateEntities() noexcept
 
 	using namespace std::chrono;
 	auto seed = high_resolution_clock::now().time_since_epoch().count();
-	std::mt19937 rng{ seed };
+	std::mt19937 rng{ static_cast<ui32>(seed) };
 
 	auto realRangeRng = [&rng](float rangeBegin, float rangeEnd) {
 		std::uniform_real_distribution<float> r(rangeBegin, rangeEnd);
