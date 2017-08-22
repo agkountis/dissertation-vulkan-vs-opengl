@@ -365,6 +365,7 @@ i32 VulkanApplication::Run() noexcept
 		static ui64 frames = 0;
 
 		Update();
+        vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::PRESENT));
 		Draw();
 
 		auto now = GetTimer().GetSec();
@@ -434,6 +435,5 @@ void VulkanApplication::PostDraw() noexcept
 		Reshape(Vec2i{ extent.width, extent.height });
 	}
 
-	vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::PRESENT));
 	w2 = GetTimer().GetSec();
 }

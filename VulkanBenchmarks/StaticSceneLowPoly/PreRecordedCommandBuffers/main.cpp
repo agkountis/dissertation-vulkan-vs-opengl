@@ -1,13 +1,13 @@
-#include "static_scene_low_poly_application.h"
+#include "demo_application.h"
 
 int main(int argc, char* argv[])
 {
 	ApplicationSettings applicationSettings;
-	applicationSettings.name = "Vulkan Single Threaded Benchmark";
+	applicationSettings.name = "Vulkan - StaticSceneLowPoly - Pre recorded command buffers.";
 	applicationSettings.windowResolution = Vec2i{ 1024, 768 };
 	applicationSettings.vsync = false;
 
-	StaticSceneLowPolyApplication app{ applicationSettings };
+	DemoApplication app{ applicationSettings };
 
 	if (!app.Initialize()) {
 		return 1;

@@ -371,6 +371,8 @@ bool DemoScene::PrepareUniforms() noexcept
 		writeDescriptorSets.clear();
 	}
 
+	m_MatricesUbo.Map(sizeof m_MatricesUbo);
+
 	return true;
 }
 
@@ -614,11 +616,7 @@ void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 
 	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 200.0f);
 
-	m_MatricesUbo.Map(sizeof m_MatricesUbo, 0);
-
 	m_MatricesUbo.Fill(&ubo, sizeof ubo);
-
-	m_MatricesUbo.Unmap();
 }
 
 void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept

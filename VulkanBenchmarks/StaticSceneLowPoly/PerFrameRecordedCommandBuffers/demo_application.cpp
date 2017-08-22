@@ -1,8 +1,8 @@
-#include "static_scene_low_poly_application.h"
+#include "demo_application.h"
 #include <vulkan_infrastructure_context.h>
 
 //Private functions ---------------------------------------------------------------------------
-void StaticSceneLowPolyApplication::EnableFeatures() noexcept
+void DemoApplication::EnableFeatures() noexcept
 {
 	const auto& physicalDevice = G_VulkanDevice.GetPhysicalDevice();
 
@@ -16,7 +16,7 @@ void StaticSceneLowPolyApplication::EnableFeatures() noexcept
 	}
 }
 
-bool StaticSceneLowPolyApplication::BuildCommandBuffers() noexcept
+bool DemoApplication::BuildCommandBuffers() noexcept
 {
 	VkCommandBufferBeginInfo commandBufferBeginInfo{};
 	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -89,12 +89,12 @@ bool StaticSceneLowPolyApplication::BuildCommandBuffers() noexcept
 
 //---------------------------------------------------------------------------------------------
 
-StaticSceneLowPolyApplication::StaticSceneLowPolyApplication(const ApplicationSettings& settings)
+DemoApplication::DemoApplication(const ApplicationSettings& settings)
 		: VulkanApplication{ settings }
 {
 }
 
-bool StaticSceneLowPolyApplication::Initialize() noexcept
+bool DemoApplication::Initialize() noexcept
 {
 	if (!VulkanApplication::Initialize()) {
 		return false;
@@ -107,14 +107,14 @@ bool StaticSceneLowPolyApplication::Initialize() noexcept
 	return BuildCommandBuffers();
 }
 
-void StaticSceneLowPolyApplication::Update() noexcept
+void DemoApplication::Update() noexcept
 {
 	m_DemoScene.Update(GetSwapChain().GetExtent(),
 	                   GetTimer().GetMsec(),
 	                   GetTimer().GetDelta());
 }
 
-void StaticSceneLowPolyApplication::Draw() noexcept
+void DemoApplication::Draw() noexcept
 {
 	PreDraw();
 
@@ -137,7 +137,7 @@ void StaticSceneLowPolyApplication::Draw() noexcept
 	PostDraw();
 }
 
-void StaticSceneLowPolyApplication::OnResize(const Vec2i& size) noexcept
+void DemoApplication::OnResize(const Vec2i& size) noexcept
 {
 	LOG("RESIZE EVENT!");
 }
