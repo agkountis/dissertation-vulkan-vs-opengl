@@ -169,12 +169,13 @@ bool VulkanApplication::CreateFramebuffers() noexcept
 // -------------------------------------------------
 
 VulkanApplication::VulkanApplication(const ApplicationSettings& settings)
-		: Application{ settings }
+	: Application{ settings }
 {
 }
 
 VulkanApplication::~VulkanApplication()
 {
+	vkDeviceWaitIdle(m_Device);
 	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
 }
 
@@ -220,6 +221,8 @@ ui32 VulkanApplication::GetCurrentBufferIndex() const noexcept
 
 bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 {
+	vkDeviceWaitIdle(m_Device);
+
 	m_SwapChain.Create(size, GetSettings().vsync);
 
 	m_DepthStencil.Destroy();
@@ -232,9 +235,11 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 
 	for (ui32 i = 0; i < m_SwapChainFrameBuffers.size(); ++i) {
 		m_SwapChainFrameBuffers[i].Destroy();
+	}
 
+	for (ui32 i = 0; i < m_SwapChainFrameBuffers.size(); ++i) {
 		std::vector<VkImageView> imageViews{ m_SwapChain.GetImageViews()[i],
-		                                     m_DepthStencil.GetImageView() };
+			m_DepthStencil.GetImageView() };
 
 		if (!m_SwapChainFrameBuffers[i].Create(imageViews,
 		                                       Vec2ui{ extent.width, extent.height },
@@ -365,7 +370,6 @@ i32 VulkanApplication::Run() noexcept
 		static ui64 frames = 0;
 
 		Update();
-        vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::PRESENT));
 		Draw();
 
 		auto now = GetTimer().GetSec();
@@ -401,7 +405,7 @@ i32 VulkanApplication::Run() noexcept
 		auto cpuTime = wholeFrame - gpuTime;
 
 		std::cout << "frame: " << frames << " " << "ms/frame: " << wholeFrame << " " << "Cpu: " << cpuTime << "ms"
-		          << " Gpu: " << gpuTime << "ms" << " running time:" << GetTimer().GetSec() * 1000.0 << std::endl;
+				<< " Gpu: " << gpuTime << "ms" << " running time:" << GetTimer().GetSec() * 1000.0 << std::endl;
 
 		prev = now;
 		++frames;
@@ -422,6 +426,8 @@ void VulkanApplication::PreDraw() noexcept
 		result = m_SwapChain.GetNextImageIndex(m_PresentComplete,
 		                                       m_CurrentBuffer);
 	}
+
+	vkQueueWaitIdle(m_Device.GetQueue(QueueFamily::GRAPHICS));
 }
 
 void VulkanApplication::PostDraw() noexcept

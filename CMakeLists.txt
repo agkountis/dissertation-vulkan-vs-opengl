@@ -19,6 +19,8 @@ if(APPLE)
     set(VULKAN_LIB "/Users/gordath/Downloads/Molten-0.18.0/MoltenVK/macOS/libMoltenVK.dylib")
     set(VULKAN_APP_LIBRARIES ${LIBRARIES} ${COCOA} ${METAL} ${QUARTZ_CORE} ${VULKAN_LIB})
 elseif(MSVC)
+	set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
     include_directories(C:/usr/include)
     include_directories(C:/VulkanSDK/1.0.57.0/Include)
 

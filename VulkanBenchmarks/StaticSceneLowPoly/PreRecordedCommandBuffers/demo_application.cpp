@@ -41,13 +41,11 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 
 	const auto& frameBuffers = GetFramebuffers();
 
-	VkResult result;
-
 	for (i32 i = 0; i < commandBuffers.size(); ++i) {
 
 		renderPassBeginInfo.framebuffer = frameBuffers[i];
 
-		result = vkBeginCommandBuffer(commandBuffers[i], &commandBufferBeginInfo);
+		VkResult result{ vkBeginCommandBuffer(commandBuffers[i], &commandBufferBeginInfo) };
 
 		if (result != VK_SUCCESS) {
 			ERROR_LOG("Failed to begin command buffer.");

@@ -95,9 +95,9 @@ bool VulkanDepthStencil::Create(const Vec2ui& size, VkFormat format) noexcept
 
 void VulkanDepthStencil::Destroy() const noexcept
 {
+	vkDestroyImageView(G_VulkanDevice, m_ImageView, nullptr);
+
 	vkDestroyImage(G_VulkanDevice, m_Image, nullptr);
 
 	vkFreeMemory(G_VulkanDevice, m_Memory, nullptr);
-
-	vkDestroyImageView(G_VulkanDevice, m_ImageView, nullptr);
 }

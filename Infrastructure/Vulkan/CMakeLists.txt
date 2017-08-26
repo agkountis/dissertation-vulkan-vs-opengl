@@ -33,10 +33,16 @@ set(SOURCE_FILES vulkan_application.cpp
         vulkan_texture.h
         vulkan_texture.cpp
         vulkan_infrastructure_context.h
-        vulkan_infrastructure_context.cpp vulkan_query_pool.h vulkan_query_pool.cpp)
+        vulkan_infrastructure_context.cpp 
+		vulkan_query_pool.h 
+		vulkan_query_pool.cpp)
 
 include_directories(../Core)
 
 add_library(VulkanInfrastructure ${SOURCE_FILES})
+
+if(MSVC)
+	set_target_properties(VulkanInfrastructure PROPERTIES FOLDER Infrastructure)
+endif()
 
 target_link_libraries(VulkanInfrastructure CoreInfrastructure ${VULKAN_APP_LIBRARIES})

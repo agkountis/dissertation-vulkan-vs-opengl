@@ -5,6 +5,7 @@ int main(int argc, char* argv[])
 	ApplicationSettings applicationSettings;
 	applicationSettings.name = "Vulkan - StaticSceneLowPoly - Pre recorded command buffers.";
 	applicationSettings.windowResolution = Vec2i{ 1024, 768 };
+	applicationSettings.windowPosition = Vec2i{ 512, 512 };
 	applicationSettings.vsync = false;
 
 	DemoApplication app{ applicationSettings };

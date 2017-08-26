@@ -14,8 +14,8 @@ set(SOURCE_FILES application.cpp
 		texture.h
 		stb_image.h entity.cpp mesh_utilities.h mesh_utilities.cpp)
 
-if(MSVC)
-	include_directories(C:/usr/include)
-endif()
-
 add_library(CoreInfrastructure ${SOURCE_FILES})
+
+if(MSVC)
+	set_target_properties(CoreInfrastructure PROPERTIES FOLDER Infrastructure)
+endif()
