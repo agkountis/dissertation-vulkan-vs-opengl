@@ -37,52 +37,50 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 	renderPassBeginInfo.clearValueCount = 2;
 	renderPassBeginInfo.pClearValues = clearValues;
 
-	const auto& commandBuffers = GetCommandBuffers();
+	// Command buffers are re-recorded per frame so we do not need a command buffer per framebuffer.
+	// Use the first one of the available command buffers already allocated.
+	const auto bufferIndex = GetCurrentBufferIndex();
 
-	const auto& frameBuffers = GetFramebuffers();
+	const auto& commandBuffer = GetCommandBuffers()[bufferIndex];
 
-	VkResult result;
+	renderPassBeginInfo.framebuffer = GetFramebuffers()[bufferIndex];
 
-	for (i32 i = 0; i < commandBuffers.size(); ++i) {
+	VkResult result = vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
 
-		renderPassBeginInfo.framebuffer = frameBuffers[i];
-
-		result = vkBeginCommandBuffer(commandBuffers[i], &commandBufferBeginInfo);
-
-		if (result != VK_SUCCESS) {
-			ERROR_LOG("Failed to begin command buffer.");
-			return false;
-		}
-
-		vkCmdResetQueryPool(commandBuffers[i], queryPools[i], 0, 2);
-
-		vkCmdWriteTimestamp(commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPools[i], 0);
-
-		vkCmdBeginRenderPass(commandBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		VkViewport viewport{};
-		viewport.width = static_cast<float>(swapChainExtent.width);
-		viewport.height = static_cast<float>(swapChainExtent.height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(commandBuffers[i], 0, 1, &viewport);
-
-		VkRect2D scissor{};
-		scissor.extent = swapChainExtent;
-		scissor.offset = VkOffset2D{ 0, 0 };
-		vkCmdSetScissor(commandBuffers[i], 0, 1, &scissor);
-
-		m_DemoScene.Draw(commandBuffers[i]);
-
-		vkCmdEndRenderPass(commandBuffers[i]);
-
-		result = vkEndCommandBuffer(commandBuffers[i]);
-
-		if (result != VK_SUCCESS) {
-			ERROR_LOG("Failed to end command buffer.");
-			return false;
-		}
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to begin command buffer.");
+		return false;
 	}
+
+	vkCmdResetQueryPool(commandBuffer, queryPools[bufferIndex], 0, 2);
+
+	vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPools[bufferIndex], 0);
+
+	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	VkViewport viewport{};
+	viewport.width = static_cast<float>(swapChainExtent.width);
+	viewport.height = static_cast<float>(swapChainExtent.height);
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor{};
+	scissor.extent = swapChainExtent;
+	scissor.offset = VkOffset2D{ 0, 0 };
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+	m_DemoScene.Draw(commandBuffer);
+
+	vkCmdEndRenderPass(commandBuffer);
+
+	result = vkEndCommandBuffer(commandBuffer);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to end command buffer.");
+		return false;
+	}
+
 
 	return true;
 }
@@ -90,7 +88,7 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 //---------------------------------------------------------------------------------------------
 
 DemoApplication::DemoApplication(const ApplicationSettings& settings)
-		: VulkanApplication{ settings }
+	: VulkanApplication{ settings }
 {
 }
 
@@ -116,8 +114,9 @@ void DemoApplication::Update() noexcept
 
 void DemoApplication::Draw() noexcept
 {
-	BuildCommandBuffers();
 	PreDraw();
+
+	BuildCommandBuffers();
 
 	auto& submitInfo = GetSubmitInfo();
 	submitInfo.commandBufferCount = 1;
@@ -125,10 +124,12 @@ void DemoApplication::Draw() noexcept
 
 	w1 = GetTimer().GetSec();
 
-	VkResult result{ vkQueueSubmit(G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
-	                               1,
-	                               &submitInfo,
-	                               VK_NULL_HANDLE) };
+	VkResult result{
+		vkQueueSubmit(G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
+		              1,
+		              &submitInfo,
+		              VK_NULL_HANDLE)
+	};
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to submit the command buffer.");

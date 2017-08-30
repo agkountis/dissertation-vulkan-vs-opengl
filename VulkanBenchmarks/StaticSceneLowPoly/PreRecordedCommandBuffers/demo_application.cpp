@@ -54,7 +54,7 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 
 		vkCmdResetQueryPool(commandBuffers[i], queryPools[i], 0, 2);
 
-		vkCmdWriteTimestamp(commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPools[i], 0);
+		vkCmdWriteTimestamp(commandBuffers[i], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPools[i], 0);
 
 		vkCmdBeginRenderPass(commandBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
