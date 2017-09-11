@@ -5,74 +5,72 @@
 #include <map>
 #include "declspec.h"
 
-namespace Blade
-{
-	class NCF_DECLSPEC NCF
-	{
-	private:
-		std::string m_Name; // Node name.
 
-		mutable std::map<std::string, NCF*> m_Groups; // Sub-node map.
+class NCF_DECLSPEC NCF {
+private:
+	std::string m_Name; // Node name.
 
-		mutable std::map<std::string, std::string> m_Symbols; // Symbol map.
+	mutable std::map<std::string, NCF*> m_Groups; // Sub-node map.
 
-		std::string m_Filepath; // Source path.
+	mutable std::map<std::string, std::string> m_Symbols; // Symbol map.
 
-		unsigned int m_Level; // Node level.
+	std::string m_Filepath; // Source path.
 
-		void Release();
+	unsigned int m_Level; // Node level.
 
-		void ExpandSymbol(std::map<std::string, std::string>& symbols, std::string& s);
+	void Release();
 
-	public:
-		NCF();
-		~NCF();
+	void ExpandSymbol(std::map<std::string, std::string>& symbols, std::string& s);
 
-		void SetSource(const char* file);
-		const char* GetSource() const;
+public:
+	NCF();
+	~NCF();
 
-		void Purge();
+	void SetSource(const char* file);
+	const char* GetSource() const;
 
-		/* RETURN CODES:
-		** 0 : Everything went well.
-		** 1 : Not an ASCII file.
-		** 2 : File I/O error.
-		** 3 : Syntax error.
-		** 4 : Unbalanced groups.
-		*/
-		int Parse();
+	void Purge();
 
-		/* RETURN CODES:
-		** 0 : Everything went well.
-		** 1 : File I/O error.
-		*/
-		int Dump(const char* file, int create = 1) const;
+	/* RETURN CODES:
+	** 0 : Everything went well.
+	** 1 : Not an ASCII file.
+	** 2 : File I/O error.
+	** 3 : Syntax error.
+	** 4 : Unbalanced groups.
+	*/
+	int Parse();
 
-		bool QueryProperty(const char* name) const;
+	/* RETURN CODES:
+	** 0 : Everything went well.
+	** 1 : File I/O error.
+	*/
+	int Dump(const char* file, int create = 1) const;
 
-		bool QueryGroup(const char* name) const;
+	bool QueryProperty(const char* name) const;
 
-		unsigned int CountProperties() const;
+	bool QueryGroup(const char* name) const;
 
-		unsigned int CountGroups() const;
+	unsigned int CountProperties() const;
 
-		void SetProperty(const char* name, const char* value);
+	unsigned int CountGroups() const;
 
-		const char* GetPropertyByName(const char* name) const;
+	void SetProperty(const char* name, const char* value);
 
-		const char* GetPropertyByIndex(unsigned int index) const;
+	const char* GetPropertyByName(const char* name) const;
 
-		const char* GetPropertyNameByIndex(unsigned int index) const;
+	const char* GetPropertyByIndex(unsigned int index) const;
 
-		NCF* GetGroupByName(const char* name) const;
+	const char* GetPropertyNameByIndex(unsigned int index) const;
 
-		NCF* GetGroupByIndex(unsigned int index) const;
+	NCF* GetGroupByName(const char* name) const;
 
-		const char* GetName() const;
+	NCF* GetGroupByIndex(unsigned int index) const;
 
-		NCF(const NCF&) = delete;
-		NCF& operator =(const NCF&) = delete;
-	};
-}
+	const char* GetName() const;
+
+	NCF(const NCF&) = delete;
+	NCF& operator =(const NCF&) = delete;
+};
+
 
 #endif //BLADE_LIB_NCF_H_

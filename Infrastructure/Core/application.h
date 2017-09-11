@@ -21,6 +21,8 @@ private:
 
 	ApplicationSettings m_Settings;
 
+	float m_Duration{ -1.0f };
+
 public:
 	explicit Application(const ApplicationSettings& settings);
 
@@ -40,7 +42,9 @@ public:
 
 	void SetSettings(const ApplicationSettings& settings) noexcept;
 
-	virtual bool Initialize() noexcept = 0;
+	float GetDuration() const noexcept;
+
+	virtual bool Initialize() noexcept;
 
 	virtual i32 Run() noexcept = 0;
 

@@ -272,6 +272,10 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 
 bool VulkanApplication::Initialize() noexcept
 {
+	if (!Application::Initialize()) {
+		return false;
+	}
+
 	GetTimer().Start();
 
 	VulkanInfrastructureContext::Register(&m_Instance,
@@ -363,7 +367,7 @@ bool VulkanApplication::Initialize() noexcept
 
 i32 VulkanApplication::Run() noexcept
 {
-	while (!glfwWindowShouldClose(m_Window)) {
+	while (!glfwWindowShouldClose(m_Window) && !ShouldTerminate()) {
 		glfwPollEvents();
 
 		static f64 prev = 0.0;
@@ -374,6 +378,10 @@ i32 VulkanApplication::Run() noexcept
 
 		auto now = GetTimer().GetSec();
 		auto wholeFrame = (now - prev) * 1000.0;
+
+		if (GetDuration() > 0.0f && now > GetDuration()) {
+			SetTermination(true);
+		}
 
 		VkCommandBuffer commandBuffer{ G_VulkanDevice.CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY) };
 
