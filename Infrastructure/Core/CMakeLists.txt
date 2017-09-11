@@ -12,7 +12,17 @@ set(SOURCE_FILES application.cpp
 		mesh.h
 		mesh.cpp
 		texture.h
-		stb_image.h entity.cpp mesh_utilities.h mesh_utilities.cpp)
+		stb_image.h 
+		entity.cpp 
+		mesh_utilities.h 
+		mesh_utilities.cpp
+		cfg.h
+		cfg.cpp
+		dllmain.c
+		ncf.h
+		ncf.cpp
+		util.h
+		util.cpp)
 
 add_library(CoreInfrastructure ${SOURCE_FILES})
 

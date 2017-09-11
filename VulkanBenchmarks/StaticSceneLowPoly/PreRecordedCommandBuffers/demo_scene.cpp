@@ -22,10 +22,10 @@ bool DemoScene::GenerateEntities() noexcept
 	}
 
 	using namespace std::chrono;
-	auto seed = high_resolution_clock::now().time_since_epoch().count();
+	const auto seed = high_resolution_clock::now().time_since_epoch().count();
 	std::mt19937 rng{ static_cast<ui32>(seed) };
 
-	auto realRangeRng = [&rng](float rangeBegin, float rangeEnd) {
+	const auto realRangeRng = [&rng](float rangeBegin, float rangeEnd) {
 		std::uniform_real_distribution<float> r(rangeBegin, rangeEnd);
 
 		return r(rng);
@@ -93,7 +93,7 @@ bool DemoScene::CreateTextureSampler() noexcept
 	samplerCreateInfo.minLod = 0.0f;
 	samplerCreateInfo.maxLod = 0.0f;
 
-	VkResult result{ vkCreateSampler(G_VulkanDevice, &samplerCreateInfo, nullptr, &m_TextureSampler) };
+	const VkResult result{ vkCreateSampler(G_VulkanDevice, &samplerCreateInfo, nullptr, &m_TextureSampler) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create texture sampler.");
