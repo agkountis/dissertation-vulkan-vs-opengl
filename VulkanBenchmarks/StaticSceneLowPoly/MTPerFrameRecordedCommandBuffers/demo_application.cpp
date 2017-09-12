@@ -104,6 +104,10 @@ bool DemoApplication::Initialize() noexcept
 		return false;
 	}
 
+	if (!m_ThreadPool.Initialize()) {
+		return false;
+	}
+
 	return true;
 }
 

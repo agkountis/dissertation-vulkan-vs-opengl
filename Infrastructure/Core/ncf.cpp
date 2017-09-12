@@ -32,8 +32,8 @@ void NCF::Purge()
 
 void NCF::Release()
 {
-	std::map<std::string, NCF*>::iterator it = m_Groups.begin();
-	std::map<std::string, NCF*>::iterator et = m_Groups.end();
+	auto it = m_Groups.begin();
+	auto et = m_Groups.end();
 
 	for (; it != et; ++it) {
 		delete it->second;

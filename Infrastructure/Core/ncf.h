@@ -1,5 +1,5 @@
-#ifndef BLADE_LIB_NCF_H_
-#define BLADE_LIB_NCF_H_
+#ifndef LIB_NCF_H_
+#define LIB_NCF_H_
 
 #include <string>
 #include <map>
@@ -73,4 +73,4 @@ public:
 };
 
 
-#endif //BLADE_LIB_NCF_H_
+#endif //LIB_NCF_H_

@@ -22,7 +22,9 @@ set(SOURCE_FILES application.cpp
 		ncf.h
 		ncf.cpp
 		util.h
-		util.cpp)
+		util.cpp
+		thread_pool.h
+		thread_pool.cpp)
 
 add_library(CoreInfrastructure ${SOURCE_FILES})
 

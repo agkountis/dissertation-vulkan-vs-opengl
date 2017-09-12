@@ -6,10 +6,16 @@
 #include "demo_scene.h"
 #include <memory>
 #include <vulkan_infrastructure_context.h>
+#include "thread_pool.h"
 
 class DemoApplication : public VulkanApplication {
 private:
 	DemoScene m_DemoScene;
+
+	ThreadPool m_ThreadPool;
+
+	//TODO: create resources per thread
+	//TODO: create command buffers per thread.
 
 	void EnableFeatures() noexcept override;
 
