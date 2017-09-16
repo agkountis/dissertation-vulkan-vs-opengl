@@ -4,8 +4,6 @@
 #include "vulkan_application.h"
 #include "demo_entity.h"
 #include "demo_scene.h"
-#include <memory>
-#include <vulkan_infrastructure_context.h>
 #include "thread_pool.h"
 
 class DemoApplication : public VulkanApplication {
@@ -15,6 +13,13 @@ private:
 	ThreadPool m_ThreadPool;
 
 	//TODO: create resources per thread
+	struct ThreadData {
+		VkCommandPool commandPool{ VK_NULL_HANDLE };
+		VkCommandBuffer secondaryCommandBuffer{ VK_NULL_HANDLE };
+	};
+
+	std::vector<ThreadData> m_PerThreadData;
+
 	//TODO: create command buffers per thread.
 
 	void EnableFeatures() noexcept override;

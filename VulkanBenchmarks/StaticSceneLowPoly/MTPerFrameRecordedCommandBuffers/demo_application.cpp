@@ -116,6 +116,17 @@ void DemoApplication::Update() noexcept
 	m_DemoScene.Update(GetSwapChain().GetExtent(),
 	                   GetTimer().GetMsec(),
 	                   GetTimer().GetDelta());
+
+	std::vector<Task> tasks;
+
+	tasks.resize(100, []()
+	{
+		std::cout << "Hello from " << std::this_thread::get_id() << std::endl;
+	});
+
+	m_ThreadPool.AddTasks(std::move(tasks));
+
+	std::cout << "FOO" << std::endl;
 }
 
 void DemoApplication::Draw() noexcept

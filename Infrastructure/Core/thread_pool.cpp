@@ -71,6 +71,9 @@ void WorkerThread::Wait() noexcept
 }
 
 // ThreadPool -----------------------------------------------------------------------------------------------
+
+static int workerIndex{ 0 };
+
 bool ThreadPool::Initialize()
 {
 	LOG("Initializing thread pool...");
@@ -112,9 +115,25 @@ void ThreadPool::Wait() noexcept
 	}
 }
 
-void ThreadPool::AddTask(int workerIndex, const Task& task) noexcept
+void ThreadPool::AddTask(int workerIndex, Task&& task) noexcept
 {
-	m_Workers[workerIndex]->AddTask(std::move(task));
+	m_Workers[workerIndex]->AddTask(task);
+}
+
+void ThreadPool::AddTask(Task&& task) noexcept
+{
+	if (!m_Workers.empty()) {
+		AddTask(workerIndex++ % m_Workers.size(), std::move(task));
+	}
+}
+
+void ThreadPool::AddTasks(std::vector<Task>&& tasks) noexcept
+{
+	if (!m_Workers.empty()) {
+		for (int i = 0; i < tasks.size(); ++i) {
+			AddTask(workerIndex++ % m_Workers.size(), std::move(tasks[i]));
+		}
+	}
 }
 
 size_t ThreadPool::GetWorkerCount() const noexcept
