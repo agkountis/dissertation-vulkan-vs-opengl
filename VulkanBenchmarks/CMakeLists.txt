@@ -1,1 +1,1 @@
-add_subdirectory(StaticSceneLowPoly)
+add_subdirectory(CommandBufferRecording)

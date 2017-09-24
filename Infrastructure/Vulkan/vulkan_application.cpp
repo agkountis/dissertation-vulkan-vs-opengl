@@ -280,7 +280,8 @@ bool VulkanApplication::Initialize() noexcept
 
 	VulkanInfrastructureContext::Register(&m_Instance,
 	                                      &m_Device,
-	                                      &m_ResourceManager);
+	                                      &m_ResourceManager,
+										  this);
 
 	const auto& settings = GetSettings();
 	if (!m_Window.Create(settings.name,

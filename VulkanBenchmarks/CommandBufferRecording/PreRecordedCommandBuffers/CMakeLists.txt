@@ -29,7 +29,7 @@ if(MSVC)
 	source_group(Configuration ${CONFIGURATION_FILES})
 
 	set_target_properties(PreRecordedCmdBuffers PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-	set_target_properties(PreRecordedCmdBuffers PROPERTIES FOLDER VulkanBenchmarks/StaticSceneLowPoly)
+	set_target_properties(PreRecordedCmdBuffers PROPERTIES FOLDER VulkanBenchmarks/CommandBufferRecording)
 else()
 	add_executable(PreRecordedCmdBuffers ${SOURCE_FILES})
 endif()

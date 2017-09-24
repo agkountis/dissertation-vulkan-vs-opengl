@@ -113,21 +113,23 @@ void ThreadPool::Wait() noexcept
 	for (auto& worker : m_Workers) {
 		worker->Wait();
 	}
+
+	std::cout << "Pool done waiting" << std::endl;
 }
 
-void ThreadPool::AddTask(int workerIndex, Task&& task) noexcept
+void ThreadPool::AddTask(int workerIndex, Task task) noexcept
 {
 	m_Workers[workerIndex]->AddTask(task);
 }
 
-void ThreadPool::AddTask(Task&& task) noexcept
+void ThreadPool::AddTask(Task task) noexcept
 {
 	if (!m_Workers.empty()) {
 		AddTask(workerIndex++ % m_Workers.size(), std::move(task));
 	}
 }
 
-void ThreadPool::AddTasks(std::vector<Task>&& tasks) noexcept
+void ThreadPool::AddTasks(std::vector<Task> tasks) noexcept
 {
 	if (!m_Workers.empty()) {
 		for (int i = 0; i < tasks.size(); ++i) {

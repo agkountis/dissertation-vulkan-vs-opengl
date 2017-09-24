@@ -224,7 +224,7 @@ ui32 VulkanDevice::GetMemoryTypeIndex(ui32 memoryTypeMask, VkMemoryPropertyFlags
 		}
 	}
 
-	ERROR_LOG("Could not find suitable m_Memory type.");
+	ERROR_LOG("Could not find suitable memory type.");
 	return std::numeric_limits<ui32>::max();
 }
 
@@ -386,6 +386,50 @@ VkCommandBuffer VulkanDevice::CreateCommandBuffer(VkCommandBufferLevel commandBu
 	}
 
 	return commandBuffer;
+}
+
+VkCommandBuffer VulkanDevice::CreateCommandBuffer(VkCommandPool commandPool,
+												  VkCommandBufferLevel commandBufferLevel) const noexcept
+{
+	VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
+	commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	commandBufferAllocateInfo.commandBufferCount = 1;
+	commandBufferAllocateInfo.level = commandBufferLevel;
+	commandBufferAllocateInfo.pNext = VK_NULL_HANDLE;
+	commandBufferAllocateInfo.commandPool = commandPool;
+
+	VkCommandBuffer commandBuffer{ nullptr };
+
+	VkResult result{ vkAllocateCommandBuffers(m_LogicalDevice, &commandBufferAllocateInfo, &commandBuffer) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to allocate command m_Buffer.");
+	}
+
+	return commandBuffer;
+}
+
+std::vector<VkCommandBuffer> VulkanDevice::CreateCommandBuffers(ui32 count,
+																VkCommandPool commandPool,
+																VkCommandBufferLevel commandBufferLevel) const noexcept
+{
+	VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
+	commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	commandBufferAllocateInfo.commandBufferCount = count;
+	commandBufferAllocateInfo.level = commandBufferLevel;
+	commandBufferAllocateInfo.pNext = VK_NULL_HANDLE;
+	commandBufferAllocateInfo.commandPool = commandPool;
+
+	std::vector<VkCommandBuffer> commandBuffers;
+	commandBuffers.resize(count);
+
+	VkResult result{ vkAllocateCommandBuffers(m_LogicalDevice, &commandBufferAllocateInfo, commandBuffers.data()) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to allocate command m_Buffer.");
+	}
+
+	return std::move(commandBuffers);
 }
 
 bool VulkanDevice::SubmitCommandBuffer(VkCommandBuffer commandBuffer,
@@ -677,6 +721,22 @@ VkQueue VulkanDevice::GetQueue(QueueFamily queueFamily) const noexcept
 			return m_ComputeQueue;
 		default:
 			return nullptr;
+	}
+}
+
+ui32 VulkanDevice::GetQueueFamilyIndex(QueueFamily queueFamily) const noexcept
+{
+	switch (queueFamily) {
+		case QueueFamily::GRAPHICS:
+			return m_QueueFamilyIndices.graphics;
+		case QueueFamily::PRESENT:
+			return m_QueueFamilyIndices.present;
+		case QueueFamily::TRANSFER:
+			return m_QueueFamilyIndices.transfer;
+		case QueueFamily::COMPUTE:
+			return m_QueueFamilyIndices.compute;
+		default:
+			return std::numeric_limits<ui32>::max();
 	}
 }
 

@@ -23,10 +23,15 @@ set(SOURCE_FILES application.cpp
 		ncf.cpp
 		util.h
 		util.cpp
+		declspec.h
 		thread_pool.h
 		thread_pool.cpp)
 
 add_library(CoreInfrastructure ${SOURCE_FILES})
+
+if(UNIX)
+	target_link_libraries(CoreInfrastructure Threads::Threads)
+endif()
 
 if(MSVC)
 	set_target_properties(CoreInfrastructure PROPERTIES FOLDER Infrastructure)

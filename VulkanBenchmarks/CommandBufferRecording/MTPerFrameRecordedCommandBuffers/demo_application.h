@@ -12,15 +12,14 @@ private:
 
 	ThreadPool m_ThreadPool;
 
-	//TODO: create resources per thread
 	struct ThreadData {
 		VkCommandPool commandPool{ VK_NULL_HANDLE };
-		VkCommandBuffer secondaryCommandBuffer{ VK_NULL_HANDLE };
+		std::vector<VkCommandBuffer> secondaryCommandBuffers;
 	};
 
 	std::vector<ThreadData> m_PerThreadData;
 
-	//TODO: create command buffers per thread.
+	VkFence m_RenderFence{ VK_NULL_HANDLE };
 
 	void EnableFeatures() noexcept override;
 
@@ -36,6 +35,8 @@ public:
 	void Draw() noexcept override;
 
 	void OnResize(const Vec2i& size) noexcept override;
+
+	const DemoScene& GetScene() const noexcept { return m_DemoScene; }
 };
 
 #endif // VULKAN_SINGLE_THREADED_APPLICATION_H_

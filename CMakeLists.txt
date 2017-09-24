@@ -27,14 +27,15 @@ elseif(MSVC)
     set(VULKAN_LIB C:/VulkanSDK/1.0.57.0/Lib/vulkan-1.lib)
     set(GLFW_LIB C:/usr/lib/glfw3x64.lib)
 
-    set(VULKAN_APP_LIBRARIES ${LIBRARIES} ${VULKAN_LIB} ${GLFW_LIB})
+    set(VULKAN_APP_LIBRARIES ${VULKAN_LIB} ${GLFW_LIB})
 elseif(MINGW)
     #handle mingw
 else()
+    find_package(Threads REQUIRED)
     find_package(Vulkan 1.0.57.0 REQUIRED)
     include_directories(${Vulkan_INCLUDE_DIR})
 
-    set(VULKAN_APP_LIBRARIES ${LIBRARIES} ${Vulkan_LIBRARY} glfw)
+    set(VULKAN_APP_LIBRARIES ${Vulkan_LIBRARY} glfw)
 endif()
 
 add_subdirectory(Infrastructure)

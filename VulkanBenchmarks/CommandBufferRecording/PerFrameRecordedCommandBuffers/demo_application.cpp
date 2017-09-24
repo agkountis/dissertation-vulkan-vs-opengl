@@ -41,7 +41,7 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 	// Use the first one of the available command buffers already allocated.
 	const auto bufferIndex = GetCurrentBufferIndex();
 
-	const auto& commandBuffer = GetCommandBuffers()[bufferIndex];
+	const auto commandBuffer = GetCommandBuffers()[bufferIndex];
 
 	renderPassBeginInfo.framebuffer = GetFramebuffers()[bufferIndex];
 

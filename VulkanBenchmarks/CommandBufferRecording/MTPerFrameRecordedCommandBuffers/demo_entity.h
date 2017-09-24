@@ -20,6 +20,9 @@ public:
 
 	void Draw(VkCommandBuffer commandBuffer) noexcept;
 
+	void Draw(VkCommandBuffer commandBuffer,
+			  const VkCommandBufferInheritanceInfo& commandBufferInheritanceInfo) noexcept;
+
 	bool Load(const std::string& fileName) noexcept override;
 };
 

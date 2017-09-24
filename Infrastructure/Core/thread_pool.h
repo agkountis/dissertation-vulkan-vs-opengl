@@ -5,6 +5,8 @@
 #include <queue>
 #include <mutex>
 #include <memory>
+#include <functional>
+#include <condition_variable>
 
 using Task = std::function<void()>;
 
@@ -47,11 +49,11 @@ public:
 
 	void Wait() noexcept;
 
-	void AddTask(int workerIndex, Task&& task) noexcept;
+	void AddTask(int workerIndex, Task task) noexcept;
 
-	void AddTask(Task&& task) noexcept;
+	void AddTask(Task task) noexcept;
 
-	void AddTasks(std::vector<Task>&& tasks) noexcept;
+	void AddTasks(std::vector<Task> tasks) noexcept;
 
 	size_t GetWorkerCount() const noexcept;
 };
