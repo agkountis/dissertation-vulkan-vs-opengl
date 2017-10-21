@@ -45,9 +45,11 @@ bool VulkanApplication::CreateCommandBuffers() noexcept
 	commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	commandBufferAllocateInfo.commandBufferCount = static_cast<ui32>(m_DrawCommandBuffers.size());
 
-	VkResult result{ vkAllocateCommandBuffers(m_Device,
-	                                          &commandBufferAllocateInfo,
-	                                          m_DrawCommandBuffers.data()) };
+	VkResult result{
+		vkAllocateCommandBuffers(m_Device,
+		                         &commandBufferAllocateInfo,
+		                         m_DrawCommandBuffers.data())
+	};
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to allocate command buffers.");
@@ -132,10 +134,12 @@ bool VulkanApplication::CreateRenderPasses() noexcept
 	renderPassInfo.dependencyCount = static_cast<ui32>(dependencies.size());
 	renderPassInfo.pDependencies = dependencies.data();
 
-	VkResult result{ vkCreateRenderPass(m_Device,
-	                                    &renderPassInfo,
-	                                    nullptr,
-	                                    &m_RenderPass) };
+	VkResult result{
+		vkCreateRenderPass(m_Device,
+		                   &renderPassInfo,
+		                   nullptr,
+		                   &m_RenderPass)
+	};
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create render pass.");
@@ -238,8 +242,10 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 	}
 
 	for (ui32 i = 0; i < m_SwapChainFrameBuffers.size(); ++i) {
-		std::vector<VkImageView> imageViews{ m_SwapChain.GetImageViews()[i],
-			m_DepthStencil.GetImageView() };
+		std::vector<VkImageView> imageViews{
+			m_SwapChain.GetImageViews()[i],
+			m_DepthStencil.GetImageView()
+		};
 
 		if (!m_SwapChainFrameBuffers[i].Create(imageViews,
 		                                       Vec2ui{ extent.width, extent.height },
@@ -281,7 +287,7 @@ bool VulkanApplication::Initialize() noexcept
 	VulkanInfrastructureContext::Register(&m_Instance,
 	                                      &m_Device,
 	                                      &m_ResourceManager,
-										  this);
+	                                      this);
 
 	const auto& settings = GetSettings();
 	if (!m_Window.Create(settings.name,
@@ -384,29 +390,8 @@ i32 VulkanApplication::Run() noexcept
 			SetTermination(true);
 		}
 
-		VkCommandBuffer commandBuffer{ G_VulkanDevice.CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY) };
-
-		VkCommandBufferBeginInfo commandBufferBeginInfo{};
-		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-		vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
-
-		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPools[m_CurrentBuffer], 1);
-
-		vkEndCommandBuffer(commandBuffer);
-
-		VkFenceCreateInfo fenceCreateInfo{};
-		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-
-		VkFence fence{ VK_NULL_HANDLE };
-		vkCreateFence(G_VulkanDevice, &fenceCreateInfo, nullptr, &fence);
-
-		G_VulkanDevice.SubmitCommandBuffer(commandBuffer,
-		                                   G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
-		                                   fence);
-
 		std::vector<ui64> gpuResults;
-		queryPools[m_CurrentBuffer].GetResults(gpuResults);
+		queryPools[m_CurrentBuffer].GetResults(gpuResults); //this stalls on multithreaded build.
 
 		float nanosInAnIncrement{ m_Device.GetPhysicalDevice().properties.limits.timestampPeriod };
 
@@ -425,8 +410,10 @@ i32 VulkanApplication::Run() noexcept
 
 void VulkanApplication::PreDraw() noexcept
 {
-	VkResult result{ m_SwapChain.GetNextImageIndex(m_PresentComplete,
-	                                               m_CurrentBuffer) };
+	VkResult result{
+		m_SwapChain.GetNextImageIndex(m_PresentComplete,
+		                              m_CurrentBuffer)
+	};
 
 	while (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		const auto& extent = m_SwapChain.GetExtent();
@@ -441,9 +428,11 @@ void VulkanApplication::PreDraw() noexcept
 
 void VulkanApplication::PostDraw() noexcept
 {
-	VkResult result{ m_SwapChain.Present(m_Device.GetQueue(QueueFamily::PRESENT),
-	                                     m_CurrentBuffer,
-	                                     m_DrawComplete) };
+	VkResult result{
+		m_SwapChain.Present(m_Device.GetQueue(QueueFamily::PRESENT),
+		                    m_CurrentBuffer,
+		                    m_DrawComplete)
+	};
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		const auto& extent = m_SwapChain.GetExtent();

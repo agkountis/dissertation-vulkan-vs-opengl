@@ -187,9 +187,9 @@ private:
 	virtual bool CreateFramebuffers() noexcept;
 
 public:
-	
+
 	std::vector<VulkanQueryPool> queryPools;
-	
+
 	double w1, w2;
 	/**
 	 * \brief VulkanApplication's constructor.

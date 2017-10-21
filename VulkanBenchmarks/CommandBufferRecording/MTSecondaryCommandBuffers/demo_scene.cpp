@@ -1,13 +1,11 @@
 #include <logger.h>
 #include <vulkan_infrastructure_context.h>
-#include <glm/gtc/matrix_transform.hpp>
 #include <random>
-#include <mesh_utilities.h>
 #include <vulkan_shader.h>
-#include <mutex>
+#include <mesh_utilities.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include "demo_scene.h"
-
-#define ENTITY_COUNT 5000
+#include "vulkan_application.h"
 
 // Vulkan clip space has inverted Y and half Z.
 static const Mat4f s_ClipCorrectionMat{1.0f, 0.0f, 0.0f, 0.0f,
@@ -224,7 +222,7 @@ bool DemoScene::PrepareUniforms() noexcept
     // The pipeline layout tells the driver how the uniforms (and other data) will be organized
     // and passed to the shaders.
     // Create the pipeline layout.
-    // Here we specify to the the pipeline if we use an push constants or descriptor sets.
+    // Here we specify to the the pipeline if we use any push constants or descriptor sets.
 
     // Use a push constant block for the model matrix of each object...
     std::array<VkPushConstantRange, 2> pushConstantRanges{};
@@ -614,6 +612,8 @@ void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
     UniformBufferObject ubo{};
     ubo.view = glm::lookAt(Vec3f{0.0f, 0.0f, 80.0f}, Vec3f{}, Vec3f{0.0f, 1.0f, 0.0f});
 
+    ubo.view = glm::rotate(ubo.view, msec / 1000.0f * glm::radians(5.0f), Vec3f{1.0f, 1.0f, 1.0f});
+
     f32 aspect{static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height)};
 
     ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 200.0f);
@@ -628,7 +628,6 @@ void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
     for (const auto &entity : m_Entities) {
 
         auto &material = entity->GetMaterial();
-
         std::vector<VkDescriptorSet> descriptorSets{m_SceneMatricesDescriptorSet,
                                                     material.descriptorSet};
 
@@ -662,3 +661,68 @@ void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
         entity->Draw(commandBuffer);
     }
 }
+
+void DemoScene::DrawSingle(int entityIndex,
+                           VkCommandBuffer commandBuffer,
+                           VkCommandBufferInheritanceInfo inheritanceInfo) const noexcept
+{
+    VkCommandBufferBeginInfo commandBufferBeginInfo{};
+    commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+    commandBufferBeginInfo.pInheritanceInfo = &inheritanceInfo;
+
+    vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+
+    auto extent = G_Application.GetSwapChain().GetExtent();
+
+    VkViewport viewport{};
+    viewport.width = static_cast<float>(extent.width);
+    viewport.height = static_cast<float>(extent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.extent = extent;
+    scissor.offset = VkOffset2D{0, 0};
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipelines.solid);
+
+    auto &material = m_Entities[entityIndex]->GetMaterial();
+    std::vector<VkDescriptorSet> descriptorSets{m_SceneMatricesDescriptorSet,
+                                                material.descriptorSet};
+
+    vkCmdBindDescriptorSets(commandBuffer,
+                            VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            m_PipelineLayout,
+                            0,
+                            static_cast<ui32>(descriptorSets.size()),
+                            descriptorSets.data(),
+                            0,
+                            nullptr);
+
+    const auto &xform = m_Entities[entityIndex]->GetXform();
+
+    vkCmdPushConstants(commandBuffer,
+                       m_PipelineLayout,
+                       VK_SHADER_STAGE_VERTEX_BIT,
+                       0,
+                       sizeof(Mat4f),
+                       &xform);
+
+    std::array<Vec4f, 2> materialProperties{material.diffuse, material.specular};
+
+    vkCmdPushConstants(commandBuffer,
+                       m_PipelineLayout,
+                       VK_SHADER_STAGE_FRAGMENT_BIT,
+                       sizeof(Mat4f),
+                       2 * sizeof(Vec4f),
+                       materialProperties.data());
+
+    m_Entities[entityIndex]->Draw(commandBuffer);
+
+    vkEndCommandBuffer(commandBuffer);
+
+}
+

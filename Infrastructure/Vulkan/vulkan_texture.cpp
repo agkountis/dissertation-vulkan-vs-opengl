@@ -9,8 +9,8 @@
 VulkanTexture::VulkanTexture(TextureType textureType,
                              VkFormat format,
                              VkImageAspectFlagBits imageAspectFlagBits)
-		: Texture{ textureType },
-		  m_Format{ format }
+	: Texture{ textureType },
+	  m_Format{ format }
 {
 	m_ImageAspectFlags |= imageAspectFlagBits;
 }
@@ -38,11 +38,13 @@ bool VulkanTexture::Load(const std::string& fileName) noexcept
 	Vec2i size;
 	int colorChannels;
 
-	stbi_uc* pixels{ stbi_load(fileName.c_str(),
-	                           &size.x,
-	                           &size.y,
-	                           &colorChannels,
-	                           STBI_rgb_alpha) };
+	stbi_uc* pixels{
+		stbi_load(fileName.c_str(),
+		          &size.x,
+		          &size.y,
+		          &colorChannels,
+		          STBI_rgb_alpha)
+	};
 
 	m_Size = Vec2ui{ size.x, size.y };
 
@@ -56,10 +58,10 @@ bool VulkanTexture::Load(const std::string& fileName) noexcept
 	VulkanBuffer stagingBuffer;
 
 	if (!G_VulkanDevice.CreateBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-	                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-	                             stagingBuffer,
-	                             imageSize,
-	                             pixels)) {
+	                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	                                 stagingBuffer,
+	                                 imageSize,
+	                                 pixels)) {
 		ERROR_LOG("Failed to create staging buffer.");
 		return false;
 	}
@@ -69,12 +71,12 @@ bool VulkanTexture::Load(const std::string& fileName) noexcept
 
 	// Create the image
 	if (!G_VulkanDevice.CreateImage(m_Size,
-	                            VK_FORMAT_R8G8B8A8_UNORM, //make this a texture class member.
-	                            VK_IMAGE_TILING_OPTIMAL,
-	                            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-	                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-	                            m_Image,
-	                            m_ImageMemory)) {
+	                                VK_FORMAT_R8G8B8A8_UNORM, //make this a texture class member.
+	                                VK_IMAGE_TILING_OPTIMAL,
+	                                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+	                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+	                                m_Image,
+	                                m_ImageMemory)) {
 		ERROR_LOG("Failed to create image.");
 		return false;
 	}
@@ -82,9 +84,9 @@ bool VulkanTexture::Load(const std::string& fileName) noexcept
 	// transition the image from the default pre-initialized layout to
 	// transfer destination optimal to copy the pixels from the staging buffer.
 	if (!G_VulkanDevice.TransitionImageLayout(m_Image,
-	                                      m_Format,
-	                                      m_ImageLayout,
-	                                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)) {
+	                                          m_Format,
+	                                          m_ImageLayout,
+	                                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)) {
 		ERROR_LOG("Failed to transition image layout.");
 		return false;
 	}
@@ -93,17 +95,17 @@ bool VulkanTexture::Load(const std::string& fileName) noexcept
 
 	// Copy the data from the staging buffer to the image.
 	if (!G_VulkanDevice.CopyBufferToImage(stagingBuffer,
-	                                  m_Image,
-	                                  m_Size)) {
+	                                      m_Image,
+	                                      m_Size)) {
 		ERROR_LOG("Failed to copy buffer to image.");
 		return false;
 	}
 
 	// Transition the image layout to shader read only optimal for optimal shader sampling.
 	if (!G_VulkanDevice.TransitionImageLayout(m_Image,
-	                                      m_Format,
-	                                      m_ImageLayout,
-	                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)) {
+	                                          m_Format,
+	                                          m_ImageLayout,
+	                                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)) {
 		ERROR_LOG("Failed to transition image layout.");
 		return false;
 	}

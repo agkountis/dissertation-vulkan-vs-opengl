@@ -1,3 +1,4 @@
 add_subdirectory(PreRecordedCommandBuffers)
 add_subdirectory(PerFrameRecordedCommandBuffers)
-add_subdirectory(MTPerFrameRecordedCommandBuffers)
+add_subdirectory(MTSecondaryCommandBuffers)
+add_subdirectory(MTPrimaryCommandBuffers)

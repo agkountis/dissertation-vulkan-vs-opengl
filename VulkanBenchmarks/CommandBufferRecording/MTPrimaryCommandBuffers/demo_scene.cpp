@@ -61,6 +61,9 @@ bool DemoScene::GenerateEntities() noexcept
         m_Entities.push_back(std::move(entity));
     }
 
+	// Sort entities from back to front to avoid early z optimizations.
+	std::sort(m_Entities.begin(), m_Entities.end(), [](auto& a, auto& b) { return a->GetPosition().z > b->GetPosition().z; });
+
     return true;
 }
 
@@ -219,7 +222,7 @@ bool DemoScene::PrepareUniforms() noexcept
     // The pipeline layout tells the driver how the uniforms (and other data) will be organized
     // and passed to the shaders.
     // Create the pipeline layout.
-    // Here we specify to the the pipeline if we use an push constants or descriptor sets.
+    // Here we specify to the the pipeline if we use any push constants or descriptor sets.
 
     // Use a push constant block for the model matrix of each object...
     std::array<VkPushConstantRange, 2> pushConstantRanges{};

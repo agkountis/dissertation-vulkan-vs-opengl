@@ -426,7 +426,7 @@ std::vector<VkCommandBuffer> VulkanDevice::CreateCommandBuffers(ui32 count,
 	VkResult result{ vkAllocateCommandBuffers(m_LogicalDevice, &commandBufferAllocateInfo, commandBuffers.data()) };
 
 	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to allocate command m_Buffer.");
+		ERROR_LOG("Failed to allocate command buffer.");
 	}
 
 	return std::move(commandBuffers);

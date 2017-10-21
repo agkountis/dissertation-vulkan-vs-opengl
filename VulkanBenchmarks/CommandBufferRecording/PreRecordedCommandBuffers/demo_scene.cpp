@@ -610,8 +610,6 @@ void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 	UniformBufferObject ubo{};
 	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 80.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
 
-	ubo.view = glm::rotate(ubo.view, msec / 1000.0f * glm::radians(5.0f), Vec3f{ 1.0f, 1.0f, 1.0f });
-
 	f32 aspect{ static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height) };
 
 	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 200.0f);

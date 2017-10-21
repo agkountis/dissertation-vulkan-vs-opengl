@@ -16,7 +16,7 @@ void WorkerThread::WaitAndExecute() noexcept
 			});
 
 			if (m_Terminating) {
-				return;
+				break;
 			}
 
 			task = m_TaskQueue.front();
@@ -55,7 +55,7 @@ WorkerThread::~WorkerThread()
 	}
 }
 
-void WorkerThread::AddTask(const Task& task) noexcept
+void WorkerThread::AddTask(Task task) noexcept
 {
 	std::lock_guard<std::mutex> lock{ m_TaskQueueMutex };
 	m_TaskQueue.push(std::move(task));
@@ -113,8 +113,6 @@ void ThreadPool::Wait() noexcept
 	for (auto& worker : m_Workers) {
 		worker->Wait();
 	}
-
-	std::cout << "Pool done waiting" << std::endl;
 }
 
 void ThreadPool::AddTask(int workerIndex, Task task) noexcept

@@ -35,7 +35,7 @@ public:
 
 	~WorkerThread();
 
-	void AddTask(const Task& task) noexcept;
+	void AddTask(Task task) noexcept;
 
 	void Wait() noexcept;
 };

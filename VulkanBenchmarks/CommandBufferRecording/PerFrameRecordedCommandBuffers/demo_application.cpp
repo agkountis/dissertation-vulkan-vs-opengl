@@ -74,13 +74,14 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 
 	vkCmdEndRenderPass(commandBuffer);
 
+	vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPools[bufferIndex], 1);
+
 	result = vkEndCommandBuffer(commandBuffer);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to end command buffer.");
 		return false;
 	}
-
 
 	return true;
 }
