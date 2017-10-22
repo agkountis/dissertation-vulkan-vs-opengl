@@ -102,6 +102,16 @@ DemoApplication::DemoApplication(const ApplicationSettings& settings)
 {
 }
 
+DemoApplication::~DemoApplication()
+{
+	vkDeviceWaitIdle(G_VulkanDevice);
+	for (const auto& threadData : m_PerThreadData) {
+		vkDestroyCommandPool(G_VulkanDevice, threadData.commandPool, nullptr);
+	}
+
+	vkDestroyFence(G_VulkanDevice, m_RenderFence, nullptr);
+}
+
 bool DemoApplication::Initialize() noexcept
 {
 	if (!VulkanApplication::Initialize()) {
@@ -120,7 +130,7 @@ bool DemoApplication::Initialize() noexcept
 
 	m_PerThreadData.resize(m_ThreadPool.GetWorkerCount());
 
-	ui32 gfxQueueIndex{ G_VulkanDevice.GetQueueFamilyIndex(QueueFamily::GRAPHICS) };
+	const auto gfxQueueIndex{ G_VulkanDevice.GetQueueFamilyIndex(QueueFamily::GRAPHICS) };
 	for (auto& threadData : m_PerThreadData) {
 		// One command pool per thread
 		threadData.commandPool = G_VulkanDevice.CreateCommandPool(gfxQueueIndex);
@@ -134,7 +144,7 @@ bool DemoApplication::Initialize() noexcept
 	VkFenceCreateInfo fenceCreateInfo{};
 	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
-	VkResult result{ vkCreateFence(G_VulkanDevice, &fenceCreateInfo, nullptr, &m_RenderFence) };
+	const auto result{ vkCreateFence(G_VulkanDevice, &fenceCreateInfo, nullptr, &m_RenderFence) };
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create fence.");
@@ -163,10 +173,10 @@ void DemoApplication::Draw() noexcept
 
 	w1 = GetTimer().GetSec();
 
-	VkResult result{
+	const auto result{
 		vkQueueSubmit(G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
 		              1,
-		              &submitInfo, m_RenderFence)
+		              &submitInfo, VK_NULL_HANDLE)
 	};
 
 	if (result != VK_SUCCESS) {
@@ -174,13 +184,13 @@ void DemoApplication::Draw() noexcept
 		return;
 	}
 
-	result = vkWaitForFences(G_VulkanDevice, 1, &m_RenderFence, VK_TRUE, std::numeric_limits<ui64>::max());
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Wait for fences failed.");
-		return;
-	}
-	vkResetFences(G_VulkanDevice, 1, &m_RenderFence);
+//	result = vkWaitForFences(G_VulkanDevice, 1, &m_RenderFence, VK_TRUE, std::numeric_limits<ui64>::max());
+//
+//	if (result != VK_SUCCESS) {
+//		ERROR_LOG("Wait for fences failed.");
+//		return;
+//	}
+//	vkResetFences(G_VulkanDevice, 1, &m_RenderFence);
 
 	PostDraw();
 }

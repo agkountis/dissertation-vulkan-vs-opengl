@@ -62,7 +62,7 @@ void Entity::SetOrientation(const Quatf& orientation) noexcept
 	m_XformInvalid = true;
 }
 
-void Entity::SetOrientation(f32 angle, const Vec3f& axis) noexcept
+void Entity::SetOrientation(const f32 angle, const Vec3f& axis) noexcept
 {
 	m_Orientation = glm::rotate(Quatf{}, angle, axis);
 
@@ -89,7 +89,7 @@ const Mat4f& Entity::GetXform() const noexcept
 	return m_Xform;
 }
 
-void Entity::Update(f32 deltaTime) noexcept
+void Entity::Update(const f32 deltaTime) noexcept
 {
 	// if Xform has to be recalculated...
 	if (m_XformInvalid) {

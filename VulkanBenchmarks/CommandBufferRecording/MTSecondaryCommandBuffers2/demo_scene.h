@@ -61,6 +61,11 @@ public:
 	void DrawSingle(int entityIndex,
 	                VkCommandBuffer commandBuffer,
 	                VkCommandBufferInheritanceInfo inheritanceInfo) const noexcept;
+
+	void DrawRange(int startIndex,
+	               int endIndex,
+	               VkCommandBuffer commandBuffer,
+	               VkCommandBufferInheritanceInfo inheritanceInfo) const noexcept;
 };
 
 #endif //DISSERTATION_DEMO_SCENE_H

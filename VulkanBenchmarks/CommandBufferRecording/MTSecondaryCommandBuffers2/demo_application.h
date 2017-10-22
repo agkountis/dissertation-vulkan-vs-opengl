@@ -14,12 +14,11 @@ private:
 
 	struct ThreadData {
 		VkCommandPool commandPool{ VK_NULL_HANDLE };
-		std::vector<VkCommandBuffer> secondaryCommandBuffers;
+		VkCommandBuffer secondaryCommandBuffer;
+		std::tuple<int, int> startEndIndices;
 	};
 
 	std::vector<ThreadData> m_PerThreadData;
-
-	VkFence m_RenderFence{ VK_NULL_HANDLE };
 
 	void EnableFeatures() noexcept override;
 
@@ -27,6 +26,8 @@ private:
 
 public:
 	explicit DemoApplication(const ApplicationSettings& settings);
+
+	~DemoApplication();
 
 	bool Initialize() noexcept override;
 

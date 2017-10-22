@@ -231,7 +231,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 
 	m_DepthStencil.Destroy();
 
-	VkExtent2D extent = m_SwapChain.GetExtent();
+	const VkExtent2D extent = m_SwapChain.GetExtent();
 	if (!m_DepthStencil.Create(Vec2ui{ extent.width, extent.height },
 	                           m_Device.GetPhysicalDevice().GetSupportedDepthFormat())) {
 		return false;
@@ -242,7 +242,7 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 	}
 
 	for (ui32 i = 0; i < m_SwapChainFrameBuffers.size(); ++i) {
-		std::vector<VkImageView> imageViews{
+		const std::vector<VkImageView> imageViews{
 			m_SwapChain.GetImageViews()[i],
 			m_DepthStencil.GetImageView()
 		};
@@ -325,7 +325,7 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	VkFormat depthStencilFormat{ m_Device.GetPhysicalDevice().GetSupportedDepthFormat() };
+	const VkFormat depthStencilFormat{ m_Device.GetPhysicalDevice().GetSupportedDepthFormat() };
 
 	if (depthStencilFormat == VK_FORMAT_UNDEFINED) {
 		ERROR_LOG("Could not find supported depth format.");
@@ -383,8 +383,8 @@ i32 VulkanApplication::Run() noexcept
 		Update();
 		Draw();
 
-		auto now = GetTimer().GetSec();
-		auto wholeFrame = (now - prev) * 1000.0;
+		const auto now = GetTimer().GetSec();
+		const auto wholeFrame = (now - prev) * 1000.0;
 
 		if (GetDuration() > 0.0f && now > GetDuration()) {
 			SetTermination(true);
@@ -393,10 +393,10 @@ i32 VulkanApplication::Run() noexcept
 		std::vector<ui64> gpuResults;
 		queryPools[m_CurrentBuffer].GetResults(gpuResults); //this stalls on multithreaded build.
 
-		float nanosInAnIncrement{ m_Device.GetPhysicalDevice().properties.limits.timestampPeriod };
+		const auto nanosInAnIncrement{ m_Device.GetPhysicalDevice().properties.limits.timestampPeriod };
 
-		auto gpuTime = (gpuResults[1] - gpuResults[0]) * nanosInAnIncrement * 1e-6;
-		auto cpuTime = wholeFrame - gpuTime;
+		const auto gpuTime = (gpuResults[1] - gpuResults[0]) * nanosInAnIncrement * 1e-6;
+		const auto cpuTime = wholeFrame - gpuTime;
 
 		std::cout << "frame: " << frames << " " << "ms/frame: " << wholeFrame << " " << "Cpu: " << cpuTime << "ms"
 				<< " Gpu: " << gpuTime << "ms" << " running time:" << GetTimer().GetSec() * 1000.0 << std::endl;

@@ -20,16 +20,16 @@ if(MSVC)
 
 	set(CONFIGURATION_FILES config/config.cfg)
 
-	add_executable(MTPrimaryCmdBuffers ${SOURCE_FILES} ${SHADER_FILES} ${TEXTURE_FILES} ${CONFIGURATION_FILES})
+	add_executable(MTSecondaryCmdBuffers2 ${SOURCE_FILES} ${SHADER_FILES} ${TEXTURE_FILES} ${CONFIGURATION_FILES})
 
 	source_group(Shaders FILES ${SHADER_FILES})
 	source_group(Textures FILES ${TEXTURE_FILES})
 	source_group(Configuration FILES ${CONFIGURATION_FILES})
 
-	set_target_properties(MTPrimaryCmdBuffers PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-	set_target_properties(MTPrimaryCmdBuffers PROPERTIES FOLDER VulkanBenchmarks/CommandBufferRecording)
+	set_target_properties(MTSecondaryCmdBuffers2 PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+	set_target_properties(MTSecondaryCmdBuffers2 PROPERTIES FOLDER VulkanBenchmarks/CommandBufferRecording)
 else()
-	add_executable(MTPrimaryCmdBuffers ${SOURCE_FILES})
+	add_executable(MTSecondaryCmdBuffers2 ${SOURCE_FILES})
 endif()
 
-target_link_libraries(MTPrimaryCmdBuffers VulkanInfrastructure)
+target_link_libraries(MTSecondaryCmdBuffers2 VulkanInfrastructure)

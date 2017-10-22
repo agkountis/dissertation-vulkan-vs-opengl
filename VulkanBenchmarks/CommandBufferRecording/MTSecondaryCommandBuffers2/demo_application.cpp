@@ -61,24 +61,17 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 	commandBufferInheritanceInfo.renderPass = GetRenderPass();
 	commandBufferInheritanceInfo.framebuffer = renderPassBeginInfo.framebuffer;
 
-	int entityIndex = 0;
 	for (int i = 0; i < m_PerThreadData.size(); ++i) {
-		for (int j = 0; j < m_PerThreadData[i].secondaryCommandBuffers.size(); ++j) {
-			m_ThreadPool.AddTask(i, [=]()
-			{
-				GetScene().DrawSingle(entityIndex, m_PerThreadData[i].secondaryCommandBuffers[j],
-				                      commandBufferInheritanceInfo);
-			});
+		
+		const auto& [start, end] = m_PerThreadData[i].startEndIndices;
 
-			++entityIndex;
-		}
+		m_ThreadPool.AddTask(i, [=] { m_DemoScene.DrawRange(start, end, m_PerThreadData[i].secondaryCommandBuffer, commandBufferInheritanceInfo); });
 	}
 
 	m_ThreadPool.Wait();
 
 	for (const auto& threadData : m_PerThreadData) {
-		vkCmdExecuteCommands(primaryCmdBuffer, threadData.secondaryCommandBuffers.size(),
-		                     threadData.secondaryCommandBuffers.data());
+		vkCmdExecuteCommands(primaryCmdBuffer, 1, &threadData.secondaryCommandBuffer);
 	}
 
 	vkCmdEndRenderPass(primaryCmdBuffer);
@@ -104,11 +97,10 @@ DemoApplication::DemoApplication(const ApplicationSettings& settings)
 
 DemoApplication::~DemoApplication()
 {
+	vkDeviceWaitIdle(G_VulkanDevice);
 	for (const auto& threadData : m_PerThreadData) {
 		vkDestroyCommandPool(G_VulkanDevice, threadData.commandPool, nullptr);
 	}
-
-	vkDestroyFence(G_VulkanDevice, m_RenderFence, nullptr);
 }
 
 bool DemoApplication::Initialize() noexcept
@@ -129,25 +121,20 @@ bool DemoApplication::Initialize() noexcept
 
 	m_PerThreadData.resize(m_ThreadPool.GetWorkerCount());
 
-	ui32 gfxQueueIndex{ G_VulkanDevice.GetQueueFamilyIndex(QueueFamily::GRAPHICS) };
+	const auto gfxQueueIndex{ G_VulkanDevice.GetQueueFamilyIndex(QueueFamily::GRAPHICS) };
+	static auto startIndex{ 0 };
 	for (auto& threadData : m_PerThreadData) {
 		// One command pool per thread
 		threadData.commandPool = G_VulkanDevice.CreateCommandPool(gfxQueueIndex);
 
-		// One secondary command buffer for each entity.
-		threadData.secondaryCommandBuffers = G_VulkanDevice.CreateCommandBuffers(s_EntitiesPerThread,
-		                                                                         threadData.commandPool,
-		                                                                         VK_COMMAND_BUFFER_LEVEL_SECONDARY);
-	}
+		// One secondary command buffer for each entity range.
+		threadData.secondaryCommandBuffer = G_VulkanDevice.CreateCommandBuffer(threadData.commandPool,
+		                                                                       VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 
-	VkFenceCreateInfo fenceCreateInfo{};
-	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		const auto endIndex{ startIndex + s_EntitiesPerThread };
+		threadData.startEndIndices = std::make_tuple(startIndex, endIndex);
 
-	VkResult result{ vkCreateFence(G_VulkanDevice, &fenceCreateInfo, nullptr, &m_RenderFence) };
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to create fence.");
-		return false;
+		startIndex = endIndex;
 	}
 
 	return true;
@@ -172,24 +159,16 @@ void DemoApplication::Draw() noexcept
 
 	w1 = GetTimer().GetSec();
 
-	VkResult result{
+	const auto result{
 		vkQueueSubmit(G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
 		              1,
-		              &submitInfo, m_RenderFence)
+		              &submitInfo, VK_NULL_HANDLE)
 	};
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to submit the command buffer.");
 		return;
 	}
-
-	result = vkWaitForFences(G_VulkanDevice, 1, &m_RenderFence, VK_TRUE, std::numeric_limits<ui64>::max());
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Wait for fences failed.");
-		return;
-	}
-	vkResetFences(G_VulkanDevice, 1, &m_RenderFence);
 
 	PostDraw();
 }
