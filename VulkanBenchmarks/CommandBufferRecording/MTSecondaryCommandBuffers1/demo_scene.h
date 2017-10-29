@@ -41,7 +41,7 @@ private:
 
 	VulkanMesh m_CubeMesh;
 
-	bool GenerateEntities() noexcept;
+	bool SpawnEntity() noexcept;
 
 	bool CreateTextureSampler() noexcept;
 

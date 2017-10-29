@@ -378,13 +378,12 @@ i32 VulkanApplication::Run() noexcept
 		glfwPollEvents();
 
 		static f64 prev = 0.0;
-		static ui64 frames = 0;
 
 		Update();
 		Draw();
 
 		const auto now = GetTimer().GetSec();
-		const auto wholeFrame = (now - prev) * 1000.0;
+		wholeFrameTime = (now - prev) * 1000.0;
 
 		if (GetDuration() > 0.0f && now > GetDuration()) {
 			SetTermination(true);
@@ -395,14 +394,44 @@ i32 VulkanApplication::Run() noexcept
 
 		const auto nanosInAnIncrement{ m_Device.GetPhysicalDevice().properties.limits.timestampPeriod };
 
-		const auto gpuTime = (gpuResults[1] - gpuResults[0]) * nanosInAnIncrement * 1e-6;
-		const auto cpuTime = wholeFrame - gpuTime;
+		gpuTime = (gpuResults[1] - gpuResults[0]) * nanosInAnIncrement * 1e-6;
+		cpuTime = wholeFrameTime - gpuTime;
 
-		std::cout << "frame: " << frames << " " << "ms/frame: " << wholeFrame << " " << "Cpu: " << cpuTime << "ms"
-				<< " Gpu: " << gpuTime << "ms" << " running time:" << GetTimer().GetSec() * 1000.0 << std::endl;
+		// Calculate moving averages
+		if (frameCount < m_SampleWindow) {
+			m_WholeFrameTimeSamples.push_back(wholeFrameTime);
+			m_CpuTimeSamples.push_back(cpuTime);
+			m_GpuTimeSamples.push_back(gpuTime);
+		}
+		else {
+			m_WholeFrameTimeSamples.pop_front();
+			m_CpuTimeSamples.pop_front();
+			m_GpuTimeSamples.pop_front();
+
+			m_WholeFrameTimeSamples.push_back(wholeFrameTime);
+			m_CpuTimeSamples.push_back(cpuTime);
+			m_GpuTimeSamples.push_back(gpuTime);
+
+			auto wholeFrameTimeSum{ 0.0 };
+			auto cpuTimeSum{ 0.0 };
+			auto gpuTimeSum{ 0.0 };
+
+			for (int i = 0; i < m_SampleWindow; ++i) {
+				wholeFrameTimeSum += m_WholeFrameTimeSamples[i];
+				cpuTimeSum += m_CpuTimeSamples[i];
+				gpuTimeSum += m_GpuTimeSamples[i];
+			}
+
+			wholeFrameMovingAverage = wholeFrameTimeSum / static_cast<f64>(m_SampleWindow);
+			cpuTimeMovingAverage = cpuTimeSum / static_cast<f64>(m_SampleWindow);
+			gpuTimeMovingAverage = gpuTimeSum / static_cast<f64>(m_SampleWindow);
+		}
+
+		std::cout << "frame: " << frameCount << " " << "ms/frame: " << wholeFrameMovingAverage << " " << "Cpu: " << cpuTimeMovingAverage << "ms"
+				<< " Gpu: " << gpuTimeMovingAverage << "ms" << " running time:" << GetTimer().GetSec() * 1000.0 << std::endl;
 
 		prev = now;
-		++frames;
+		++frameCount;
 	}
 
 	return 0;

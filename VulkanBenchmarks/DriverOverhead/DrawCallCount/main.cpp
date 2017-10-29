@@ -3,7 +3,7 @@
 int main(int argc, char* argv[])
 {
 	ApplicationSettings applicationSettings;
-	applicationSettings.name = "Vulkan - CommandBufferRecording - Per frame command buffers.";
+	applicationSettings.name = "Vulkan - Driver Overhead - Draw Call Count";
 	applicationSettings.windowResolution = Vec2i{ 1024, 768 };
 	applicationSettings.windowPosition = Vec2i{ 512, 512 };
 	applicationSettings.vsync = false;

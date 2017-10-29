@@ -23,6 +23,7 @@
 #include "vulkan_framebuffer.h"
 #include "vulkan_shader.h"
 #include "vulkan_query_pool.h"
+#include <deque>
 
 class VulkanApplication : public Application {
 private:
@@ -185,6 +186,29 @@ private:
 	 * \return TRUE if successful, FALSE otherwise.
 	 */
 	virtual bool CreateFramebuffers() noexcept;
+
+	std::deque<f64> m_WholeFrameTimeSamples;
+
+	std::deque<f64> m_CpuTimeSamples;
+
+	std::deque<f64> m_GpuTimeSamples;
+
+	i32 m_SampleWindow{ 1000 }; //frames
+
+protected:
+	f64 wholeFrameTime{ 0.0 };
+
+	f64 cpuTime{ 0.0 };
+
+	f64 gpuTime{ 0.0 };
+
+	i64 frameCount{ 0 };
+
+	f64 wholeFrameMovingAverage{ 0.0 };
+
+	f64 cpuTimeMovingAverage{ 0.0 };
+
+	f64 gpuTimeMovingAverage{ 0.0 };
 
 public:
 

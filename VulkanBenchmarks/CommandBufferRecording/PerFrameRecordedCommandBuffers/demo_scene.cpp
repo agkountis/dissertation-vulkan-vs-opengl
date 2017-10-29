@@ -16,7 +16,7 @@ static const Mat4f s_ClipCorrectionMat{1.0f, 0.0f, 0.0f, 0.0f,
                                        0.0f, 0.0f, 0.5f, 1.0f};
 
 // Private functions -------------------------------------------------
-bool DemoScene::GenerateEntities() noexcept
+bool DemoScene::SpawnEntity() noexcept
 {
     if (!GenerateCube(&m_CubeMesh, 1.0f)) {
         return false;
@@ -583,7 +583,7 @@ DemoScene::~DemoScene()
 
 bool DemoScene::Initialize(VkExtent2D swapChainExtent, VkRenderPass renderPass) noexcept
 {
-    if (!GenerateEntities()) {
+    if (!SpawnEntity()) {
         ERROR_LOG("Failed to generate scene's entities.");
         return false;
     }
