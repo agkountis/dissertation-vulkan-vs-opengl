@@ -1,2 +1,3 @@
 add_subdirectory(CommandBufferRecording)
 add_subdirectory(DriverOverhead)
+add_subdirectory(MultiPass)
