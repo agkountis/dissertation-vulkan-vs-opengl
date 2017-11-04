@@ -745,6 +745,15 @@ VkCommandPool VulkanDevice::GetCommandPool() const noexcept
 	return m_CommandPool;
 }
 
+VkMemoryRequirements VulkanDevice::GetImageMemoryRequirements(const VkImage image) const noexcept
+{
+	VkMemoryRequirements memoryRequirements{ VK_NULL_HANDLE };
+
+	vkGetImageMemoryRequirements(m_LogicalDevice, image, &memoryRequirements);
+
+	return memoryRequirements;
+}
+
 VulkanDevice::operator VkDevice() const noexcept
 {
 	return m_LogicalDevice;

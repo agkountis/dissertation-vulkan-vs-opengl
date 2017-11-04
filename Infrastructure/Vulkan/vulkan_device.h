@@ -206,6 +206,8 @@ public:
 
     VkCommandPool GetCommandPool() const noexcept;
 
+	VkMemoryRequirements GetImageMemoryRequirements(const VkImage image) const noexcept;
+
     /**
      * \brief Automatic conversion to Vk device.
      * \details Utility that allows this class to be used directly in Vulkan functions.

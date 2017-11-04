@@ -33,9 +33,11 @@ set(SOURCE_FILES vulkan_application.cpp
         vulkan_texture.h
         vulkan_texture.cpp
         vulkan_infrastructure_context.h
-        vulkan_infrastructure_context.cpp 
-		vulkan_query_pool.h 
-		vulkan_query_pool.cpp)
+        vulkan_infrastructure_context.cpp
+		vulkan_query_pool.h
+		vulkan_query_pool.cpp
+		vulkan_render_target.h
+		vulkan_render_target.cpp)
 
 include_directories(../Core)
 
