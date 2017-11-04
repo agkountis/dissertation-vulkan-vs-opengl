@@ -5,6 +5,7 @@
 #include <mesh_utilities.h>
 #include <vulkan_shader.h>
 #include <mutex>
+#include <algorithm>
 #include "demo_scene.h"
 
 // Vulkan clip space has inverted Y and half Z.
@@ -20,7 +21,7 @@ static std::mt19937 s_Rng;
 
 static auto RealRangeRng(const f32 begin, const f32 end)
 {
-	const std::uniform_real_distribution<f32> distribution{ begin, end };
+	std::uniform_real_distribution<f32> distribution{ begin, end };
 	return distribution(s_Rng);
 }
 

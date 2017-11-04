@@ -5,6 +5,7 @@
 #include <mesh_utilities.h>
 #include <vulkan_shader.h>
 #include <mutex>
+#include <algorithm>
 #include "demo_scene.h"
 
 #define ENTITY_COUNT 5000

@@ -4,6 +4,7 @@
 #include <vulkan_shader.h>
 #include <mesh_utilities.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm>
 #include "demo_scene.h"
 #include "vulkan_application.h"
 
@@ -614,7 +615,7 @@ void DemoScene::Update(const VkExtent2D swapChainExtent, const i64 msec, f64 dt)
 
     //ubo.view = glm::rotate(ubo.view, msec / 1000.0f * glm::radians(5.0f), Vec3f{1.0f, 1.0f, 1.0f});
 
-	const auto aspect{static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height)};
+	const auto aspect = static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height);
 
     ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 200.0f);
 

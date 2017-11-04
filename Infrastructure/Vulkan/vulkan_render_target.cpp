@@ -1,6 +1,7 @@
 #include "vulkan_render_target.h"
 #include <cassert>
 #include "vulkan_infrastructure_context.h"
+#include <algorithm>
 
 // VulkanRenderTargetAttachment -----------------------------------------------------------------
 VulkanRenderTargetAttachment::VulkanRenderTargetAttachment(const Vec2ui& size,
@@ -14,8 +15,8 @@ VulkanRenderTargetAttachment::VulkanRenderTargetAttachment(const Vec2ui& size,
 	  m_AttachmentType{ attachmentType },
 	  m_SamplingEnabled{ samplingEnabled }
 {
-	assert(format != VK_FORMAT_UNDEFINED, "Render target attachment format cannot be VK_FORMAT_UNDEFINED.");
-	assert(layerCount > 0, "Render target attachment layer count must be greater than zero.");
+	assert(format != VK_FORMAT_UNDEFINED);
+	assert(layerCount > 0);
 
 	m_LayerCount = layerCount;
 	m_Format = format;
@@ -73,7 +74,7 @@ bool VulkanRenderTargetAttachment::Create() noexcept
 			aspectFlags |= VK_IMAGE_ASPECT_STENCIL_BIT;
 		}
 
-		assert(aspectFlags & VK_IMAGE_ASPECT_DEPTH_BIT, "Attachment type specified does not match specified image format");
+		assert(aspectFlags & VK_IMAGE_ASPECT_DEPTH_BIT);
 
 		imageUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 		break;

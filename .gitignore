@@ -11,3 +11,7 @@ VulkanBenchmarks/Debug - Vulkan/
 Dissertation.VC.db
 CMakeSettings.json
 build/
+
+\.idea/
+
+\.vscode/
