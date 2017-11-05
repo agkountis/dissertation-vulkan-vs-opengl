@@ -47,6 +47,10 @@ public:
 	bool Create() noexcept;
 
 	VkAttachmentDescription GetDescription() const noexcept;
+
+	VkImageView GetImageView() const noexcept;
+
+	ui32 GetLayerCount() const noexcept;
 };
 
 class VulkanRenderTarget {

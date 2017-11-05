@@ -184,6 +184,15 @@ VkAttachmentDescription VulkanRenderTargetAttachment::GetDescription() const noe
 	return m_Description;
 }
 
+VkImageView VulkanRenderTargetAttachment::GetImageView() const noexcept
+{
+	return m_ImageView;
+}
+
+ui32 VulkanRenderTargetAttachment::GetLayerCount() const noexcept
+{
+	return m_LayerCount;
+}
 // ----------------------------------------------------------------------------------------------
 
 
@@ -239,11 +248,89 @@ bool VulkanRenderTarget::CreateRenderPass(const bool overwriteExisting) noexcept
 	std::vector<VkAttachmentReference> colorAttachmentReferences;
 	VkAttachmentReference depthAttachmentReference{};
 
+	bool hasDepthAttachment{ false };
 	for (auto i = 0; i < 0; ++i) {
 		attachmentDescriptions.push_back(m_Attachments[i].GetDescription());
+
+		if ((m_Attachments[i].HasDepth() || 
+			m_Attachments[i].HasStencil()) && !hasDepthAttachment) {
+			depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			depthAttachmentReference.attachment = i;
+
+			hasDepthAttachment = true;
+		}
+		else {
+			VkAttachmentReference attachmentReference{};
+			attachmentReference.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			attachmentReference.attachment = i;
+		}
 	}
 
-	//TODO continue;
+	VkSubpassDescription subpassDescription{};
+	subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpassDescription.pColorAttachments = colorAttachmentReferences.data();
+	subpassDescription.colorAttachmentCount = static_cast<ui32>(colorAttachmentReferences.size());
+
+	if (hasDepthAttachment) {
+		subpassDescription.pDepthStencilAttachment = &depthAttachmentReference;
+	}
+
+	std::array<VkSubpassDependency, 2> subpassDependencies;
+	subpassDependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+	subpassDependencies[0].dstSubpass = 0;
+	subpassDependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+	subpassDependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	subpassDependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+	subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	subpassDependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+	
+	subpassDependencies[1].srcSubpass = 0;
+	subpassDependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+	subpassDependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	subpassDependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+	subpassDependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	subpassDependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+	subpassDependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+	
+	// Create render pass
+	VkRenderPassCreateInfo renderPassInfo = {};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.pAttachments = attachmentDescriptions.data();
+	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentDescriptions.size());
+	renderPassInfo.subpassCount = 1;
+	renderPassInfo.pSubpasses = &subpassDescription;
+	renderPassInfo.dependencyCount = static_cast<ui32>(subpassDependencies.size());
+	renderPassInfo.pDependencies = subpassDependencies.data();
+	
+	VkResult result{ vkCreateRenderPass(G_VulkanDevice, &renderPassInfo, nullptr, &m_RenderPass) };
+	
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create renderpass for the render target.");
+		return false;
+	}
+	
+	std::vector<VkImageView> attachmentViews;
+	ui32 totalLayers{ 0 };
+	for (const auto& attachment : m_Attachments) {
+		attachmentViews.push_back(attachment.GetImageView());
+		totalLayers += attachment.GetLayerCount();
+	}
+	
+	VkFramebufferCreateInfo framebufferInfo = {};
+	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	framebufferInfo.renderPass = m_RenderPass;
+	framebufferInfo.pAttachments = attachmentViews.data();
+	framebufferInfo.attachmentCount = static_cast<uint32_t>(attachmentViews.size());
+	framebufferInfo.width = m_Size.x;
+	framebufferInfo.height = m_Size.y;
+	framebufferInfo.layers = totalLayers;
+	
+	result = vkCreateFramebuffer(G_VulkanDevice, &framebufferInfo, nullptr, &m_Framebuffer);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create framebuffer for the render target");
+		return false;
+	}
 
 	return true;
 }
