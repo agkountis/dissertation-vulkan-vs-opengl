@@ -389,12 +389,14 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass renderP
 	colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 	colorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
 
+	std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates{ 3, colorBlendAttachmentState };
+
 	VkPipelineColorBlendStateCreateInfo colorBlendState{};
 	colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 	colorBlendState.logicOpEnable = VK_FALSE;
 	colorBlendState.logicOp = VK_LOGIC_OP_COPY;
-	colorBlendState.attachmentCount = 1;
-	colorBlendState.pAttachments = &colorBlendAttachmentState;
+	colorBlendState.attachmentCount = colorBlendAttachmentStates.size();
+	colorBlendState.pAttachments = colorBlendAttachmentStates.data();
 
 	for (auto& blendConstant : colorBlendState.blendConstants) {
 		blendConstant = 0.0f;
@@ -447,14 +449,14 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass renderP
 
 	// Solid rendering pipeline
 	// Load shaders
-	VulkanShader* vertexShader{ G_ResourceManager.Get<VulkanShader>("sdr/default.vert.spv") };
+	VulkanShader* vertexShader{ G_ResourceManager.Get<VulkanShader>("sdr/deferred.vert.spv") };
 
 	if (!vertexShader) {
 		ERROR_LOG("Failed to load vertex shader.");
 		return false;
 	}
 
-	VulkanShader* fragmentShader{ G_ResourceManager.Get<VulkanShader>("sdr/default.frag.spv") };
+	VulkanShader* fragmentShader{ G_ResourceManager.Get<VulkanShader>("sdr/deferred.frag.spv") };
 
 	if (!fragmentShader) {
 		ERROR_LOG("Failed to load fragment shader.");
@@ -628,24 +630,23 @@ static f64 entitiesToSpawn{ 0.0f };
 
 void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 {
-	
-	entitiesToSpawn += spawnRate * dt;
-
-	i32 e = entitiesToSpawn;
-
-	entitiesToSpawn -= e;
-
-	int i = 0;
-	while (i < e) {
-		SpawnEntity();
-		++i;
-	}
-
-	for (auto& entity : m_Entities) {
-		entity->Update(dt);
-	}
-
-	std::cout << "Draw Calls: " << m_Entities.size() << std::endl;
+//	entitiesToSpawn += spawnRate * dt;
+//
+//	i32 e = entitiesToSpawn;
+//
+//	entitiesToSpawn -= e;
+//
+//	int i = 0;
+//	while (i < e) {
+//		SpawnEntity();
+//		++i;
+//	}
+//
+//	for (auto& entity : m_Entities) {
+//		entity->Update(dt);
+//	}
+//
+//	std::cout << "Draw Calls: " << m_Entities.size() << std::endl;
 }
 
 void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept

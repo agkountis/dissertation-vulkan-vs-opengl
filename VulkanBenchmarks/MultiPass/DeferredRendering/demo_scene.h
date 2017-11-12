@@ -4,6 +4,7 @@
 #include <memory>
 #include <vulkan_pipeline_cache.h>
 #include "demo_entity.h"
+#include "vulkan_render_target.h"
 
 struct UniformBufferObject {
 	Mat4f view;

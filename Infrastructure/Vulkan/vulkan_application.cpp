@@ -223,6 +223,16 @@ ui32 VulkanApplication::GetCurrentBufferIndex() const noexcept
 	return m_CurrentBuffer;
 }
 
+const VulkanSemaphore& VulkanApplication::GetPresentCompleteSemaphore() const noexcept
+{
+	return m_PresentComplete;
+}
+
+const VulkanSemaphore& VulkanApplication::GetDrawCompleteSemaphore() const noexcept
+{
+	return m_DrawComplete;
+}
+
 bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 {
 	vkDeviceWaitIdle(m_Device);

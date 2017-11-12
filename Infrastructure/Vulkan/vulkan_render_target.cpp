@@ -2,13 +2,14 @@
 #include <cassert>
 #include "vulkan_infrastructure_context.h"
 #include <algorithm>
+#include <array>
 
 // VulkanRenderTargetAttachment -----------------------------------------------------------------
-VulkanRenderTargetAttachment::VulkanRenderTargetAttachment(const Vec2ui& size,
-                                                           const ui32 layerCount,
-                                                           const VkFormat format,
-                                                           const AttachmentType attachmentType,
-                                                           const bool samplingEnabled)
+VulkanRenderTarget::VulkanRenderTargetAttachment::VulkanRenderTargetAttachment(const Vec2ui& size,
+                                                                               const ui32 layerCount,
+                                                                               const VkFormat format,
+                                                                               const AttachmentType attachmentType,
+                                                                               const bool samplingEnabled)
 	: m_Format{ format },
 	  m_Size{ size },
 	  m_LayerCount{ layerCount },
@@ -22,14 +23,14 @@ VulkanRenderTargetAttachment::VulkanRenderTargetAttachment(const Vec2ui& size,
 	m_Format = format;
 }
 
-VulkanRenderTargetAttachment::~VulkanRenderTargetAttachment()
+VulkanRenderTarget::VulkanRenderTargetAttachment::~VulkanRenderTargetAttachment()
 {
 	vkDestroyImage(G_VulkanDevice, m_Image, nullptr);
 	vkDestroyImageView(G_VulkanDevice, m_ImageView, nullptr);
 	vkFreeMemory(G_VulkanDevice, m_Memory, nullptr);
 }
 
-bool VulkanRenderTargetAttachment::HasDepth() const
+bool VulkanRenderTarget::VulkanRenderTargetAttachment::HasDepth() const
 {
 	std::vector<VkFormat> formats{
 		VK_FORMAT_D16_UNORM,
@@ -43,7 +44,7 @@ bool VulkanRenderTargetAttachment::HasDepth() const
 	return std::find(formats.begin(), formats.end(), m_Format) != std::end(formats);
 }
 
-bool VulkanRenderTargetAttachment::HasStencil() const noexcept
+bool VulkanRenderTarget::VulkanRenderTargetAttachment::HasStencil() const noexcept
 {
 	std::vector<VkFormat> formats{
 		VK_FORMAT_S8_UINT,
@@ -55,7 +56,7 @@ bool VulkanRenderTargetAttachment::HasStencil() const noexcept
 	return std::find(formats.begin(), formats.end(), m_Format) != std::end(formats);
 }
 
-bool VulkanRenderTargetAttachment::Create() noexcept
+bool VulkanRenderTarget::VulkanRenderTargetAttachment::Create() noexcept
 {
 	VkImageAspectFlags aspectFlags{ VK_NULL_HANDLE };
 	VkImageUsageFlags imageUsageFlags{ VK_NULL_HANDLE };
@@ -86,6 +87,7 @@ bool VulkanRenderTargetAttachment::Create() noexcept
 	// Create the image
 	VkImageCreateInfo imageCreateInfo{};
 	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
 	imageCreateInfo.format = m_Format;
 	imageCreateInfo.extent = VkExtent3D{ m_Size.x, m_Size.y, 1 /* depth */ };
 	imageCreateInfo.mipLevels = 1;
@@ -131,7 +133,7 @@ bool VulkanRenderTargetAttachment::Create() noexcept
 
 	// Create the image view.
 	VkImageViewCreateInfo imageViewCreateInfo{};
-	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 
 	if (m_LayerCount == 1) {
 		imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -159,7 +161,8 @@ bool VulkanRenderTargetAttachment::Create() noexcept
 	if (m_SamplingEnabled) {
 		m_Description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 	}
-	else { // don't care!
+	else {
+		// don't care!
 		m_Description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	}
 
@@ -179,29 +182,25 @@ bool VulkanRenderTargetAttachment::Create() noexcept
 	return true;
 }
 
-VkAttachmentDescription VulkanRenderTargetAttachment::GetDescription() const noexcept
+VkAttachmentDescription VulkanRenderTarget::VulkanRenderTargetAttachment::GetDescription() const noexcept
 {
 	return m_Description;
 }
 
-VkImageView VulkanRenderTargetAttachment::GetImageView() const noexcept
+VkImageView VulkanRenderTarget::VulkanRenderTargetAttachment::GetImageView() const noexcept
 {
 	return m_ImageView;
 }
 
-ui32 VulkanRenderTargetAttachment::GetLayerCount() const noexcept
+ui32 VulkanRenderTarget::VulkanRenderTargetAttachment::GetLayerCount() const noexcept
 {
 	return m_LayerCount;
 }
+
 // ----------------------------------------------------------------------------------------------
 
 
 // VulkanRenderTarget ---------------------------------------------------------------------------
-VulkanRenderTarget::~VulkanRenderTarget()
-{
-	vkDestroySampler(G_VulkanDevice, m_Sampler, nullptr);
-	vkDestroyRenderPass(G_VulkanDevice, m_RenderPass, nullptr);
-}
 
 bool VulkanRenderTarget::CreateSampler(const VkFilter magFilter,
                                        const VkFilter minFilter,
@@ -231,17 +230,20 @@ bool VulkanRenderTarget::CreateSampler(const VkFilter magFilter,
 	return true;
 }
 
-bool VulkanRenderTarget::CreateRenderPass(const bool overwriteExisting) noexcept
+VulkanRenderTarget::~VulkanRenderTarget()
 {
-	if (m_RenderPass != VK_NULL_HANDLE && !overwriteExisting) {
-		WARNING_LOG("RenderPass already set to the render target. If you want it overwritten, specify it when calling the CeateRenderPass method of the Render target.");
-		return true;
-	}
+	vkDestroySampler(G_VulkanDevice, m_Sampler, nullptr);
+	vkDestroyRenderPass(G_VulkanDevice, m_RenderPass, nullptr);
+}
 
+bool VulkanRenderTarget::Create(const Vec2ui& size) noexcept
+{
 	if (m_Attachments.empty()) {
-		ERROR_LOG("Cannot create render target with 0 attachments.");
+		ERROR_LOG("Cannot create render pass with 0 attachments.");
 		return false;
 	}
+
+	m_Size = size;
 
 	std::vector<VkAttachmentDescription> attachmentDescriptions;
 
@@ -249,20 +251,28 @@ bool VulkanRenderTarget::CreateRenderPass(const bool overwriteExisting) noexcept
 	VkAttachmentReference depthAttachmentReference{};
 
 	bool hasDepthAttachment{ false };
-	for (auto i = 0; i < 0; ++i) {
+	for (auto i = 0; i < m_Attachments.size(); ++i) {
+
+		if (!m_Attachments[i].Create()) {
+			ERROR_LOG("Attachment creation failed. Attachment index: " + i);
+			return false;
+		}
+
 		attachmentDescriptions.push_back(m_Attachments[i].GetDescription());
 
-		if ((m_Attachments[i].HasDepth() || 
+		if ((m_Attachments[i].HasDepth() ||
 			m_Attachments[i].HasStencil()) && !hasDepthAttachment) {
-			depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			depthAttachmentReference.attachment = i;
 
 			hasDepthAttachment = true;
 		}
 		else {
 			VkAttachmentReference attachmentReference{};
-			attachmentReference.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			attachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			attachmentReference.attachment = i;
+
+			colorAttachmentReferences.push_back(attachmentReference);
 		}
 	}
 
@@ -283,7 +293,7 @@ bool VulkanRenderTarget::CreateRenderPass(const bool overwriteExisting) noexcept
 	subpassDependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 	subpassDependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 	subpassDependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-	
+
 	subpassDependencies[1].srcSubpass = 0;
 	subpassDependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
 	subpassDependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -291,7 +301,7 @@ bool VulkanRenderTarget::CreateRenderPass(const bool overwriteExisting) noexcept
 	subpassDependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 	subpassDependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 	subpassDependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-	
+
 	// Create render pass
 	VkRenderPassCreateInfo renderPassInfo = {};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -301,21 +311,25 @@ bool VulkanRenderTarget::CreateRenderPass(const bool overwriteExisting) noexcept
 	renderPassInfo.pSubpasses = &subpassDescription;
 	renderPassInfo.dependencyCount = static_cast<ui32>(subpassDependencies.size());
 	renderPassInfo.pDependencies = subpassDependencies.data();
-	
+
 	VkResult result{ vkCreateRenderPass(G_VulkanDevice, &renderPassInfo, nullptr, &m_RenderPass) };
-	
+
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create renderpass for the render target.");
 		return false;
 	}
-	
+
 	std::vector<VkImageView> attachmentViews;
-	ui32 totalLayers{ 0 };
+	ui32 maxLayerCount{ 0 };
 	for (const auto& attachment : m_Attachments) {
 		attachmentViews.push_back(attachment.GetImageView());
-		totalLayers += attachment.GetLayerCount();
+
+		if (attachment.GetLayerCount() > maxLayerCount) {
+			maxLayerCount = attachment.GetLayerCount();
+		}
 	}
-	
+
+	//TODO: fix the framebuffer creation!
 	VkFramebufferCreateInfo framebufferInfo = {};
 	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	framebufferInfo.renderPass = m_RenderPass;
@@ -323,8 +337,8 @@ bool VulkanRenderTarget::CreateRenderPass(const bool overwriteExisting) noexcept
 	framebufferInfo.attachmentCount = static_cast<uint32_t>(attachmentViews.size());
 	framebufferInfo.width = m_Size.x;
 	framebufferInfo.height = m_Size.y;
-	framebufferInfo.layers = totalLayers;
-	
+	framebufferInfo.layers = maxLayerCount;
+
 	result = vkCreateFramebuffer(G_VulkanDevice, &framebufferInfo, nullptr, &m_Framebuffer);
 
 	if (result != VK_SUCCESS) {
@@ -335,11 +349,37 @@ bool VulkanRenderTarget::CreateRenderPass(const bool overwriteExisting) noexcept
 	return true;
 }
 
-size_t VulkanRenderTarget::AddAttachment(const VulkanRenderTargetAttachment&& attachment) noexcept
+size_t VulkanRenderTarget::AddAttachment(const Vec2ui& size,
+                                         const ui32 layerCount,
+                                         const VkFormat format,
+                                         const AttachmentType attachmentType,
+                                         const bool samplingEnabled) noexcept
 {
-	m_Attachments.push_back(attachment);
+	m_Attachments.push_back(VulkanRenderTargetAttachment{
+		size,
+		layerCount,
+		format,
+		attachmentType,
+		samplingEnabled
+	});
 
 	return m_Attachments.size() - 1;
+}
+
+VkRenderPass VulkanRenderTarget::GetRenderPass() const noexcept
+{
+	return m_RenderPass;
+}
+
+
+const Vec2ui& VulkanRenderTarget::GetSize() const noexcept
+{
+	return m_Size;
+}
+
+VulkanRenderTarget::operator VkFramebuffer() const
+{
+	return m_Framebuffer;
 }
 
 // ----------------------------------------------------------------------------------------------

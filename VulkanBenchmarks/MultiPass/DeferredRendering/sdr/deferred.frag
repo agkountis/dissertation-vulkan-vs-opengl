@@ -16,7 +16,9 @@ layout(set = 1, binding = 0) uniform sampler2D diffuseSampler;
 layout(set = 1, binding = 1) uniform sampler2D specularSampler;
 layout(set = 1, binding = 2) uniform sampler2D normalSampler;
 
-layout(location = 0) out vec4 outColor;
+layout(location = 0) out vec4 outPosition;
+layout(location = 1) out vec4 outNormal;
+layout(location = 2) out vec4 outAlbedo;
 
 void main()
 {
@@ -24,15 +26,10 @@ void main()
     vec3 v = normalize(v_InViewDirection);
     vec3 l = normalize(v_InLightDirection);
 
-    vec3 h = normalize(l + v);
-
-    float diffLight = max(dot(n, l), 0.0);
-
-    float specLight = pow(max(dot(n, h), 0.0), 60.0);
-
     vec4 diffTexel = texture(diffuseSampler, inTexcoord);
     vec4 specTexel = texture(specularSampler, inTexcoord);
 
-	outColor = diffTexel * pcs.diffuse  * diffLight
-	            + specTexel * pcs.specular * specLight;
+	outPosition = vec4(1.0, 0.0, 0.0, 1.0);
+	outNormal = vec4(0.0, 1.0, 0.0, 1.0);
+	outAlbedo = vec4(0.0, 0.0, 1.0, 1.0);
 }

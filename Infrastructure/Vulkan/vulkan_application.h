@@ -120,7 +120,7 @@ private:
 	VkRenderPass m_RenderPass{ VK_NULL_HANDLE };
 
 	/**
-	 * \brief A class that encapsulates the functionality of a 
+	 * \brief A class that encapsulates the functionality of a
 	 * Vulkan swap chain.
 	 */
 	VulkanSwapChain m_SwapChain;
@@ -251,6 +251,10 @@ public:
 	VkSubmitInfo& GetSubmitInfo() noexcept;
 
 	ui32 GetCurrentBufferIndex() const noexcept;
+
+	const VulkanSemaphore& GetPresentCompleteSemaphore() const noexcept;
+
+	const VulkanSemaphore& GetDrawCompleteSemaphore() const noexcept;
 
 	bool Reshape(const Vec2ui& size) noexcept;
 

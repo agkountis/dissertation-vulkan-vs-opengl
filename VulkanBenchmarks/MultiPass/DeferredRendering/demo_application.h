@@ -1,19 +1,28 @@
-#ifndef VULKAN_SINGLE_THREADED_APPLICATION_H_
-#define VULKAN_SINGLE_THREADED_APPLICATION_H_
+#ifndef DISSERTATION_DEMO_APPLICATION_H_
+#define DISSERTATION_DEMO_APPLICATION_H_
 
 #include "vulkan_application.h"
 #include "demo_entity.h"
 #include "demo_scene.h"
-#include <memory>
-#include <vulkan_infrastructure_context.h>
+#include "vulkan_render_target.h"
 
 class DemoApplication : public VulkanApplication {
 private:
 	DemoScene m_DemoScene;
 
+	VulkanRenderTarget m_GBuffer;
+
+	VkCommandBuffer m_DeferredCommandBuffer{ VK_NULL_HANDLE };
+
+	VulkanSemaphore m_DeferredSemaphore;
+
 	void EnableFeatures() noexcept override;
 
 	bool BuildCommandBuffers() noexcept override;
+
+	bool BuildDeferredPassCommandBuffer(); // G-Buffer
+
+	bool BuildDisplayCommandBuffer(); // Fullscreen quad
 
 public:
 	explicit DemoApplication(const ApplicationSettings& settings);
@@ -27,4 +36,4 @@ public:
 	void OnResize(const Vec2i& size) noexcept override;
 };
 
-#endif // VULKAN_SINGLE_THREADED_APPLICATION_H_
+#endif // DISSERTATION_DEMO_APPLICATION_H_
