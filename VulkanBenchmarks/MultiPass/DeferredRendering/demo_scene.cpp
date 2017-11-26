@@ -16,7 +16,6 @@ static const Mat4f s_ClipCorrectionMat{
 	0.0f, 0.0f, 0.5f, 1.0f
 };
 
-
 static std::mt19937 s_Rng;
 
 static auto RealRangeRng(const f32 begin, const f32 end)
@@ -109,13 +108,28 @@ bool DemoScene::PrepareUniforms() noexcept
 	// 3 textures per material of each entity.
 	materialPoolSize.descriptorCount = 3;
 
-	std::vector<VkDescriptorPoolSize> descriptorPoolSizes{ sceneMatricesPoolSize, materialPoolSize };
+	// Descriptor pool size for the deferred shading resolution pass (display pass)
+	VkDescriptorPoolSize gBufferPoolSize{};
+	gBufferPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	gBufferPoolSize.descriptorCount = 4; // x4 (position, normal, specular, albedo textures)
+
+	// 1 UBO for the light array (display pass)
+	VkDescriptorPoolSize lightsPoolSize{};
+	lightsPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	lightsPoolSize.descriptorCount = 1; // x1
+
+	std::vector<VkDescriptorPoolSize> descriptorPoolSizes{
+		sceneMatricesPoolSize,
+		materialPoolSize,
+		gBufferPoolSize,
+		lightsPoolSize
+	};
 
 	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
 	descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 
-	//1 set for each entity's material plus one for the scene matrices
-	descriptorPoolCreateInfo.maxSets = 2;
+	//1 set for each entity's material plus one for the scene matrices plus one for the display pass light ubo and input textures
+	descriptorPoolCreateInfo.maxSets = 3;
 	descriptorPoolCreateInfo.poolSizeCount = static_cast<ui32>(descriptorPoolSizes.size());
 	descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
 
@@ -133,13 +147,13 @@ bool DemoScene::PrepareUniforms() noexcept
 		return false;
 	}
 
-	//Now a descriptor set has to be created, but before that, it's layout
+	//Now a descriptor set has to be created, but before that, its layout
 	//has to be defined.
 	//First the bindings have to be defined...
 	//Descriptor set 0 - scene matrices;
 	VkDescriptorSetLayoutBinding vertexShaderUboBinding{};
 	vertexShaderUboBinding.binding = 0; //bind at location 0.
-	vertexShaderUboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; //It's a uniform m_Buffer
+	vertexShaderUboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; //It's a uniform buffer
 	vertexShaderUboBinding.descriptorCount = 1; //1 descriptor.
 	vertexShaderUboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; //bound to the vertex shader stage
 
@@ -200,6 +214,62 @@ bool DemoScene::PrepareUniforms() noexcept
 		return false;
 	}
 
+	descriptorSetLayoutBindings.clear();
+
+	// Create descriptor bindings for the gBuffer and Lights descriptor set layout.
+	VkDescriptorSetLayoutBinding positionTexBinding{};
+	positionTexBinding.binding = 0;
+	positionTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	positionTexBinding.descriptorCount = 1;
+	positionTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	descriptorSetLayoutBindings.push_back(positionTexBinding);
+
+	VkDescriptorSetLayoutBinding normalTexBinding{};
+	normalTexBinding.binding = 1;
+	normalTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	normalTexBinding.descriptorCount = 1;
+	normalTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	descriptorSetLayoutBindings.push_back(normalTexBinding);
+
+	VkDescriptorSetLayoutBinding albedoTexBinding{};
+	albedoTexBinding.binding = 2;
+	albedoTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	albedoTexBinding.descriptorCount = 1;
+	albedoTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	descriptorSetLayoutBindings.push_back(albedoTexBinding);
+
+	VkDescriptorSetLayoutBinding specularTexBinding{};
+	specularTexBinding.binding = 3;
+	specularTexBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	specularTexBinding.descriptorCount = 1;
+	specularTexBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	descriptorSetLayoutBindings.push_back(specularTexBinding);
+
+	VkDescriptorSetLayoutBinding lightsUboBinding{};
+	lightsUboBinding.binding = 4;
+	lightsUboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	lightsUboBinding.descriptorCount = 1;
+	lightsUboBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	descriptorSetLayoutBindings.push_back(lightsUboBinding);
+
+	descriptorSetLayoutCreateInfo.bindingCount = static_cast<ui32>(descriptorSetLayoutBindings.size());
+	descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
+
+	result = vkCreateDescriptorSetLayout(device,
+	                                     &descriptorSetLayoutCreateInfo,
+	                                     nullptr,
+	                                     &m_DescriptorSetLayouts.gBufferAndLights);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create g buffer and lights descriptor set layout.");
+		return false;
+	}
+
 	// After the descriptor set layouts have been defined and created,
 	// the pipeline layout can be defined. The pipeline layout will need the
 	// descriptor layouts created above plus the constant ranges that will be defined bellow.
@@ -224,6 +294,7 @@ bool DemoScene::PrepareUniforms() noexcept
 		m_DescriptorSetLayouts.material
 	};
 
+	// Deferred pass pipeline layout
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
 	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutCreateInfo.setLayoutCount = static_cast<ui32>(descriptorSetLayouts.size());
@@ -231,9 +302,26 @@ bool DemoScene::PrepareUniforms() noexcept
 	pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<ui32>(pushConstantRanges.size());
 	pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRanges.data();
 
-	result = vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout);
+	result = vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayouts.deferred);
 	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to create pipeline layout.");
+		ERROR_LOG("Failed to create deferred pass pipeline layout.");
+		return false;
+	}
+
+	descriptorSetLayouts.clear();
+	descriptorSetLayouts.insert(descriptorSetLayouts.cbegin(),
+	                            { m_DescriptorSetLayouts.sceneMatrices, m_DescriptorSetLayouts.gBufferAndLights });
+
+	// Display/lighting pass pipeline layout
+	pipelineLayoutCreateInfo.setLayoutCount = static_cast<ui32>(descriptorSetLayouts.size());
+	pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
+	pipelineLayoutCreateInfo.pPushConstantRanges = VK_NULL_HANDLE;
+	pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+
+	result = vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayouts.display);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create desplay/lighting pass pipeline layout.");
 		return false;
 	}
 
@@ -245,7 +333,7 @@ bool DemoScene::PrepareUniforms() noexcept
 	descriptorSetAllocateInfo.descriptorSetCount = 1; //1 descriptor set.
 	descriptorSetAllocateInfo.pSetLayouts = &m_DescriptorSetLayouts.sceneMatrices; //With this layout.
 
-	result = vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &m_SceneMatricesDescriptorSet);
+	result = vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &m_DescriptorSets.sceneMatrices);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to allocate scene matrices descriptor set.");
@@ -255,8 +343,8 @@ bool DemoScene::PrepareUniforms() noexcept
 	// Create the buffer object that will store the uniforms.
 	if (!device.CreateBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 	                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-	                         m_MatricesUbo,
-	                         sizeof(UniformBufferObject))) {
+	                         m_Ubos.matrices,
+	                         sizeof(MatricesUbo))) {
 		ERROR_LOG("Failed to create uniform buffer.");
 		return false;
 	}
@@ -264,12 +352,12 @@ bool DemoScene::PrepareUniforms() noexcept
 	// Now that the descriptor set is allocated we have to write into it and update the uniforms.
 	VkWriteDescriptorSet uniformDescriptorWrite{};
 	uniformDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	uniformDescriptorWrite.dstSet = m_SceneMatricesDescriptorSet; //Write to this set
+	uniformDescriptorWrite.dstSet = m_DescriptorSets.sceneMatrices; //Write to this set
 	uniformDescriptorWrite.dstBinding = 0; //at this binding
 	uniformDescriptorWrite.dstArrayElement = 0; //It is not an array.
 	uniformDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; //It is a uniform buffer.
 	uniformDescriptorWrite.descriptorCount = 1; // 1 descriptor set.
-	uniformDescriptorWrite.pBufferInfo = &m_MatricesUbo.descriptorBufferInfo; // And here is the buffer description.
+	uniformDescriptorWrite.pBufferInfo = &m_Ubos.matrices.descriptorBufferInfo; // And here is the buffer description.
 
 	std::vector<VkWriteDescriptorSet> writeDescriptorSets{ uniformDescriptorWrite };
 
@@ -283,7 +371,6 @@ bool DemoScene::PrepareUniforms() noexcept
 	writeDescriptorSets.clear();
 
 	// Allocate 1 descriptor set for each entity's material
-	descriptorSetAllocateInfo.descriptorPool = m_DescriptorPool; //Allocate from this pool.
 	descriptorSetAllocateInfo.descriptorSetCount = 1; //1 descriptor set.
 	descriptorSetAllocateInfo.pSetLayouts = &m_DescriptorSetLayouts.material; //With this layout.
 
@@ -354,13 +441,121 @@ bool DemoScene::PrepareUniforms() noexcept
 	                       0,
 	                       nullptr);
 
+	writeDescriptorSets.clear();
 
-	m_MatricesUbo.Map(sizeof m_MatricesUbo);
+
+	descriptorSetAllocateInfo.descriptorSetCount = 1; //1 descriptor set.
+	descriptorSetAllocateInfo.pSetLayouts = &m_DescriptorSetLayouts.gBufferAndLights; //With this layout.
+
+	result = vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &m_DescriptorSets.display);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create the display/lighting resolution descriptor set.");
+		return false;
+	}
+
+	const auto sampler = m_GBuffer.GetSampler();
+
+	const auto& positionAttachment = m_GBuffer.GetAttachment(m_AttachmentIndices.position);
+	VkDescriptorImageInfo positionImageInfo{};
+	positionImageInfo.imageView = positionAttachment.GetImageView();
+	positionImageInfo.imageLayout = positionAttachment.GetDescription().finalLayout;
+	positionImageInfo.sampler = sampler;
+
+	const auto& normalAttachment = m_GBuffer.GetAttachment(m_AttachmentIndices.normal);
+	VkDescriptorImageInfo normalImageInfo{};
+	normalImageInfo.imageView = normalAttachment.GetImageView();
+	normalImageInfo.imageLayout = normalAttachment.GetDescription().finalLayout;
+	normalImageInfo.sampler = sampler;
+
+	const auto& albedoAttachment = m_GBuffer.GetAttachment(m_AttachmentIndices.albedo);
+	VkDescriptorImageInfo albedoImageInfo{};
+	albedoImageInfo.imageView = albedoAttachment.GetImageView();
+	albedoImageInfo.imageLayout = albedoAttachment.GetDescription().finalLayout;
+	albedoImageInfo.sampler = sampler;
+
+	const auto& specularAttachment = m_GBuffer.GetAttachment(m_AttachmentIndices.specular);
+	VkDescriptorImageInfo specularImageInfo{};
+	specularImageInfo.imageView = specularAttachment.GetImageView();
+	specularImageInfo.imageLayout = specularAttachment.GetDescription().finalLayout;
+	specularImageInfo.sampler = sampler;
+
+	VkWriteDescriptorSet positionImageDescriptorWrite{};
+	positionImageDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	positionImageDescriptorWrite.dstSet = m_DescriptorSets.display;
+	positionImageDescriptorWrite.dstBinding = m_AttachmentIndices.position;
+	positionImageDescriptorWrite.dstArrayElement = 0;
+	positionImageDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	positionImageDescriptorWrite.descriptorCount = 1;
+	positionImageDescriptorWrite.pImageInfo = &positionImageInfo;
+
+	writeDescriptorSets.push_back(positionImageDescriptorWrite);
+
+	VkWriteDescriptorSet normalImageDescriptorWrite{};
+	normalImageDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	normalImageDescriptorWrite.dstSet = m_DescriptorSets.display;
+	normalImageDescriptorWrite.dstBinding = m_AttachmentIndices.normal;
+	normalImageDescriptorWrite.dstArrayElement = 0;
+	normalImageDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	normalImageDescriptorWrite.descriptorCount = 1;
+	normalImageDescriptorWrite.pImageInfo = &normalImageInfo;
+
+	writeDescriptorSets.push_back(normalImageDescriptorWrite);
+
+	VkWriteDescriptorSet albedoImageDescriptorWrite{};
+	albedoImageDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	albedoImageDescriptorWrite.dstSet = m_DescriptorSets.display;
+	albedoImageDescriptorWrite.dstBinding = m_AttachmentIndices.albedo;
+	albedoImageDescriptorWrite.dstArrayElement = 0;
+	albedoImageDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	albedoImageDescriptorWrite.descriptorCount = 1;
+	albedoImageDescriptorWrite.pImageInfo = &albedoImageInfo;
+
+	writeDescriptorSets.push_back(albedoImageDescriptorWrite);
+
+	VkWriteDescriptorSet specularImageDescriptorWrite{};
+	specularImageDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	specularImageDescriptorWrite.dstSet = m_DescriptorSets.display;
+	specularImageDescriptorWrite.dstBinding = m_AttachmentIndices.specular;
+	specularImageDescriptorWrite.dstArrayElement = 0;
+	specularImageDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	specularImageDescriptorWrite.descriptorCount = 1;
+	specularImageDescriptorWrite.pImageInfo = &specularImageInfo;
+
+	writeDescriptorSets.push_back(specularImageDescriptorWrite);
+
+	if (!device.CreateBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+	                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	                         m_Ubos.lights,
+	                         sizeof(MatricesUbo))) {
+		ERROR_LOG("Failed to create uniform buffer.");
+		return false;
+	}
+
+	uniformDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	uniformDescriptorWrite.dstSet = m_DescriptorSets.display;
+	uniformDescriptorWrite.dstBinding = writeDescriptorSets.size();
+	uniformDescriptorWrite.dstArrayElement = 0;
+	uniformDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uniformDescriptorWrite.descriptorCount = 1;
+	uniformDescriptorWrite.pBufferInfo = &m_Ubos.lights.descriptorBufferInfo;
+
+	writeDescriptorSets.push_back(uniformDescriptorWrite);
+
+	//Update the display descriptor set.
+	vkUpdateDescriptorSets(device,
+	                       static_cast<ui32>(writeDescriptorSets.size()),
+	                       writeDescriptorSets.data(),
+	                       0,
+	                       nullptr);
+
+	m_Ubos.matrices.Map(sizeof m_Ubos.matrices);
+	m_Ubos.lights.Map(sizeof m_Ubos.lights);
 
 	return true;
 }
 
-bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass renderPass) noexcept
+bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass displayRenderPass) noexcept
 {
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState{};
 	inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -379,8 +574,7 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass renderP
 	rasterizationState.lineWidth = 1.0f;
 
 	VkPipelineColorBlendAttachmentState colorBlendAttachmentState{};
-	colorBlendAttachmentState.colorWriteMask =
-			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	colorBlendAttachmentState.blendEnable = VK_FALSE;
 	colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
 	colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
@@ -389,7 +583,7 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass renderP
 	colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 	colorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
 
-	std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates{ 3, colorBlendAttachmentState };
+	std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentStates{ 4, colorBlendAttachmentState };
 
 	VkPipelineColorBlendStateCreateInfo colorBlendState{};
 	colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -494,8 +688,8 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass renderP
 
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
 	pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipelineCreateInfo.renderPass = renderPass;
-	pipelineCreateInfo.layout = m_PipelineLayout;
+	pipelineCreateInfo.renderPass = m_GBuffer.GetRenderPass();
+	pipelineCreateInfo.layout = m_PipelineLayouts.deferred;
 	pipelineCreateInfo.flags = VK_NULL_HANDLE;
 	pipelineCreateInfo.basePipelineIndex = -1;
 	pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -516,7 +710,7 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass renderP
 		                          1,
 		                          &pipelineCreateInfo,
 		                          nullptr,
-		                          &m_Pipelines.solid)
+		                          &m_Pipelines.deferred)
 	};
 
 	if (result != VK_SUCCESS) {
@@ -524,19 +718,46 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass renderP
 		return false;
 	}
 
-	//Wire frame pipeline
-	if (G_VulkanDevice.GetPhysicalDevice().features.fillModeNonSolid) {
+	// Display pipeline
+	// The display pipeline only has 1 color attachment
+	colorBlendState.attachmentCount = 1;
+	colorBlendState.pAttachments = &colorBlendAttachmentState;
 
-		rasterizationState.polygonMode = VK_POLYGON_MODE_LINE;
-		rasterizationState.lineWidth = 1.0f;
+	vertexShader = G_ResourceManager.Get<VulkanShader>("sdr/display.vert.spv");
 
-		result = vkCreateGraphicsPipelines(G_VulkanDevice,
-		                                   m_PipelineCache,
-		                                   1,
-		                                   &pipelineCreateInfo,
-		                                   nullptr,
-		                                   &m_Pipelines.wireframe);
+	if (!vertexShader) {
+		ERROR_LOG("Failed to load vertex shader.");
+		return false;
 	}
+
+	fragmentShader = G_ResourceManager.Get<VulkanShader>("sdr/display.frag.spv");
+
+	if (!fragmentShader) {
+		ERROR_LOG("Failed to load vertex shader.");
+		return false;
+	}
+
+	// change the shader modules
+	vertexShaderStage.module = *vertexShader;
+	fragmentShaderStage.module = *fragmentShader;
+
+	shaderStages.clear();
+	shaderStages.insert(shaderStages.cbegin(), { vertexShaderStage, fragmentShaderStage });
+
+	pipelineCreateInfo.pStages = shaderStages.data();
+
+	// Assign the correct pipeline layout
+	pipelineCreateInfo.layout = m_PipelineLayouts.display; //TODO: allocate this layout...
+
+	// Assign the correct render pass.
+	pipelineCreateInfo.renderPass = displayRenderPass;
+
+	result = vkCreateGraphicsPipelines(G_VulkanDevice,
+	                                   m_PipelineCache,
+	                                   1,
+	                                   &pipelineCreateInfo,
+	                                   nullptr,
+	                                   &m_Pipelines.display);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create pipeline.");
@@ -560,14 +781,15 @@ DemoScene::~DemoScene()
 
 	vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
 
-	vkDestroyPipeline(device, m_Pipelines.solid, nullptr);
+	vkDestroyPipeline(device, m_Pipelines.deferred, nullptr);
 
-	vkDestroyPipeline(device, m_Pipelines.wireframe, nullptr);
+	vkDestroyPipeline(device, m_Pipelines.display, nullptr);
 
-	vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
+	vkDestroyPipelineLayout(device, m_PipelineLayouts.deferred, nullptr);
+	vkDestroyPipelineLayout(device, m_PipelineLayouts.display, nullptr);
 }
 
-bool DemoScene::Initialize(const VkExtent2D swapChainExtent, const VkRenderPass renderPass) noexcept
+bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displayRenderPass) noexcept
 {
 	using namespace std::chrono;
 	const auto seed = high_resolution_clock::now().time_since_epoch().count();
@@ -601,70 +823,110 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, const VkRenderPass 
 	                                                                       VK_FORMAT_R8G8B8A8_UNORM,
 	                                                                       VK_IMAGE_ASPECT_COLOR_BIT);
 
+	const Vec2ui size{ swapChainExtent.width, swapChainExtent.height };
+
+	m_AttachmentIndices.position = m_GBuffer.AddAttachment(size,
+	                                                       1,
+	                                                       VK_FORMAT_R16G16B16A16_SFLOAT,
+	                                                       AttachmentType::COLOR,
+	                                                       true);
+
+	m_AttachmentIndices.normal = m_GBuffer.AddAttachment(size,
+	                                                     1,
+	                                                     VK_FORMAT_R16G16B16A16_SFLOAT,
+	                                                     AttachmentType::COLOR,
+	                                                     true);
+
+	m_AttachmentIndices.albedo = m_GBuffer.AddAttachment(size,
+	                                                     1,
+	                                                     VK_FORMAT_R8G8B8A8_UNORM,
+	                                                     AttachmentType::COLOR,
+	                                                     true);
+
+	m_AttachmentIndices.specular = m_GBuffer.AddAttachment(size,
+	                                                       1,
+	                                                       VK_FORMAT_R8G8B8A8_UNORM,
+	                                                       AttachmentType::COLOR,
+	                                                       true);
+
+	m_AttachmentIndices.depth = m_GBuffer.AddAttachment(size,
+	                                                    1,
+	                                                    VK_FORMAT_D32_SFLOAT,
+	                                                    AttachmentType::DEPTH,
+	                                                    true);
+
+	if (!m_GBuffer.Create(size,
+	                      VK_FILTER_LINEAR,
+	                      VK_FILTER_LINEAR,
+	                      VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE)) {
+		ERROR_LOG("Failed to create GBuffer!");
+		return false;
+	}
+
 	if (!PrepareUniforms()) {
 		ERROR_LOG("Failed to prepare the scene's uniforms");
 		return false;
 	}
 
-	if (!CreatePipelines(swapChainExtent, renderPass)) {
+	if (!CreatePipelines(swapChainExtent, displayRenderPass)) {
 		ERROR_LOG("Failed to create scene's pipelines.");
 		return false;
 	}
 
-	UniformBufferObject ubo{};
-	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 80.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
+	MatricesUbo ubo{};
+	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 40.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
 
 	f32 aspect{ static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height) };
 
 	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 200.0f);
 
-	m_MatricesUbo.Fill(&ubo, sizeof ubo);
+	m_Ubos.matrices.Fill(&ubo, sizeof ubo);
 
-	m_MatricesUbo.Unmap();
+	m_Ubos.matrices.Unmap();
 
 	return true;
 }
 
-static constexpr f64 spawnRate{ 500.0f };
+static constexpr f64 spawnRate{ 50.0f };
 static f64 entitiesToSpawn{ 0.0f };
 
 void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 {
-//	entitiesToSpawn += spawnRate * dt;
-//
-//	i32 e = entitiesToSpawn;
-//
-//	entitiesToSpawn -= e;
-//
-//	int i = 0;
-//	while (i < e) {
-//		SpawnEntity();
-//		++i;
-//	}
-//
-//	for (auto& entity : m_Entities) {
-//		entity->Update(dt);
-//	}
-//
-//	std::cout << "Draw Calls: " << m_Entities.size() << std::endl;
+	entitiesToSpawn += spawnRate * dt;
+
+	i32 e = entitiesToSpawn;
+
+	entitiesToSpawn -= e;
+
+	int i = 0;
+	while (i < e) {
+		SpawnEntity();
+		++i;
+	}
+
+	for (auto& entity : m_Entities) {
+		entity->Update(dt);
+	}
+
+	std::cout << "Draw Calls: " << m_Entities.size() << std::endl;
 }
 
 void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
 {
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipelines.solid);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipelines.deferred);
 
 	for (const auto& entity : m_Entities) {
 
 		auto& material = entity->GetMaterial();
 
 		std::vector<VkDescriptorSet> descriptorSets{
-			m_SceneMatricesDescriptorSet,
+			m_DescriptorSets.sceneMatrices,
 			material.descriptorSet
 		};
 
 		vkCmdBindDescriptorSets(commandBuffer,
 		                        VK_PIPELINE_BIND_POINT_GRAPHICS,
-		                        m_PipelineLayout,
+		                        m_PipelineLayouts.deferred,
 		                        0,
 		                        static_cast<ui32>(descriptorSets.size()),
 		                        descriptorSets.data(),
@@ -674,7 +936,7 @@ void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
 		const auto& xform = entity->GetXform();
 
 		vkCmdPushConstants(commandBuffer,
-		                   m_PipelineLayout,
+		                   m_PipelineLayouts.deferred,
 		                   VK_SHADER_STAGE_VERTEX_BIT,
 		                   0,
 		                   sizeof(Mat4f),
@@ -683,7 +945,7 @@ void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
 		std::array<Vec4f, 2> materialProperties{ material.diffuse, material.specular };
 
 		vkCmdPushConstants(commandBuffer,
-		                   m_PipelineLayout,
+		                   m_PipelineLayouts.deferred,
 		                   VK_SHADER_STAGE_FRAGMENT_BIT,
 		                   sizeof(Mat4f),
 		                   2 * sizeof(Vec4f),
@@ -691,4 +953,9 @@ void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
 
 		entity->Draw(commandBuffer);
 	}
+}
+
+const VulkanRenderTarget& DemoScene::GetGBuffer() const noexcept
+{
+	return m_GBuffer;
 }

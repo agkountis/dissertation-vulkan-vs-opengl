@@ -31,12 +31,17 @@ layout(location = 1) out vec3 t_OutViewDirection;
 layout(location = 2) out vec2 outTexcoord;
 layout(location = 3) out vec3 outNormal;
 layout(location = 4) out vec3 outVertexColor;
+layout(location = 5) out vec4 outWorldPos;
 
 void main()
 {
     //Transform vertex to clipspace.
     vec4 localVertexPosition = vec4(inPosition, 1.0);
     gl_Position = ubo.projection * ubo.view * pushConstant.model * localVertexPosition;
+
+	vec4 worldPos = pushConstant.model * localVertexPosition;
+	worldPos.y = -worldPos.y;
+	outWorldPos = worldPos;
 
     //Calculate the normal.
     outNormal = normalize(mat3(ubo.view) * inNormal);

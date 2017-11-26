@@ -5,11 +5,11 @@
 #include <array>
 
 // VulkanRenderTargetAttachment -----------------------------------------------------------------
-VulkanRenderTarget::VulkanRenderTargetAttachment::VulkanRenderTargetAttachment(const Vec2ui& size,
-                                                                               const ui32 layerCount,
-                                                                               const VkFormat format,
-                                                                               const AttachmentType attachmentType,
-                                                                               const bool samplingEnabled)
+VulkanRenderTargetAttachment::VulkanRenderTargetAttachment(const Vec2ui& size,
+                                                           const ui32 layerCount,
+                                                           const VkFormat format,
+                                                           const AttachmentType attachmentType,
+                                                           const bool samplingEnabled)
 	: m_Format{ format },
 	  m_Size{ size },
 	  m_LayerCount{ layerCount },
@@ -23,14 +23,14 @@ VulkanRenderTarget::VulkanRenderTargetAttachment::VulkanRenderTargetAttachment(c
 	m_Format = format;
 }
 
-VulkanRenderTarget::VulkanRenderTargetAttachment::~VulkanRenderTargetAttachment()
+VulkanRenderTargetAttachment::~VulkanRenderTargetAttachment()
 {
 	vkDestroyImage(G_VulkanDevice, m_Image, nullptr);
 	vkDestroyImageView(G_VulkanDevice, m_ImageView, nullptr);
 	vkFreeMemory(G_VulkanDevice, m_Memory, nullptr);
 }
 
-bool VulkanRenderTarget::VulkanRenderTargetAttachment::HasDepth() const
+bool VulkanRenderTargetAttachment::HasDepth() const
 {
 	std::vector<VkFormat> formats{
 		VK_FORMAT_D16_UNORM,
@@ -44,7 +44,7 @@ bool VulkanRenderTarget::VulkanRenderTargetAttachment::HasDepth() const
 	return std::find(formats.begin(), formats.end(), m_Format) != std::end(formats);
 }
 
-bool VulkanRenderTarget::VulkanRenderTargetAttachment::HasStencil() const noexcept
+bool VulkanRenderTargetAttachment::HasStencil() const noexcept
 {
 	std::vector<VkFormat> formats{
 		VK_FORMAT_S8_UINT,
@@ -56,7 +56,7 @@ bool VulkanRenderTarget::VulkanRenderTargetAttachment::HasStencil() const noexce
 	return std::find(formats.begin(), formats.end(), m_Format) != std::end(formats);
 }
 
-bool VulkanRenderTarget::VulkanRenderTargetAttachment::Create() noexcept
+bool VulkanRenderTargetAttachment::Create() noexcept
 {
 	VkImageAspectFlags aspectFlags{ VK_NULL_HANDLE };
 	VkImageUsageFlags imageUsageFlags{ VK_NULL_HANDLE };
@@ -64,7 +64,7 @@ bool VulkanRenderTarget::VulkanRenderTargetAttachment::Create() noexcept
 	switch (m_AttachmentType) {
 	case AttachmentType::COLOR:
 		aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
-		imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		break;
 	case AttachmentType::DEPTH:
 		if (HasDepth()) {
@@ -79,6 +79,10 @@ bool VulkanRenderTarget::VulkanRenderTargetAttachment::Create() noexcept
 
 		imageUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 		break;
+	}
+
+	if (m_SamplingEnabled) {
+		imageUsageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
 	}
 
 	assert(aspectFlags);
@@ -182,17 +186,17 @@ bool VulkanRenderTarget::VulkanRenderTargetAttachment::Create() noexcept
 	return true;
 }
 
-VkAttachmentDescription VulkanRenderTarget::VulkanRenderTargetAttachment::GetDescription() const noexcept
+VkAttachmentDescription VulkanRenderTargetAttachment::GetDescription() const noexcept
 {
 	return m_Description;
 }
 
-VkImageView VulkanRenderTarget::VulkanRenderTargetAttachment::GetImageView() const noexcept
+VkImageView VulkanRenderTargetAttachment::GetImageView() const noexcept
 {
 	return m_ImageView;
 }
 
-ui32 VulkanRenderTarget::VulkanRenderTargetAttachment::GetLayerCount() const noexcept
+ui32 VulkanRenderTargetAttachment::GetLayerCount() const noexcept
 {
 	return m_LayerCount;
 }
@@ -329,7 +333,6 @@ bool VulkanRenderTarget::Create(const Vec2ui& size) noexcept
 		}
 	}
 
-	//TODO: fix the framebuffer creation!
 	VkFramebufferCreateInfo framebufferInfo = {};
 	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	framebufferInfo.renderPass = m_RenderPass;
@@ -343,6 +346,23 @@ bool VulkanRenderTarget::Create(const Vec2ui& size) noexcept
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create framebuffer for the render target");
+		return false;
+	}
+
+	return true;
+}
+
+bool VulkanRenderTarget::Create(const Vec2ui& size,
+                                const VkFilter magFilter,
+                                const VkFilter minFilter,
+                                const VkSamplerAddressMode addressMode) noexcept
+{
+	if (!Create(size)) {
+		return false;
+	}
+
+	if (!CreateSampler(magFilter, minFilter, addressMode)) {
+		ERROR_LOG("Failed to create texture sampler for the render target.");
 		return false;
 	}
 
@@ -366,15 +386,25 @@ size_t VulkanRenderTarget::AddAttachment(const Vec2ui& size,
 	return m_Attachments.size() - 1;
 }
 
+const VulkanRenderTargetAttachment& VulkanRenderTarget::GetAttachment(const size_t index) const noexcept
+{
+	assert(index >= 0 && index < m_Attachments.size());
+	return m_Attachments[index];
+}
+
 VkRenderPass VulkanRenderTarget::GetRenderPass() const noexcept
 {
 	return m_RenderPass;
 }
 
-
 const Vec2ui& VulkanRenderTarget::GetSize() const noexcept
 {
 	return m_Size;
+}
+
+VkSampler VulkanRenderTarget::GetSampler() const noexcept
+{
+	return m_Sampler;
 }
 
 VulkanRenderTarget::operator VkFramebuffer() const

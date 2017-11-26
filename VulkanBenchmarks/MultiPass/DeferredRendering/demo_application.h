@@ -10,8 +10,6 @@ class DemoApplication : public VulkanApplication {
 private:
 	DemoScene m_DemoScene;
 
-	VulkanRenderTarget m_GBuffer;
-
 	VkCommandBuffer m_DeferredCommandBuffer{ VK_NULL_HANDLE };
 
 	VulkanSemaphore m_DeferredSemaphore;

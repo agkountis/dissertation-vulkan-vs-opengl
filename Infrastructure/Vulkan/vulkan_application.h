@@ -193,7 +193,7 @@ private:
 
 	std::deque<f64> m_GpuTimeSamples;
 
-	i32 m_SampleWindow{ 1000 }; //frames
+	i32 m_SampleWindow{ 60 }; //frames
 
 protected:
 	f64 wholeFrameTime{ 0.0 };

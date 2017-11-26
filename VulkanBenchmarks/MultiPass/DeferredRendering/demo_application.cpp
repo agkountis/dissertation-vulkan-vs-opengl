@@ -23,21 +23,20 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 		return false;
 	}
 
-	//	if (!BuildDisplayCommandBuffer()) {
-	//		ERROR_LOG("Failed to build display command buffer.");
-	//		return false;
-	//	}
+	if (!BuildDisplayCommandBuffer()) {
+		ERROR_LOG("Failed to build display command buffer.");
+		return false;
+	}
 
 	return true;
 }
 
 bool DemoApplication::BuildDeferredPassCommandBuffer()
 {
-	//TODO
-	std::array<VkClearValue, 4> clearValues;
+	std::array<VkClearValue, 5> clearValues;
 	for (auto i = 0; i < clearValues.size(); ++i) {
-		if (i < 3) {
-			clearValues[i].color = VkClearColorValue{ 1.0f, 0.0f, 0.0f, 0.0f };
+		if (i < 4) {
+			clearValues[i].color = VkClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
 		}
 		else {
 			clearValues[i].depthStencil = VkClearDepthStencilValue{ 1, 0 };
@@ -46,10 +45,10 @@ bool DemoApplication::BuildDeferredPassCommandBuffer()
 
 	VkRenderPassBeginInfo renderPassBeginInfo{};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassBeginInfo.renderPass = m_GBuffer.GetRenderPass();
-	renderPassBeginInfo.framebuffer = m_GBuffer;
+	renderPassBeginInfo.renderPass = m_DemoScene.GetGBuffer().GetRenderPass();
+	renderPassBeginInfo.framebuffer = m_DemoScene.GetGBuffer();
 
-	const auto& size = m_GBuffer.GetSize();
+	const auto& size = m_DemoScene.GetGBuffer().GetSize();
 	renderPassBeginInfo.renderArea.extent = VkExtent2D{ size.x, size.y };
 	renderPassBeginInfo.clearValueCount = static_cast<ui32>(clearValues.size());
 	renderPassBeginInfo.pClearValues = clearValues.data();
@@ -102,7 +101,7 @@ bool DemoApplication::BuildDisplayCommandBuffer()
 	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
 	VkClearValue clearValues[2];
-	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+	clearValues[0].color = { 0.3f, 0.3f, 0.3f, 0.0f };
 	clearValues[1].depthStencil = { 1.0f, 0 };
 
 	VkExtent2D swapChainExtent{ GetSwapChain().GetExtent() };
@@ -138,25 +137,11 @@ bool DemoApplication::BuildDisplayCommandBuffer()
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	VkViewport viewport{};
-	viewport.width = static_cast<float>(swapChainExtent.width);
-	viewport.height = static_cast<float>(swapChainExtent.height);
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-	VkRect2D scissor{};
-	scissor.extent = swapChainExtent;
-	scissor.offset = VkOffset2D{ 0, 0 };
-	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-	m_DemoScene.Draw(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
 
 	vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPools[bufferIndex], 1);
-
-	//TODO
 
 	result = vkEndCommandBuffer(commandBuffer);
 
@@ -181,46 +166,7 @@ bool DemoApplication::Initialize() noexcept
 		return false;
 	}
 
-	const auto& attachmentSize = GetSettings().windowResolution;
-
-	m_GBuffer.AddAttachment(
-		attachmentSize,
-		1,
-		VK_FORMAT_R16G16B16A16_SFLOAT,
-		AttachmentType::COLOR,
-		true
-	);
-
-	m_GBuffer.AddAttachment(
-		attachmentSize,
-		1,
-		VK_FORMAT_R16G16B16A16_SFLOAT,
-		AttachmentType::COLOR,
-		true
-	);
-
-	m_GBuffer.AddAttachment(
-		attachmentSize,
-		1,
-		VK_FORMAT_R8G8B8A8_UNORM,
-		AttachmentType::COLOR,
-		true
-	);
-
-	m_GBuffer.AddAttachment(
-		attachmentSize,
-		1,
-		VK_FORMAT_D32_SFLOAT,
-		AttachmentType::DEPTH,
-		true
-	);
-
-	if (!m_GBuffer.Create(attachmentSize)) {
-		ERROR_LOG("Failed to create GBuffer!");
-		return false;
-	}
-
-	if (!m_DemoScene.Initialize(GetSwapChain().GetExtent(), m_GBuffer.GetRenderPass())) {
+	if (!m_DemoScene.Initialize(GetSwapChain().GetExtent(), GetRenderPass())) {
 		return false;
 	}
 

@@ -6,6 +6,7 @@ layout(location = 1) in vec3 v_InViewDirection;
 layout(location = 2) in vec2 inTexcoord;
 layout(location = 3) in vec3 inNormal;
 layout(location = 4) in vec3 inVertexColor;
+layout(location = 5) in vec4 inWorldPos;
 
 layout(push_constant) uniform PushContstants {
     layout(offset = 64) vec4 diffuse;
@@ -19,6 +20,7 @@ layout(set = 1, binding = 2) uniform sampler2D normalSampler;
 layout(location = 0) out vec4 outPosition;
 layout(location = 1) out vec4 outNormal;
 layout(location = 2) out vec4 outAlbedo;
+layout(location = 3) out vec4 outSpecular;
 
 void main()
 {
@@ -29,7 +31,8 @@ void main()
     vec4 diffTexel = texture(diffuseSampler, inTexcoord);
     vec4 specTexel = texture(specularSampler, inTexcoord);
 
-	outPosition = vec4(1.0, 0.0, 0.0, 1.0);
-	outNormal = vec4(0.0, 1.0, 0.0, 1.0);
-	outAlbedo = vec4(0.0, 0.0, 1.0, 1.0);
+	outPosition = inWorldPos;
+	outNormal = vec4(n, 1.0);
+	outAlbedo = diffTexel;
+	outSpecular = specTexel;
 }
