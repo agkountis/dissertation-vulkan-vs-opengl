@@ -82,6 +82,8 @@ public:
 
 	void Draw(VkCommandBuffer commandBuffer) noexcept;
 
+	void DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept;
+
 	const VulkanRenderTarget& GetGBuffer() const noexcept;
 };
 

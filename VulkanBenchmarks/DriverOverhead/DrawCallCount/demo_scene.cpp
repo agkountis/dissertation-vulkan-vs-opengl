@@ -628,7 +628,6 @@ static f64 entitiesToSpawn{ 0.0f };
 
 void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 {
-	
 	entitiesToSpawn += spawnRate * dt;
 
 	i32 e = entitiesToSpawn;

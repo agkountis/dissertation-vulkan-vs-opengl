@@ -608,7 +608,7 @@ bool DemoScene::Initialize(VkExtent2D swapChainExtent, VkRenderPass renderPass) 
 void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 {
 	UniformBufferObject ubo{};
-	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 80.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
+	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 40.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
 
 	f32 aspect{ static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height) };
 

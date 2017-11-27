@@ -35,4 +35,6 @@ void main()
 
 	outColor = diffTexel * pcs.diffuse  * diffLight
 	            + specTexel * pcs.specular * specLight;
+
+	//outColor = vec4(inTexcoord, 0.0, 1.0);
 }

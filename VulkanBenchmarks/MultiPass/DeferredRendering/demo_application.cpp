@@ -80,7 +80,6 @@ bool DemoApplication::BuildDeferredPassCommandBuffer()
 
 	vkCmdSetScissor(m_DeferredCommandBuffer, 0, 1, &scissor);
 
-	// todo: Draw here.
 	m_DemoScene.Draw(m_DeferredCommandBuffer);
 
 	vkCmdEndRenderPass(m_DeferredCommandBuffer);
@@ -137,7 +136,22 @@ bool DemoApplication::BuildDisplayCommandBuffer()
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+	VkViewport viewport{};
+	viewport.x = 0;
+	viewport.y = 0;
+	viewport.width = swapChainExtent.width;
+	viewport.height = swapChainExtent.height;
 
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor{};
+	scissor.extent = renderPassBeginInfo.renderArea.extent;
+	scissor.offset.x = 0;
+	scissor.offset.y = 0;
+
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+	m_DemoScene.DrawFullscreenQuad(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
 

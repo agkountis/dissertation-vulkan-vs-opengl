@@ -310,7 +310,7 @@ bool DemoScene::PrepareUniforms() noexcept
 
 	descriptorSetLayouts.clear();
 	descriptorSetLayouts.insert(descriptorSetLayouts.cbegin(),
-	                            { m_DescriptorSetLayouts.sceneMatrices, m_DescriptorSetLayouts.gBufferAndLights });
+	                            { m_DescriptorSetLayouts.gBufferAndLights });
 
 	// Display/lighting pass pipeline layout
 	pipelineLayoutCreateInfo.setLayoutCount = static_cast<ui32>(descriptorSetLayouts.size());
@@ -574,7 +574,8 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass display
 	rasterizationState.lineWidth = 1.0f;
 
 	VkPipelineColorBlendAttachmentState colorBlendAttachmentState{};
-	colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+			VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	colorBlendAttachmentState.blendEnable = VK_FALSE;
 	colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
 	colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
@@ -747,7 +748,9 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass display
 	pipelineCreateInfo.pStages = shaderStages.data();
 
 	// Assign the correct pipeline layout
-	pipelineCreateInfo.layout = m_PipelineLayouts.display; //TODO: allocate this layout...
+	pipelineCreateInfo.layout = m_PipelineLayouts.display;
+
+	pipelineCreateInfo.pVertexInputState = VK_NULL_HANDLE;
 
 	// Assign the correct render pass.
 	pipelineCreateInfo.renderPass = displayRenderPass;
@@ -953,6 +956,20 @@ void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
 
 		entity->Draw(commandBuffer);
 	}
+}
+
+void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
+{
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipelines.display);
+	vkCmdBindDescriptorSets(commandBuffer,
+	                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+	                        m_PipelineLayouts.display,
+	                        0,
+	                        1,
+	                        &m_DescriptorSets.display,
+	                        0,
+	                        nullptr);
+	vkCmdDraw(commandBuffer, 6, 1, 0, 0);
 }
 
 const VulkanRenderTarget& DemoScene::GetGBuffer() const noexcept

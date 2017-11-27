@@ -26,12 +26,8 @@ out gl_PerVertex {
 // prefixes: m_ -> model space
 //           v_ -> view space
 //           t_ -> tangent space
-layout(location = 0) out vec3 t_OutlightDirection;
-layout(location = 1) out vec3 t_OutViewDirection;
-layout(location = 2) out vec2 outTexcoord;
-layout(location = 3) out vec3 outNormal;
-layout(location = 4) out vec3 outVertexColor;
-layout(location = 5) out vec4 outWorldPos;
+layout(location = 0) out vec2 outTexcoord;
+layout(location = 1) out vec4 outWorldPos;
 
 void main()
 {
@@ -43,30 +39,6 @@ void main()
 	worldPos.y = -worldPos.y;
 	outWorldPos = worldPos;
 
-    //Calculate the normal.
-    outNormal = normalize(mat3(ubo.view) * inNormal);
-
-	vec3 tangent = normalize(mat3(ubo.view) * inTangent);
-	vec3 binormal = normalize(cross(outNormal, tangent));
-
-	mat3 TBN = transpose(mat3(tangent, binormal, outNormal));
-
-    //Move the vertex in view space.
-    vec3 v_vertexPosition = (ubo.view * pushConstant.model * localVertexPosition).xyz;
-
-    //Assign the view direction for output.
-    t_OutViewDirection = TBN * -v_vertexPosition;
-
-    //Move the light to view space.
-//    vec3 v_lightPosition = (ubo.view * vec4(0.0, 0.0, 2.0, 1.0)).xyz;
-
-    vec3 v_lightPosition = (vec4(0.0, 0.0, 2.0, 1.0)).xyz;
-
-    //Calculate and assign the light direction for output.
-    t_OutlightDirection = TBN * (v_lightPosition - v_vertexPosition);
-
     //Assign texture coorinates for output.
     outTexcoord = inTexcoord;
-
-    outVertexColor = inColor;
 }
