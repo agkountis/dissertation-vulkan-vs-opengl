@@ -33,6 +33,8 @@ void main()
     vec4 diffTexel = texture(diffuseSampler, inTexcoord);
     vec4 specTexel = texture(specularSampler, inTexcoord);
 
-	outColor = diffTexel * pcs.diffuse  * diffLight
-	            + specTexel * pcs.specular * specLight;
+	//outColor = diffTexel * pcs.diffuse  * diffLight
+	//            + specTexel * pcs.specular * specLight;
+
+	outColor = vec4(inTexcoord, 0.0, 1.0);
 }

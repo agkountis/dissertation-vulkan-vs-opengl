@@ -7,6 +7,9 @@
 #include <mutex>
 #include <algorithm>
 #include "demo_scene.h"
+#include "vulkan_application.h"
+#include "imgui_impl_glfw_vulkan.h"
+#include "imgui.h"
 
 // Vulkan clip space has inverted Y and half Z.
 static const Mat4f s_ClipCorrectionMat{
@@ -750,7 +753,19 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass display
 	// Assign the correct pipeline layout
 	pipelineCreateInfo.layout = m_PipelineLayouts.display;
 
-	pipelineCreateInfo.pVertexInputState = VK_NULL_HANDLE;
+	VkPipelineVertexInputStateCreateInfo emptyInputState{};
+	emptyInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	emptyInputState.vertexAttributeDescriptionCount = 0;
+	emptyInputState.pVertexAttributeDescriptions = VK_NULL_HANDLE;
+	emptyInputState.vertexBindingDescriptionCount = 0;
+	emptyInputState.pVertexBindingDescriptions = VK_NULL_HANDLE;
+
+	pipelineCreateInfo.pVertexInputState = &emptyInputState;
+
+	rasterizationState.cullMode = VK_CULL_MODE_FRONT_BIT;
+	rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+
+	pipelineCreateInfo.pRasterizationState = &rasterizationState;
 
 	// Assign the correct render pass.
 	pipelineCreateInfo.renderPass = displayRenderPass;
@@ -766,6 +781,93 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass display
 		ERROR_LOG("Failed to create pipeline.");
 		return false;
 	}
+
+	return true;
+}
+
+bool DemoScene::InitializeImGUI(const VkRenderPass renderPass) noexcept
+{
+	VkDescriptorPoolSize pool_size[11] =
+	{
+		{ VK_DESCRIPTOR_TYPE_SAMPLER, 1 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1 },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1 }
+	};
+
+	VkDescriptorPoolCreateInfo pool_info{};
+	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	pool_info.maxSets = 1;
+	pool_info.poolSizeCount = 11;
+	pool_info.pPoolSizes = pool_size;
+	VkResult result{ vkCreateDescriptorPool(G_VulkanDevice, &pool_info, nullptr, &m_ImGUIDescriptorPool) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create ImGUI descriptor pool.");
+		return false;
+	}
+
+	ImGui_ImplGlfwVulkan_Init_Data init_data{};
+	init_data.allocator = nullptr;
+	init_data.gpu = G_VulkanDevice.GetPhysicalDevice();
+	init_data.device = G_VulkanDevice;
+	init_data.render_pass = renderPass;
+	init_data.pipeline_cache = m_PipelineCache;
+	init_data.descriptor_pool = m_ImGUIDescriptorPool;
+	init_data.check_vk_result = [](auto res)
+	{
+		if (res != VK_SUCCESS) { ERROR_LOG("ImGUI Vulkan intialization failed!"); }
+	};
+
+	if (!ImGui_ImplGlfwVulkan_Init(G_Application.GetWindow(), true, &init_data)) {
+		ERROR_LOG("Failed to initialize ImGUI.");
+		return false;
+	}
+
+	const VkCommandBuffer commandBuffer{ G_VulkanDevice.CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY) };
+
+	VkCommandBufferBeginInfo begin_info{};
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+	result = vkBeginCommandBuffer(commandBuffer, &begin_info);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to begin command buffer for Font uploading (ImGUI)");
+		return false;
+	}
+
+	ImGui_ImplGlfwVulkan_CreateFontsTexture(commandBuffer);
+
+	VkFenceCreateInfo fenceCreateInfo{};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
+	VkFence fence;
+	result = vkCreateFence(G_VulkanDevice, &fenceCreateInfo, nullptr, &fence);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create fence.");
+		return false;
+	}
+
+	vkEndCommandBuffer(commandBuffer);
+
+	if (!G_VulkanDevice.SubmitCommandBuffer(commandBuffer,
+	                                        G_VulkanDevice.GetQueue(QueueFamily::TRANSFER),
+	                                        fence)) {
+		ERROR_LOG("Failed to submit command buffer for Font uploading.");
+		return false;
+	}
+
+
+	ImGui_ImplGlfwVulkan_InvalidateFontUploadObjects();
 
 	return true;
 }
@@ -790,6 +892,8 @@ DemoScene::~DemoScene()
 
 	vkDestroyPipelineLayout(device, m_PipelineLayouts.deferred, nullptr);
 	vkDestroyPipelineLayout(device, m_PipelineLayouts.display, nullptr);
+
+	ImGui_ImplGlfwVulkan_Shutdown();
 }
 
 bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displayRenderPass) noexcept
@@ -811,17 +915,17 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displa
 		return false;
 	}
 
-	m_Material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelDiff5.png",
+	m_Material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan.jpg",
 	                                                                        TEX_DIFFUSE,
 	                                                                        VK_FORMAT_R8G8B8A8_UNORM,
 	                                                                        VK_IMAGE_ASPECT_COLOR_BIT);
 
-	m_Material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelSpec5.png",
+	m_Material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan_spec.png",
 	                                                                         TEX_SPECULAR,
 	                                                                         VK_FORMAT_R8G8B8A8_UNORM,
 	                                                                         VK_IMAGE_ASPECT_COLOR_BIT);
 
-	m_Material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelNorm5.png",
+	m_Material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan_norm.png",
 	                                                                       TEX_NORMAL,
 	                                                                       VK_FORMAT_R8G8B8A8_UNORM,
 	                                                                       VK_IMAGE_ASPECT_COLOR_BIT);
@@ -876,8 +980,12 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displa
 		return false;
 	}
 
+	if (!InitializeImGUI(displayRenderPass)) {
+		return false;
+	}
+
 	MatricesUbo ubo{};
-	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 40.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
+	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 30.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
 
 	f32 aspect{ static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height) };
 
@@ -969,7 +1077,40 @@ void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 	                        &m_DescriptorSets.display,
 	                        0,
 	                        nullptr);
-	vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+	// Draws a triangle that fills the whole screen. 3 VS invocations only and gets turned into a quad due to clipping.
+	// tc[0, 0] is at the top left. No need for vertex buffers. Positions and texture coordinates are generated in the vertex shader
+	// using gl_VertexIndex. see display.vert
+	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+
+	ImGui_ImplGlfwVulkan_NewFrame();
+
+	// 1. Show a simple window.
+	// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug".
+	{
+		static float f = 0.0f;
+		ImGui::Text("Hello, world!");
+		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+		float col[3]{ 0.3f, 0.3f, 0.3f };
+		ImGui::ColorEdit3("clear color", col);
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	}
+
+	// 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name the window.
+	bool show_another_window = true;
+	if (show_another_window)
+	{
+		ImGui::Begin("Another Window", &show_another_window);
+		ImGui::Text("Hello from another window!");
+		ImGui::End();
+	}
+
+	// 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow().
+
+	bool show_test_window = true;
+		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
+		ImGui::ShowTestWindow(&show_test_window);
+
+	ImGui_ImplGlfwVulkan_Render(commandBuffer);
 }
 
 const VulkanRenderTarget& DemoScene::GetGBuffer() const noexcept

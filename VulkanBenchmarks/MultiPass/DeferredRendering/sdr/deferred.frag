@@ -2,7 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 layout(location = 0) in vec2 inTexcoord;
-layout(location = 1) in vec4 inWorldPos;
+layout(location = 1) in vec4 v_inPosition;
 
 layout(push_constant) uniform PushContstants {
     layout(offset = 64) vec4 diffuse;
@@ -20,12 +20,8 @@ layout(location = 3) out vec4 outSpecular;
 
 void main()
 {
-    vec3 n = normalize(texture(normalSampler, inTexcoord).rgb * 2.0 - 1.0);
-    vec4 diffTexel = texture(diffuseSampler, inTexcoord);
-    vec4 specTexel = texture(specularSampler, inTexcoord);
-
-	outPosition = inWorldPos;
-	outNormal = vec4(n, 1.0);
-	outAlbedo = diffTexel;
-	outSpecular = specTexel;
+	outPosition = v_inPosition;
+	outNormal = vec4(normalize(texture(normalSampler, inTexcoord).rgb * 2.0 - 1.0), 1.0);
+	outAlbedo = texture(diffuseSampler, inTexcoord) * pcs.diffuse;
+	outSpecular = texture(specularSampler, inTexcoord) * pcs.specular;
 }

@@ -39,5 +39,19 @@ else()
     set(VULKAN_APP_LIBRARIES ${Vulkan_LIBRARY} glfw)
 endif()
 
+set(IMGUI_SOURCE ${CMAKE_SOURCE_DIR}/Dependencies/imgui/imconfig.h
+${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui.cpp
+${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui.h
+${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui_demo.cpp
+${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui_draw.cpp
+${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui_internal.h
+${CMAKE_SOURCE_DIR}/Dependencies/imgui/stb_rect_pack.h
+${CMAKE_SOURCE_DIR}/Dependencies/imgui/stb_textedit.h
+${CMAKE_SOURCE_DIR}/Dependencies/imgui/stb_truetype.h)
+
+set(IMGUI_VULKAN_IMPL ${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui_impl_glfw_vulkan.h ${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui_impl_glfw_vulkan.cpp)
+
+set(IMGUI_INCLUDE_PATH ${CMAKE_SOURCE_DIR}/Dependencies/imgui)
+
 add_subdirectory(Infrastructure)
 add_subdirectory(VulkanBenchmarks)

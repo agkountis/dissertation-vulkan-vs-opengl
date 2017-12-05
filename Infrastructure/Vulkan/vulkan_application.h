@@ -21,7 +21,6 @@
 #include "vulkan_semaphore.h"
 #include "vulkan_command_pool.h"
 #include "vulkan_framebuffer.h"
-#include "vulkan_shader.h"
 #include "vulkan_query_pool.h"
 #include <deque>
 

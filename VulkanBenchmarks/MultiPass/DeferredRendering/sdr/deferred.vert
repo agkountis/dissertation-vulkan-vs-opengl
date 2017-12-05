@@ -27,7 +27,7 @@ out gl_PerVertex {
 //           v_ -> view space
 //           t_ -> tangent space
 layout(location = 0) out vec2 outTexcoord;
-layout(location = 1) out vec4 outWorldPos;
+layout(location = 1) out vec4 v_outPosition;
 
 void main()
 {
@@ -35,9 +35,9 @@ void main()
     vec4 localVertexPosition = vec4(inPosition, 1.0);
     gl_Position = ubo.projection * ubo.view * pushConstant.model * localVertexPosition;
 
-	vec4 worldPos = pushConstant.model * localVertexPosition;
-	worldPos.y = -worldPos.y;
-	outWorldPos = worldPos;
+	vec4 v_Position = ubo.view * pushConstant.model * localVertexPosition;
+	v_Position.y = -v_Position.y;
+	v_outPosition = v_Position;
 
     //Assign texture coorinates for output.
     outTexcoord = inTexcoord;

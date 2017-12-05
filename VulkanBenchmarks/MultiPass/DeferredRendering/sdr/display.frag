@@ -18,5 +18,10 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-	outColor = texture(specularSampler, inTexCoord);
+	vec4 v_Pos = texture(positionSampler, inTexCoord);
+	vec4 normal = texture(normalSampler, inTexCoord);
+	vec4 albedo = texture(albedoSampler, inTexCoord);
+	vec4 specular = texture(specularSampler, inTexCoord);
+
+	outColor = albedo;
 }

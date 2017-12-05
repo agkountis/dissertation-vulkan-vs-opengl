@@ -36,7 +36,7 @@ bool DemoApplication::BuildDeferredPassCommandBuffer()
 	std::array<VkClearValue, 5> clearValues;
 	for (auto i = 0; i < clearValues.size(); ++i) {
 		if (i < 4) {
-			clearValues[i].color = VkClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+			clearValues[i].color = VkClearColorValue{ 0.3f, 0.3f, 0.3f, 0.0f };
 		}
 		else {
 			clearValues[i].depthStencil = VkClearDepthStencilValue{ 1, 0 };
@@ -173,6 +173,12 @@ DemoApplication::DemoApplication(const ApplicationSettings& settings)
 	: VulkanApplication{ settings }
 {
 }
+
+DemoApplication::~DemoApplication() noexcept
+{
+	vkDeviceWaitIdle(G_VulkanDevice);
+}
+
 
 bool DemoApplication::Initialize() noexcept
 {

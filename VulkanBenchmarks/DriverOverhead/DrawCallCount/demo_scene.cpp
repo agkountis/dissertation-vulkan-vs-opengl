@@ -584,17 +584,17 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, const VkRenderPass 
 		return false;
 	}
 
-	m_Material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelDiff5.png",
+	m_Material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan.jpg",
 	                                                                        TEX_DIFFUSE,
 	                                                                        VK_FORMAT_R8G8B8A8_UNORM,
 	                                                                        VK_IMAGE_ASPECT_COLOR_BIT);
 
-	m_Material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelSpec5.png",
+	m_Material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan_spec.png",
 	                                                                         TEX_SPECULAR,
 	                                                                         VK_FORMAT_R8G8B8A8_UNORM,
 	                                                                         VK_IMAGE_ASPECT_COLOR_BIT);
 
-	m_Material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelNorm5.png",
+	m_Material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan_norm.png",
 	                                                                       TEX_NORMAL,
 	                                                                       VK_FORMAT_R8G8B8A8_UNORM,
 	                                                                       VK_IMAGE_ASPECT_COLOR_BIT);

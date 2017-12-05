@@ -19,6 +19,8 @@ private:
 
 	VkDescriptorPool m_DescriptorPool{ VK_NULL_HANDLE };
 
+	VkDescriptorPool m_ImGUIDescriptorPool{ VK_NULL_HANDLE };
+
 	struct {
 		VkDescriptorSetLayout sceneMatrices{ VK_NULL_HANDLE };
 		VkDescriptorSetLayout material{ VK_NULL_HANDLE };
@@ -72,6 +74,8 @@ private:
 	bool PrepareUniforms() noexcept;
 
 	bool CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass displayRenderPass) noexcept;
+
+	bool InitializeImGUI(const VkRenderPass renderpass) noexcept;
 
 public:
 	~DemoScene();

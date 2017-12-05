@@ -25,6 +25,8 @@ private:
 public:
 	explicit DemoApplication(const ApplicationSettings& settings);
 
+	~DemoApplication() noexcept;
+
 	bool Initialize() noexcept override;
 
 	void Update() noexcept override;
