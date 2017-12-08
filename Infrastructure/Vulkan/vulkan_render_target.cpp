@@ -201,6 +201,11 @@ ui32 VulkanRenderTargetAttachment::GetLayerCount() const noexcept
 	return m_LayerCount;
 }
 
+VkImage VulkanRenderTargetAttachment::GetImage() const noexcept
+{
+	return m_Image;
+}
+
 // ----------------------------------------------------------------------------------------------
 
 

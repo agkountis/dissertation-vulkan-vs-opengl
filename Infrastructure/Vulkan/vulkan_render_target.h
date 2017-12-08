@@ -51,6 +51,8 @@ public:
 	VkImageView GetImageView() const noexcept;
 
 	ui32 GetLayerCount() const noexcept;
+
+	VkImage GetImage() const noexcept;
 };
 
 class VulkanRenderTarget {

@@ -23,11 +23,13 @@ out gl_PerVertex {
 };
 
 // Varying variables
-// prefixes: m_ -> model space
+// prefixes: w_ -> world space
 //           v_ -> view space
 //           t_ -> tangent space
 layout(location = 0) out vec2 outTexcoord;
-layout(location = 1) out vec4 v_outPosition;
+layout(location = 1) out vec4 w_outPosition;
+layout(location = 2) out vec3 w_outNormal;
+layout(location = 3) out vec3 w_outTangent;
 
 void main()
 {
@@ -35,9 +37,13 @@ void main()
     vec4 localVertexPosition = vec4(inPosition, 1.0);
     gl_Position = ubo.projection * ubo.view * pushConstant.model * localVertexPosition;
 
-	vec4 v_Position = ubo.view * pushConstant.model * localVertexPosition;
-	v_Position.y = -v_Position.y;
-	v_outPosition = v_Position;
+	vec4 w_Position = pushConstant.model * localVertexPosition;
+	w_Position.y = -w_Position.y;
+	w_outPosition = w_Position;
+
+    mat3 normalMatrix = inverse(transpose(mat3(pushConstant.model)));
+	w_outNormal = normalMatrix * inNormal;
+	w_outTangent = normalMatrix * inTangent;
 
     //Assign texture coorinates for output.
     outTexcoord = inTexcoord;

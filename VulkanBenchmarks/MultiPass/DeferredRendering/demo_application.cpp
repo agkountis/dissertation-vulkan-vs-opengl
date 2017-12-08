@@ -36,7 +36,7 @@ bool DemoApplication::BuildDeferredPassCommandBuffer()
 	std::array<VkClearValue, 5> clearValues;
 	for (auto i = 0; i < clearValues.size(); ++i) {
 		if (i < 4) {
-			clearValues[i].color = VkClearColorValue{ 0.3f, 0.3f, 0.3f, 0.0f };
+			clearValues[i].color = VkClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
 		}
 		else {
 			clearValues[i].depthStencil = VkClearDepthStencilValue{ 1, 0 };
@@ -100,7 +100,7 @@ bool DemoApplication::BuildDisplayCommandBuffer()
 	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
 	VkClearValue clearValues[2];
-	clearValues[0].color = { 0.3f, 0.3f, 0.3f, 0.0f };
+	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
 	clearValues[1].depthStencil = { 1.0f, 0 };
 
 	VkExtent2D swapChainExtent{ GetSwapChain().GetExtent() };

@@ -437,8 +437,8 @@ i32 VulkanApplication::Run() noexcept
 			gpuTimeMovingAverage = gpuTimeSum / static_cast<f64>(m_SampleWindow);
 		}
 
-		std::cout << "frame: " << frameCount << " " << "ms/frame: " << wholeFrameMovingAverage << " " << "Cpu: " << cpuTimeMovingAverage << "ms"
-				<< " Gpu: " << gpuTimeMovingAverage << "ms" << " running time:" << GetTimer().GetSec() * 1000.0 << std::endl;
+//		std::cout << "frame: " << frameCount << " " << "ms/frame: " << wholeFrameMovingAverage << " " << "Cpu: " << cpuTimeMovingAverage << "ms"
+//				<< " Gpu: " << gpuTimeMovingAverage << "ms" << " running time:" << GetTimer().GetSec() * 1000.0 << std::endl;
 
 		prev = now;
 		++frameCount;

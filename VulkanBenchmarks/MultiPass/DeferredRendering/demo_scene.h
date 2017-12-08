@@ -11,7 +11,14 @@ struct MatricesUbo {
 	Mat4f projection;
 };
 
-struct LightsUbo {};
+constexpr int lightCount{ 2 };
+
+struct LightsUbo {
+	Vec4f positions[lightCount];
+	Vec4f colors[lightCount];
+	float radi[lightCount];
+    Vec3f eyePos;
+};
 
 class DemoScene {
 private:
@@ -46,16 +53,16 @@ private:
 	VulkanPipelineCache m_PipelineCache;
 
 	struct {
-		VkPipelineLayout deferred;
-		VkPipelineLayout display;
+		VkPipelineLayout deferred{ VK_NULL_HANDLE };
+		VkPipelineLayout display{ VK_NULL_HANDLE };
 	} m_PipelineLayouts;
 
 	struct {
-		int position;
-		int normal;
-		int albedo;
-		int specular;
-		int depth;
+		int position{ -1 };
+		int normal{ -1 };
+		int albedo{ -1 };
+		int specular{ -1 };
+		int depth{ -1 };
 	} m_AttachmentIndices;
 
 	// All textures will be sampled with a single sampler.
@@ -67,6 +74,12 @@ private:
 
 	VulkanRenderTarget m_GBuffer;
 
+	LightsUbo m_Lights;
+
+	//UI -------------------------------
+    mutable int m_CurrentAttachment{ 0 };
+	std::array<const char*, 5> m_AttachmentComboItems{ "Lit", "Position", "Normals", "Albedo", "Specular" };
+	// ---------------------------
 	bool SpawnEntity() noexcept;
 
 	bool CreateTextureSampler() noexcept;
@@ -76,6 +89,8 @@ private:
 	bool CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass displayRenderPass) noexcept;
 
 	bool InitializeImGUI(const VkRenderPass renderpass) noexcept;
+
+	void UpdateLightPositions(const i64 msec, f64 dt) noexcept;
 
 public:
 	~DemoScene();
