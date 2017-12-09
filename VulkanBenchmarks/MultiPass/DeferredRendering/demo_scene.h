@@ -16,7 +16,7 @@ constexpr int lightCount{ 2 };
 struct LightsUbo {
 	Vec4f positions[lightCount];
 	Vec4f colors[lightCount];
-	float radi[lightCount];
+	Vec4f radi[lightCount];
     Vec3f eyePos;
 };
 

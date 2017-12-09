@@ -534,7 +534,7 @@ bool DemoScene::PrepareUniforms() noexcept
     if (!device.CreateBuffer(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                              m_Ubos.lights,
-                             sizeof(MatricesUbo))) {
+                             sizeof(LightsUbo))) {
         ERROR_LOG("Failed to create uniform buffer.");
         return false;
     }
@@ -556,8 +556,8 @@ bool DemoScene::PrepareUniforms() noexcept
                            0,
                            nullptr);
 
-    m_Ubos.matrices.Map(sizeof m_Ubos.matrices);
-    m_Ubos.lights.Map(sizeof m_Ubos.lights);
+    m_Ubos.matrices.Map();
+    m_Ubos.lights.Map();
 
     return true;
 }
@@ -878,9 +878,13 @@ bool DemoScene::InitializeImGUI(const VkRenderPass renderPass) noexcept
 void DemoScene::UpdateLightPositions(const i64 msec, f64 dt) noexcept
 {
     //TODO
-    m_Lights.positions[0] = Vec4f{ cos(msec / 1000.0) * 20.0f, 0.0, sin(msec / 1000.0) * 20.0f, 1.0 };
-    m_Lights.positions[1] = Vec4f{ cos(msec / 1000.0) * 20.0f, 0.0f, 0.0f, 1.0 };
-    //m_Lights.radi[2] = (sinf(msec / 1000.0f) * 0.5f + 0.5f) * 10.0f;
+   // m_Lights.positions[0] = Vec4f{ cos(msec / 1000.0) * 20.0f, 0.0, sin(msec / 1000.0) * 20.0f, 1.0 };
+   // m_Lights.positions[1] = Vec4f{ cos(msec / 1000.0) * 20.0f, 0.0f, 0.0f, 1.0 };
+	m_Lights.radi[0] = Vec4f{ (sinf(msec / 1000.0f) * 0.5f + 0.5f) * 10.0f };
+	m_Lights.radi[1] = Vec4f{ (sinf(msec / 1000.0f) * 0.5f + 0.5f) * 10.0f };
+
+	LOG(m_Lights.radi[1].x);
+
     m_Ubos.lights.Fill(&m_Lights, sizeof m_Lights);
 }
 
@@ -1008,13 +1012,13 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displa
 
     m_Ubos.matrices.Unmap();
 
-    m_Lights.positions[0] = Vec4f{0.0f};
+    m_Lights.positions[0] = Vec4f{10.0f, 0.0f, 0.0f, 0.0f};
     m_Lights.colors[0] = Vec4f{0.0f, 0.0f, 1.0f, 1.0};
-    m_Lights.radi[0] = 20.0f;
+	m_Lights.radi[0] = Vec4f{ 0.0f };
 
-    m_Lights.positions[1] = Vec4f{0.0f};
+    m_Lights.positions[1] = Vec4f{-10.0f, 0.0f, 0.0f, 0.0f};
     m_Lights.colors[1] = Vec4f{0.0f, 1.0f, 0.0f, 1.0};
-    m_Lights.radi[1] = 5.0f;
+	m_Lights.radi[1] = Vec4f{ 0.2f };
 
 //    m_Lights.positions[2] = Vec4f{0.0f};
 //    m_Lights.colors[2] = Vec4f{1.0f, 1.0f, 1.0f, 1.0};

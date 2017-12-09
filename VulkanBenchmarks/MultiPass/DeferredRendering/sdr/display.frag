@@ -12,7 +12,7 @@ const int lightCount = 2;
 layout(set = 0, binding = 4) uniform Lights {
 	vec4[lightCount] w_Positions;
 	vec4[lightCount] colors;
-	float[lightCount] radi;
+	vec4[lightCount] radi;
 	vec3 w_eyePos;
 } lightsUbo;
 
@@ -29,7 +29,7 @@ vec4 shade(vec4 w_Pos, vec3 normal, vec4 albedo, vec4 specular)
 {
     vec3 color = vec3(0.0, 0.0, 0.0);
 
-    color += albedo.rgb * vec3(0.15, 0.15, 0.15);
+    color += albedo.rgb * vec3(0.05, 0.05, 0.05);
 
     for(int i = 0; i < lightCount; ++i) {
 		// Vector to light
@@ -41,13 +41,13 @@ vec4 shade(vec4 w_Pos, vec3 normal, vec4 albedo, vec4 specular)
 		// Viewer to fragment
 		vec3 V = normalize(lightsUbo.w_eyePos - w_Pos.xyz);
 
-        float lightRadius = lightsUbo.radi[i];
+        float lightRadius = lightsUbo.radi[i].x;
 		if(dist < lightRadius) {
 			// Light to fragment
 			L = normalize(L);
 
 			// Attenuation
-			float atten = lightsUbo.radi[i] / (pow(dist, 2.0) + 1.0);
+			float atten = lightsUbo.radi[i].x / (pow(dist, 2.0) + 1.0);
 
             vec3 H = normalize(L + V);
 
