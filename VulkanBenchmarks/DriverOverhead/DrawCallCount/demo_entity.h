@@ -5,7 +5,7 @@
 #include "vulkan_mesh.h"
 #include "demo_material.h"
 
-class DemoEntity : public Entity {
+class DemoEntity final : public Entity {
 private:
 	VulkanMesh* m_Mesh{ nullptr };
 

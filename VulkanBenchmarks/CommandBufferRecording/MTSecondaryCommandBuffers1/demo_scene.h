@@ -7,12 +7,12 @@
 
 constexpr int ENTITY_COUNT = 5000;
 
-struct UniformBufferObject {
+struct UniformBufferObject final {
 	Mat4f view;
 	Mat4f projection;
 };
 
-class DemoScene {
+class DemoScene final {
 private:
 	std::vector<std::unique_ptr<DemoEntity>> m_Entities;
 

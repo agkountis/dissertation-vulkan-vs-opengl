@@ -12,7 +12,7 @@ struct UniformBufferObject {
 	Mat4f projection;
 };
 
-class DemoScene {
+class DemoScene final {
 private:
 	std::vector<std::unique_ptr<DemoEntity>> m_Entities;
 

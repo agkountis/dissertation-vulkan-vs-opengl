@@ -15,7 +15,7 @@ include_directories(${IMGUI_INCLUDE_PATH})
 
 if(MSVC)
 	set(SHADER_FILES sdr/display.vert
-		sdr/display.frag sdr/deferred.vert sdr/deferred.frag sdr/glsl_shader.vert sdr/glsl_shader.frag)
+		sdr/display.frag sdr/deferred.vert sdr/deferred.frag)
 
 	set(TEXTURE_FILES textures/tunnelDiff5.png
 		textures/tunnelSpec5.png

@@ -3,7 +3,7 @@
 
 #include <vulkan_texture.h>
 
-struct DemoMaterial {
+struct DemoMaterial final {
 	std::array<VulkanTexture*, SUPPORTED_TEX_COUNT> textures;
 
 	//These are sent to the fragment shader as push constants.

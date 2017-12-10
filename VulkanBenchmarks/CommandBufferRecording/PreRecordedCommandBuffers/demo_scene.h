@@ -5,12 +5,12 @@
 #include <vulkan_pipeline_cache.h>
 #include "demo_entity.h"
 
-struct UniformBufferObject {
+struct UniformBufferObject final {
 	Mat4f view;
 	Mat4f projection;
 };
 
-class DemoScene {
+class DemoScene final {
 private:
 	std::vector<std::unique_ptr<DemoEntity>> m_Entities;
 
@@ -32,7 +32,7 @@ private:
 
 	VulkanPipelineCache m_PipelineCache;
 
-	VkPipelineLayout m_PipelineLayout;
+	VkPipelineLayout m_PipelineLayout{ VK_NULL_HANDLE };
 
 	// All textures will be sampled with a single sampler.
 	VkSampler m_TextureSampler{ VK_NULL_HANDLE };

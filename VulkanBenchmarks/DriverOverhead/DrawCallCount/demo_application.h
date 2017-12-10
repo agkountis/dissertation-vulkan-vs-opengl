@@ -4,10 +4,8 @@
 #include "vulkan_application.h"
 #include "demo_entity.h"
 #include "demo_scene.h"
-#include <memory>
-#include <vulkan_infrastructure_context.h>
 
-class DemoApplication : public VulkanApplication {
+class DemoApplication final : public VulkanApplication {
 private:
 	DemoScene m_DemoScene;
 

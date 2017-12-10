@@ -6,7 +6,7 @@
 #include "mesh.h"
 #include "vulkan_device.h"
 
-class VulkanMesh : public Mesh {
+class VulkanMesh final : public Mesh {
 private:
 	VulkanBuffer m_Vbo;
 
@@ -17,7 +17,7 @@ public:
 
 	static std::array<VkVertexInputAttributeDescription, 5> GetVertexInputAttributeDescriptions() noexcept;
 
-	bool CreateBuffers() noexcept;
+	bool CreateBuffers() noexcept override;
 
 	void Draw(VkCommandBuffer commandBuffer) noexcept;
 };

@@ -6,7 +6,7 @@
 #include "demo_scene.h"
 #include "thread_pool.h"
 
-class DemoApplication : public VulkanApplication {
+class DemoApplication final : public VulkanApplication {
 private:
 	DemoScene m_DemoScene;
 

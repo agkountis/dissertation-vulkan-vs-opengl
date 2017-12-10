@@ -20,7 +20,7 @@ struct LightsUbo {
     Vec3f eyePos;
 };
 
-class DemoScene {
+class DemoScene final {
 private:
 	std::vector<std::unique_ptr<DemoEntity>> m_Entities;
 
