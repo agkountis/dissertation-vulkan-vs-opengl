@@ -10,8 +10,8 @@
 #include "imgui_impl_glfw_vulkan.h"
 #include "imgui.h"
 #include <functional>
-#include "assimp/cimport.h"
-#include "assimp/postprocess.h"
+#include <assimp/cimport.h>
+#include <assimp/postprocess.h>
 
 
 // Vulkan clip space has inverted Y and half Z.
@@ -100,16 +100,18 @@ void DemoScene::LoadMaterials(const aiScene* scene) noexcept
 
 	auto GetFileName = [](std::string path) -> std::string
 	{
-		auto sep = '/';
+		auto sepUnix = '/';
 
-#ifdef _WIN32
-		sep = '\\';
-#endif
+		auto sepWindows = '\\';
 
-		auto n = path.rfind(sep);
+		auto n = path.rfind(sepUnix);
+
+		if (n == std::string::npos) {
+			n = path.rfind(sepWindows);
+		}
 
 		if (n != std::string::npos) {
-			return path.substr(n);
+			return path.substr(n + 1);
 		}
 
 		return "";

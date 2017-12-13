@@ -20,7 +20,6 @@ bool VulkanApplication::CreateInstance() noexcept
 	std::vector<const char*> layers;
 #if !NDEBUG
 	layers.push_back("VK_LAYER_LUNARG_standard_validation");
-	layers.push_back("VK_LAYER_NV_nsight");
 
 	uint32_t layerCount{ 0 };
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);

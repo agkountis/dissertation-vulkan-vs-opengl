@@ -47,7 +47,7 @@ elseif(MSVC)
     set(GLFW_LIB C:/usr/lib/glfw3.lib)
 
     set(VULKAN_APP_LIBRARIES ${VULKAN_LIB} ${GLFW_LIB})
-	set(ASSIMP_LIB ${DEPENDENCIES_PATH}/lib/assimp.lib)
+	set(ASSIMP_LIBRARIES ${DEPENDENCIES_PATH}/lib/assimp.lib)
 
 	set(CMAKE_MSVCIDE_RUN_PATH ${DEPENDENCIES_PATH}/bin)
 elseif(MINGW)
@@ -55,6 +55,7 @@ elseif(MINGW)
 else()
     find_package(Threads REQUIRED)
     find_package(Vulkan 1.0.65.0 REQUIRED)
+    find_package(assimp REQUIRED)
     include_directories(${Vulkan_INCLUDE_DIR})
 
     set(VULKAN_APP_LIBRARIES ${Vulkan_LIBRARY} glfw)
