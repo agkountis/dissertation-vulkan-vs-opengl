@@ -77,7 +77,7 @@ bool VulkanRenderTargetAttachment::Create() noexcept
 
 		assert(aspectFlags & VK_IMAGE_ASPECT_DEPTH_BIT);
 
-		imageUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		imageUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		break;
 	}
 
@@ -95,7 +95,7 @@ bool VulkanRenderTargetAttachment::Create() noexcept
 	imageCreateInfo.format = m_Format;
 	imageCreateInfo.extent = VkExtent3D{ m_Size.x, m_Size.y, 1 /* depth */ };
 	imageCreateInfo.mipLevels = 1;
-	imageCreateInfo.arrayLayers = m_LayerCount;
+	imageCreateInfo.arrayLayers = 1;
 	imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 	imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 	imageCreateInfo.usage = imageUsageFlags;
@@ -132,8 +132,10 @@ bool VulkanRenderTargetAttachment::Create() noexcept
 	}
 
 	m_SubresourceRange.aspectMask = aspectFlags;
+	m_SubresourceRange.baseMipLevel = 0;
+	m_SubresourceRange.baseArrayLayer = 0;
 	m_SubresourceRange.levelCount = 1;
-	m_SubresourceRange.layerCount = m_LayerCount;
+	m_SubresourceRange.layerCount = 1;
 
 	// Create the image view.
 	VkImageViewCreateInfo imageViewCreateInfo{};
@@ -148,7 +150,6 @@ bool VulkanRenderTargetAttachment::Create() noexcept
 
 	imageViewCreateInfo.format = m_Format;
 	imageViewCreateInfo.subresourceRange = m_SubresourceRange;
-	imageViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
 	imageViewCreateInfo.image = m_Image;
 
 	result = vkCreateImageView(G_VulkanDevice, &imageViewCreateInfo, nullptr, &m_ImageView);
@@ -177,7 +178,7 @@ bool VulkanRenderTargetAttachment::Create() noexcept
 	m_Description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 	if (m_AttachmentType == AttachmentType::DEPTH) {
-		m_Description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		m_Description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	}
 	else {
 		m_Description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

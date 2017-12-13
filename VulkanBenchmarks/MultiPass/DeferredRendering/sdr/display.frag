@@ -6,10 +6,11 @@ layout(binding = 0) uniform sampler2D positionSampler;
 layout(binding = 1) uniform sampler2D normalSampler;
 layout(binding = 2) uniform sampler2D albedoSampler;
 layout(binding = 3) uniform sampler2D specularSampler;
+layout(binding = 4) uniform sampler2D depthSampler;
 
-const int lightCount = 2;
+const int lightCount = 3;
 
-layout(set = 0, binding = 4) uniform Lights {
+layout(set = 0, binding = 5) uniform Lights {
 	vec4[lightCount] w_Positions;
 	vec4[lightCount] colors;
 	vec4[lightCount] radi;
@@ -88,6 +89,14 @@ void main()
             break;
         case 4:
             outColor = specular;
+			break;
+		case 5:
+			float v = texture(depthSampler, inTexCoord).x;
+			if (v == 0.0) {
+				outColor = vec4(1.0, 0.0, 0.0, 1.0);
+			} else {
+				outColor = vec4(texture(depthSampler, inTexCoord).xxx, 1.0);
+			}
             break;
     }
 

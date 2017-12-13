@@ -5,21 +5,29 @@ DemoEntity::DemoEntity(VulkanMesh* mesh)
 	m_Mesh = mesh;
 }
 
-DemoMaterial& DemoEntity::GetMaterial() noexcept
+DemoMaterial* DemoEntity::GetMaterial() noexcept
 {
-	return *m_Material;
+	return m_Material;
+}
+
+void DemoEntity::SetName(const std::string& name) noexcept
+{
+	m_Name = name;
+}
+
+void DemoEntity::SetMesh(VulkanMesh* mesh) noexcept
+{
+	m_Mesh = mesh;
+}
+
+VulkanMesh* DemoEntity::GetMesh() const noexcept
+{
+	return m_Mesh;
 }
 
 void DemoEntity::SetMaterial(DemoMaterial* material) noexcept
 {
 	m_Material = material;
-}
-
-void DemoEntity::Draw(VkCommandBuffer commandBuffer) noexcept
-{
-	if (m_Mesh) {
-		m_Mesh->Draw(commandBuffer);
-	}
 }
 
 bool DemoEntity::Load(const std::string& fileName) noexcept

@@ -25,22 +25,16 @@ void Entity::AddChild(Entity* child) noexcept
 	child->SetParent(this);
 
 	m_Children.push_back(child);
-
-	m_XformInvalid = true;
 }
 
 void Entity::AddChildren(const std::vector<Entity*>& children) noexcept
 {
 	m_Children.insert(m_Children.cend(), children.cbegin(), children.cend());
-
-	m_XformInvalid = true;
 }
 
 void Entity::SetChildren(const std::vector<Entity*>& children) noexcept
 {
 	m_Children = children;
-
-	m_XformInvalid = true;
 }
 
 const std::vector<Entity*>& Entity::GetChildren() const noexcept
@@ -51,22 +45,23 @@ const std::vector<Entity*>& Entity::GetChildren() const noexcept
 void Entity::SetPosition(const Vec3f& position) noexcept
 {
 	m_Position = position;
-
-	m_XformInvalid = true;
 }
 
 void Entity::SetOrientation(const Quatf& orientation) noexcept
 {
 	m_Orientation = orientation;
 
-	m_XformInvalid = true;
 }
 
 void Entity::SetOrientation(const f32 angle, const Vec3f& axis) noexcept
 {
 	m_Orientation = glm::rotate(Quatf{}, angle, axis);
 
-	m_XformInvalid = true;
+}
+
+void Entity::SetScale(const Vec3f& scale) noexcept
+{
+	m_Scale = scale;
 }
 
 const Vec3f& Entity::GetPosition() const noexcept
@@ -91,9 +86,6 @@ const Mat4f& Entity::GetXform() const noexcept
 
 void Entity::Update(const f32 deltaTime) noexcept
 {
-	// if Xform has to be recalculated...
-	if (m_XformInvalid) {
-
 		// Reset identity;
 		m_Xform = Mat4f{};
 
@@ -101,13 +93,14 @@ void Entity::Update(const f32 deltaTime) noexcept
 		m_Xform *= glm::toMat4(m_Orientation);
 		m_Xform = glm::scale(m_Xform, m_Scale);
 
+		if (m_pParent) {
+			m_Xform = m_pParent->GetXform() * m_Xform;
+		}
+
 		// Since this Entity's XForm is invalid if it
 		// has children they have to be updated.
 		for (auto child : m_Children) {
 			child->Update(deltaTime);
 		}
-
-		m_XformInvalid = false;
-	}
 }
 

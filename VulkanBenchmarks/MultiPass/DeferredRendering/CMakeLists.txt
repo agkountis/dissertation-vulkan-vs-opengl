@@ -36,4 +36,4 @@ else()
 	add_executable(DeferredRendering ${SOURCE_FILES})
 endif()
 
-target_link_libraries(DeferredRendering VulkanInfrastructure)
+target_link_libraries(DeferredRendering VulkanInfrastructure ${ASSIMP_LIB})

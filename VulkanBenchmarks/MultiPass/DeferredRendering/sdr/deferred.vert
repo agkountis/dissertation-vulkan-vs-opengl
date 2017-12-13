@@ -1,5 +1,6 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
 
 //Vertex attributes
 layout(location = 0) in vec3 inPosition;
@@ -41,9 +42,12 @@ void main()
 	w_Position.y = -w_Position.y;
 	w_outPosition = w_Position;
 
-    mat3 normalMatrix = inverse(transpose(mat3(pushConstant.model)));
-	w_outNormal = normalMatrix * inNormal;
-	w_outTangent = normalMatrix * inTangent;
+    mat3 normalMatrix = transpose(inverse(mat3(pushConstant.model)));
+
+
+	w_outNormal = normalMatrix * normalize(inNormal);
+	//w_outNormal.y = -w_outNormal.y;
+	w_outTangent = normalMatrix * normalize(inTangent);
 
     //Assign texture coorinates for output.
     outTexcoord = inTexcoord;

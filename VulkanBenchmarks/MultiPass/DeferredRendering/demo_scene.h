@@ -5,13 +5,14 @@
 #include <vulkan_pipeline_cache.h>
 #include "demo_entity.h"
 #include "vulkan_render_target.h"
+#include "assimp/scene.h"
 
 struct MatricesUbo {
 	Mat4f view;
 	Mat4f projection;
 };
 
-constexpr int lightCount{ 2 };
+constexpr int lightCount{ 3 };
 
 struct LightsUbo {
 	Vec4f positions[lightCount];
@@ -68,19 +69,28 @@ private:
 	// All textures will be sampled with a single sampler.
 	VkSampler m_TextureSampler{ VK_NULL_HANDLE };
 
-	VulkanMesh m_CubeMesh;
-
-	DemoMaterial m_Material;
-
 	VulkanRenderTarget m_GBuffer;
 
 	LightsUbo m_Lights;
 
 	//UI -------------------------------
     mutable int m_CurrentAttachment{ 0 };
-	std::array<const char*, 5> m_AttachmentComboItems{ "Lit", "Position", "Normals", "Albedo", "Specular" };
+	std::array<const char*, 6> m_AttachmentComboItems{ "Lit", "Position", "Normals", "Albedo", "Specular", "Depth" };
 	// ---------------------------
-	bool SpawnEntity() noexcept;
+
+	// Model Loading--------------------
+	std::vector<DemoMaterial> m_Materials;
+
+	std::vector<VulkanMesh*> m_Meshes;
+
+	void LoadMeshes(const aiScene* scene) noexcept;
+
+	void LoadMaterials(const aiScene* scene) noexcept;
+
+	DemoEntity* LoadNode(const aiNode* aiNode) noexcept;
+
+	std::unique_ptr<DemoEntity> LoadModel(const std::string& fileName) noexcept;
+	//----------------------------------
 
 	bool CreateTextureSampler() noexcept;
 
@@ -91,6 +101,8 @@ private:
 	bool InitializeImGUI(const VkRenderPass renderpass) noexcept;
 
 	void UpdateLightPositions(const i64 msec, f64 dt) noexcept;
+
+	void DrawEntity(DemoEntity* entity, VkCommandBuffer commandBuffer) noexcept;
 
 public:
 	~DemoScene();

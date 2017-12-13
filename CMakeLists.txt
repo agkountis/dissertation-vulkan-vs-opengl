@@ -7,6 +7,24 @@ set(CMAKE_CXX_STANDARD 17)
 set(VULKAN_APP_LIBRARIES)
 set(OPENGL_APP_LIBRARIES)
 
+set(DEPENDENCIES_PATH ${CMAKE_SOURCE_DIR}/Dependencies)
+
+set(IMGUI_SOURCE ${DEPENDENCIES_PATH}/imgui/imconfig.h
+${DEPENDENCIES_PATH}/imgui/imgui.cpp
+${DEPENDENCIES_PATH}/imgui/imgui.h
+${DEPENDENCIES_PATH}/imgui/imgui_demo.cpp
+${DEPENDENCIES_PATH}/imgui/imgui_draw.cpp
+${DEPENDENCIES_PATH}/imgui/imgui_internal.h
+${DEPENDENCIES_PATH}/imgui/stb_rect_pack.h
+${DEPENDENCIES_PATH}/imgui/stb_textedit.h
+${DEPENDENCIES_PATH}/imgui/stb_truetype.h)
+
+set(IMGUI_VULKAN_IMPL ${DEPENDENCIES_PATH}/imgui/imgui_impl_glfw_vulkan.h ${DEPENDENCIES_PATH}/imgui/imgui_impl_glfw_vulkan.cpp)
+
+set(IMGUI_INCLUDE_PATH ${DEPENDENCIES_PATH}/imgui)
+
+include_directories(${DEPENDENCIES_PATH}/include)
+
 if(APPLE)
     include_directories(~/Downloads/Molten-0.18.0/MoltenVK/include)
     link_directories(~/Downloads/Molten-0.18.0/MoltenVK/macOS)
@@ -25,10 +43,13 @@ elseif(MSVC)
     include_directories(C:/usr/include)
     include_directories(C:/VulkanSDK/1.0.65.0/Include)
 
-    set(VULKAN_LIB C:/VulkanSDK/1.0.65.0/Lib/vulkan-1.lib)
-    set(GLFW_LIB C:/usr/lib/glfw3x64.lib)
+    set(VULKAN_LIB C:/VulkanSDK/1.0.65.0/Lib32/vulkan-1.lib)
+    set(GLFW_LIB C:/usr/lib/glfw3.lib)
 
     set(VULKAN_APP_LIBRARIES ${VULKAN_LIB} ${GLFW_LIB})
+	set(ASSIMP_LIB ${DEPENDENCIES_PATH}/lib/assimp.lib)
+
+	set(CMAKE_MSVCIDE_RUN_PATH ${DEPENDENCIES_PATH}/bin)
 elseif(MINGW)
     #handle mingw
 else()
@@ -38,20 +59,6 @@ else()
 
     set(VULKAN_APP_LIBRARIES ${Vulkan_LIBRARY} glfw)
 endif()
-
-set(IMGUI_SOURCE ${CMAKE_SOURCE_DIR}/Dependencies/imgui/imconfig.h
-${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui.cpp
-${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui.h
-${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui_demo.cpp
-${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui_draw.cpp
-${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui_internal.h
-${CMAKE_SOURCE_DIR}/Dependencies/imgui/stb_rect_pack.h
-${CMAKE_SOURCE_DIR}/Dependencies/imgui/stb_textedit.h
-${CMAKE_SOURCE_DIR}/Dependencies/imgui/stb_truetype.h)
-
-set(IMGUI_VULKAN_IMPL ${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui_impl_glfw_vulkan.h ${CMAKE_SOURCE_DIR}/Dependencies/imgui/imgui_impl_glfw_vulkan.cpp)
-
-set(IMGUI_INCLUDE_PATH ${CMAKE_SOURCE_DIR}/Dependencies/imgui)
 
 add_subdirectory(Infrastructure)
 add_subdirectory(VulkanBenchmarks)

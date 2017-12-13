@@ -76,8 +76,3 @@ void Mesh::GenerateIndices(VertexWinding vertexWinding) noexcept
 	}
 }
 
-bool Mesh::Load(const std::string& fileName) noexcept
-{
-	return false;
-}
-

@@ -39,7 +39,7 @@ bool DemoApplication::BuildDeferredPassCommandBuffer()
 			clearValues[i].color = VkClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
 		}
 		else {
-			clearValues[i].depthStencil = VkClearDepthStencilValue{ 1, 0 };
+			clearValues[i].depthStencil = VkClearDepthStencilValue{ 1.0, 0 };
 		}
 	}
 

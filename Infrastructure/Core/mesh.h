@@ -10,13 +10,15 @@ enum class VertexWinding {
 	COUNTERCLOCKWISE
 };
 
-class Mesh : public Resource {
+class Mesh {
 private:
 	std::vector<Vertex> m_Vertices;
 
 	std::vector<ui32> m_Indices;
 
 public:
+	virtual ~Mesh() = default;
+
 	void AddVertex(const Vertex& vertex) noexcept;
 
 	void AddIndex(ui32 index) noexcept;
@@ -38,8 +40,6 @@ public:
 	void GenerateIndices(VertexWinding vertexWinding) noexcept;
 
 	virtual bool CreateBuffers() noexcept = 0;
-
-	bool Load(const std::string& fileName) noexcept override;
 };
 
 #endif //MESH_H_

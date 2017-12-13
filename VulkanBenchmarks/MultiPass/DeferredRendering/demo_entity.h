@@ -7,18 +7,26 @@
 
 class DemoEntity final : public Entity {
 private:
+	std::string m_Name;
+
 	VulkanMesh* m_Mesh{ nullptr };
 
-	DemoMaterial* m_Material;
+	DemoMaterial* m_Material{ nullptr };
 
 public:
+	DemoEntity() = default;
+
 	explicit DemoEntity(VulkanMesh* mesh);
 
-	DemoMaterial& GetMaterial() noexcept;
+	DemoMaterial* GetMaterial() noexcept;
+
+	void SetName(const std::string& name) noexcept;
+
+	void SetMesh(VulkanMesh* mesh) noexcept;
+
+	VulkanMesh* GetMesh() const noexcept;
 
 	void SetMaterial(DemoMaterial* material) noexcept;
-
-	void Draw(VkCommandBuffer commandBuffer) noexcept;
 
 	bool Load(const std::string& fileName) noexcept override;
 };

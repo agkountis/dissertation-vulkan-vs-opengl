@@ -42,6 +42,8 @@ public:
 
 	void SetOrientation(f32 angle, const Vec3f& axis) noexcept;
 
+	void SetScale(const Vec3f& scale) noexcept;
+
 	const Vec3f& GetPosition() const noexcept;
 
 	const Quatf& GetOrientation() const noexcept;

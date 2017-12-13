@@ -29,7 +29,7 @@ void main()
     vec3 b = cross(n, t);
     mat3 tbn = mat3(t, b, n);
 
-	outNormal = vec4(tbn * normalize(texture(normalSampler, inTexcoord).rgb) * 2.0 - 1.0, 1.0);
+	outNormal = vec4(n, 1.0); //vec4(tbn * normalize(texture(normalSampler, inTexcoord).rgb) * 2.0 - 1.0, 1.0);
 	outAlbedo = texture(diffuseSampler, inTexcoord) * pcs.diffuse;
 	outSpecular = texture(specularSampler, inTexcoord) * pcs.specular;
 }
