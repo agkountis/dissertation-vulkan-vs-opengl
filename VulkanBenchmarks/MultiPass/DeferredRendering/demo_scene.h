@@ -12,7 +12,7 @@ struct MatricesUbo {
 	Mat4f projection;
 };
 
-constexpr int lightCount{ 3 };
+constexpr int lightCount{ 4 };
 
 struct LightsUbo {
 	Vec4f positions[lightCount];
@@ -39,7 +39,6 @@ private:
 		VkDescriptorSet sceneMatrices{ VK_NULL_HANDLE };
 		VkDescriptorSet display{ VK_NULL_HANDLE };
 	} m_DescriptorSets;
-
 
 	struct {
 		VulkanBuffer matrices;

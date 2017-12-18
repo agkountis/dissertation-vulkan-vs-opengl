@@ -1077,17 +1077,6 @@ bool DemoScene::InitializeImGUI(const VkRenderPass renderPass) noexcept
 	return true;
 }
 
-void DemoScene::UpdateLightPositions(const i64 msec, f64 dt) noexcept
-{
-	//TODO
-	// m_Lights.positions[0] = Vec4f{ cos(msec / 1000.0) * 20.0f, 0.0, sin(msec / 1000.0) * 20.0f, 1.0 };
-	// m_Lights.positions[1] = Vec4f{ cos(msec / 1000.0) * 20.0f, 0.0f, 0.0f, 1.0 };
-	//m_Lights.radi[0] = Vec4f{ (sinf(msec / 1000.0f) * 0.5f + 0.5f) * 10.0f };
-	//m_Lights.radi[1] = Vec4f{ (sinf(msec / 1000.0f) * 0.5f + 0.5f) * 10.0f };
-
-	//m_Ubos.lights.Fill(&m_Lights, sizeof m_Lights);
-}
-
 // -------------------------------------------------------------------
 DemoScene::~DemoScene()
 {
@@ -1166,7 +1155,7 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displa
 		return false;
 	}
 
-	m_Entities.push_back(LoadModel("models/trex.fbx"));
+	m_Entities.push_back(LoadModel("models/scene.fbx"));
 
 	if (!PrepareUniforms()) {
 		ERROR_LOG("Failed to prepare the scene's uniforms");
@@ -1182,33 +1171,6 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displa
 		return false;
 	}
 
-	MatricesUbo ubo{};
-	Vec3f eye{ -220.0f, 0.0f, 0.0f };
-	ubo.view = glm::lookAt(eye, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
-
-	f32 aspect{ static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height) };
-
-	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(60.0f), aspect, 1.0f, 200.0f);
-
-	m_Ubos.matrices.Fill(&ubo, sizeof ubo);
-
-
-	m_Lights.positions[0] = Vec4f{ 10.0f, 0.0f, 0.0f, 0.0f };
-	m_Lights.colors[0] = Vec4f{ 0.0f, 0.0f, 1.0f, 1.0 };
-	m_Lights.radi[0] = Vec4f{ 0.0f };
-
-	m_Lights.positions[1] = Vec4f{ 0.0f, 0.0f, 20.0f, 0.0f };
-	m_Lights.colors[1] = Vec4f{ 1.0f, 1.0f, 1.0f, 1.0 };
-	m_Lights.radi[1] = Vec4f{ 3000.0f };
-
-	m_Lights.positions[2] = Vec4f{0.0f, 0.0f, -20.0, 0.0f};
-	m_Lights.colors[2] = Vec4f{1.0f, 1.0f, 1.0f, 1.0};
-	m_Lights.radi[2] = Vec4f{ 3000.0f };
-
-	m_Lights.eyePos = eye;
-
-	m_Ubos.lights.Fill(&m_Lights, sizeof m_Lights);
-
 	return true;
 }
 
@@ -1218,25 +1180,40 @@ static f64 entitiesToSpawn{ 0.0f };
 void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 {
 	for (auto& entity : m_Entities) {
-		auto f = (sin(msec / 3000.0) * 0.5 + 0.5) * 200.0f;
-		entity->SetPosition(Vec3f{ 0.0f, 0.0f, f });
-		entity->SetOrientation(msec / 1000.0f, Vec3f(0.0, 1.0, 0.0));
 		entity->Update(dt);
 	}
 
 	MatricesUbo ubo{};
-	float radius = -20.0f;
-	Vec3f eye{ 0.0f, 0.0f, radius };
-	ubo.view = glm::lookAt(eye, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
-	//ubo.view = glm::rotate(ubo.view, msec / 1000.0f, Vec3f{1.0, 0.0, 0.0});
+	float radius = 20.0f;
+	Vec3f eye{ sin(msec / 3000.0f) * radius, 3.0f, cos(msec / 3000.0f) * radius };
+	ubo.view = glm::lookAt(eye, Vec3f{ 0.0, 6.0f, 0.0f }, Vec3f{ 0.0f, 1.0f, 0.0f });
+	//ubo.view = glm::rotate(ubo.view, msec / 3000.0f, Vec3f{ 0.0, 1.0, 0.0 });
 
 	f32 aspect{ static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height) };
 
-	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 200.0f);
+	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(60.0f), aspect, 0.1f, 2000.0f);
 
 	m_Ubos.matrices.Fill(&ubo, sizeof ubo);
 
-	UpdateLightPositions(msec, dt);
+	m_Lights.positions[0] = Vec4f{ sin(msec / 1000.0f) * 20.0f, 10.0f, cos(msec / 1000.0f) * 20.0f - 10.0f, 0.0f };
+	m_Lights.colors[0] = Vec4f{ 1.0f, 1.0f, 1.0f, 1.0 };
+	m_Lights.radi[0] = Vec4f{ 80.0f };
+
+	m_Lights.positions[1] = Vec4f{ cos(msec / 500.0f) * 10.0f, 5.0f, sin(msec / 500.0f) * 10.0f - 10.0f, 0.0f };
+	m_Lights.colors[1] = Vec4f{ 0.0f, 0.0f, 1.0f, 1.0 };
+	m_Lights.radi[1] = Vec4f{ 80.0f };
+
+	m_Lights.positions[2] = Vec4f{ cos(msec / 3000.0f) * 10.0f, 20.0f, sin(msec / 3000.0f) * 10.0f - 10.0f, 0.0f };
+	m_Lights.colors[2] = Vec4f{ 0.0f, 1.0f, 0.0f, 1.0 };
+	m_Lights.radi[2] = Vec4f{ 120.0f };
+
+	m_Lights.positions[3] = Vec4f{ cos(msec / 200.0f) * 5.0f, 10.0f, sin(msec / 200.0f) * 5.0f - 10.0f, 0.0f };
+	m_Lights.colors[3] = Vec4f{ 1.0f, 0.0f, 0.0f, 1.0 };
+	m_Lights.radi[3] = Vec4f{ 120.0f };
+
+	m_Lights.eyePos = eye;
+
+	m_Ubos.lights.Fill(&m_Lights, sizeof m_Lights);
 }
 
 void DemoScene::DrawEntity(DemoEntity* entity, VkCommandBuffer commandBuffer) noexcept

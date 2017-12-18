@@ -8,7 +8,7 @@ layout(binding = 2) uniform sampler2D albedoSampler;
 layout(binding = 3) uniform sampler2D specularSampler;
 layout(binding = 4) uniform sampler2D depthSampler;
 
-const int lightCount = 3;
+const int lightCount = 4;
 
 layout(set = 0, binding = 5) uniform Lights {
 	vec4[lightCount] w_Positions;
@@ -26,11 +26,20 @@ layout(location = 0) in vec2 inTexCoord;
 layout(location = 0) out vec4 outColor;
 
 
+vec4 linearizeDepth(vec2 uv)
+{
+    float zNear = 1.0;    // TODO: Replace by the zNear of your perspective projection
+    float zFar  = 2000.0; // TODO: Replace by the zFar  of your perspective projection
+    float depth = texture(depthSampler, uv).x;
+    return vec4(vec3((2.0 * zNear) / (zFar + zNear - depth * (zFar - zNear))), 1.0);
+}
+
+
 vec4 shade(vec4 w_Pos, vec3 normal, vec4 albedo, vec4 specular)
 {
     vec3 color = vec3(0.0, 0.0, 0.0);
 
-    color += albedo.rgb * vec3(0.05, 0.05, 0.05);
+    color += albedo.rgb * vec3(0.1, 0.1, 0.1);
 
     for(int i = 0; i < lightCount; ++i) {
 		// Vector to light
@@ -91,12 +100,7 @@ void main()
             outColor = specular;
 			break;
 		case 5:
-			float v = texture(depthSampler, inTexCoord).x;
-			if (v == 0.0) {
-				outColor = vec4(1.0, 0.0, 0.0, 1.0);
-			} else {
-				outColor = vec4(texture(depthSampler, inTexCoord).xxx, 1.0);
-			}
+			outColor = linearizeDepth(inTexCoord);
             break;
     }
 

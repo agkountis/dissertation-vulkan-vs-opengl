@@ -46,7 +46,6 @@ void main()
 
 
 	w_outNormal = normalMatrix * normalize(inNormal);
-	//w_outNormal.y = -w_outNormal.y;
 	w_outTangent = normalMatrix * normalize(inTangent);
 
     //Assign texture coorinates for output.

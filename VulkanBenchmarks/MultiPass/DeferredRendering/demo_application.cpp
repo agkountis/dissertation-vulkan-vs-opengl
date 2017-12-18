@@ -70,6 +70,8 @@ bool DemoApplication::BuildDeferredPassCommandBuffer()
 	viewport.y = 0;
 	viewport.width = size.x;
 	viewport.height = size.y;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
 
 	vkCmdSetViewport(m_DeferredCommandBuffer, 0, 1, &viewport);
 
