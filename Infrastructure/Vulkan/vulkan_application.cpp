@@ -1,6 +1,7 @@
 #include "vulkan_application.h"
 #include "vulkan_infrastructure_context.h"
 #include <array>
+#include <algorithm>
 
 // Private functions -------------------------------
 bool VulkanApplication::CreateInstance() noexcept
@@ -158,7 +159,7 @@ bool VulkanApplication::CreateFramebuffers() noexcept
 	auto swapChainExtent = m_SwapChain.GetExtent();
 
 	for (int i = 0; i < swapChainImageViews.size(); ++i) {
-		std::vector<VkImageView> attachments{ swapChainImageViews[i], m_DepthStencil.GetImageView() };
+		const std::vector<VkImageView> attachments{ swapChainImageViews[i], m_DepthStencil.GetImageView() };
 
 		if (!m_SwapChainFrameBuffers[i].Create(attachments,
 		                                       Vec2ui{ swapChainExtent.width, swapChainExtent.height },
@@ -466,10 +467,10 @@ i32 VulkanApplication::Run() noexcept
 				maxGpuTime = gpuTimeAverage;
 			}
 
-			std::rotate(fpsAverages.begin(), ++fpsAverages.begin(), fpsAverages.end());
-			std::rotate(wholeFrameAverages.begin(), ++wholeFrameAverages.begin(), wholeFrameAverages.end());
-			std::rotate(cpuTimeAverages.begin(), ++cpuTimeAverages.begin(), cpuTimeAverages.end());
-			std::rotate(gpuTimeAverages.begin(), ++gpuTimeAverages.begin(), gpuTimeAverages.end());
+			std::rotate(fpsAverages.begin(), fpsAverages.begin() + 1, fpsAverages.end());
+			std::rotate(wholeFrameAverages.begin(), wholeFrameAverages.begin() + 1, wholeFrameAverages.end());
+			std::rotate(cpuTimeAverages.begin(), cpuTimeAverages.begin() + 1, cpuTimeAverages.end());
+			std::rotate(gpuTimeAverages.begin(), gpuTimeAverages.begin() + 1, gpuTimeAverages.end());
 
 			fpsAverages.back() = averageFps;
 			wholeFrameAverages.back() = wholeFrameAverage;

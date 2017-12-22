@@ -1075,6 +1075,12 @@ bool DemoScene::InitializeImGUI(const VkRenderPass renderPass) noexcept
 
 	ImGui_ImplGlfwVulkan_InvalidateFontUploadObjects();
 
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.Colors[ImGuiCol_TitleBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.6f);
+	style.Colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
+	style.Colors[ImGuiCol_MenuBarBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+	style.Colors[ImGuiCol_Header] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+
 	return true;
 }
 
@@ -1099,13 +1105,11 @@ DemoScene::~DemoScene()
 	vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
 	vkDestroyDescriptorPool(device, m_ImGUIDescriptorPool, nullptr);
 
-	vkDestroyPipeline(device, m_Pipelines.deferred, nullptr);
-	vkDestroyPipeline(device, m_Pipelines.display, nullptr);
-
-	vkDestroySampler(device, m_TextureSampler, nullptr);
-
 	vkDestroyPipelineLayout(device, m_PipelineLayouts.deferred, nullptr);
 	vkDestroyPipelineLayout(device, m_PipelineLayouts.display, nullptr);
+
+	vkDestroyPipeline(device, m_Pipelines.deferred, nullptr);
+	vkDestroyPipeline(device, m_Pipelines.display, nullptr);
 
 	ImGui_ImplGlfwVulkan_Shutdown();
 }
