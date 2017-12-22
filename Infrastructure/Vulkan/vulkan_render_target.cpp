@@ -243,6 +243,7 @@ bool VulkanRenderTarget::CreateSampler(const VkFilter magFilter,
 VulkanRenderTarget::~VulkanRenderTarget()
 {
 	vkDestroySampler(G_VulkanDevice, m_Sampler, nullptr);
+	vkDestroyFramebuffer(G_VulkanDevice, m_Framebuffer, nullptr);
 	vkDestroyRenderPass(G_VulkanDevice, m_RenderPass, nullptr);
 }
 

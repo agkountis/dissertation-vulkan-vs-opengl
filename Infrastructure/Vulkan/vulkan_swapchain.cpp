@@ -56,8 +56,8 @@ bool VulkanSwapChain::InitializeSurface(const VulkanWindow& window) noexcept
 	}
 
 	// Exit if either a graphics or a presenting queue hasn't been found
-	bool graphicsQueueIndexInvalid{ graphicsQueueIndex == std::numeric_limits<ui32>::max() };
-	bool presentQueueIndexInvalid{ presentQueueIndex == std::numeric_limits<ui32>::max() };
+	const auto graphicsQueueIndexInvalid{ graphicsQueueIndex == std::numeric_limits<ui32>::max() };
+	const auto presentQueueIndexInvalid{ presentQueueIndex == std::numeric_limits<ui32>::max() };
 
 	if (graphicsQueueIndexInvalid || presentQueueIndexInvalid) {
 		ERROR_LOG("Could not find a queue that supports graphics/presenting.");

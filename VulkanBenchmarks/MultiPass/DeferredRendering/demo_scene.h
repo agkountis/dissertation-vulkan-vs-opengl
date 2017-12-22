@@ -99,8 +99,6 @@ private:
 
 	bool InitializeImGUI(const VkRenderPass renderpass) noexcept;
 
-	void UpdateLightPositions(const i64 msec, f64 dt) noexcept;
-
 	void DrawEntity(DemoEntity* entity, VkCommandBuffer commandBuffer) noexcept;
 
 public:

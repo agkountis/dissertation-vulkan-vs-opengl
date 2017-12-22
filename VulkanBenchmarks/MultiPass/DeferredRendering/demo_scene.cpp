@@ -45,7 +45,6 @@ static Quatf AssQuat(const aiQuaternion q) noexcept
 
 void DemoScene::LoadMeshes(const aiScene* scene) noexcept
 {
-
 	for (auto i = 0; i < scene->mNumMeshes; ++i) {
 		auto mesh = new VulkanMesh;
 
@@ -186,10 +185,11 @@ std::unique_ptr<DemoEntity> DemoScene::LoadModel(const std::string& fileName) no
 	auto result = std::make_unique<DemoEntity>();
 
 	const auto scn = aiImportFile(fileName.c_str(),
-									aiProcess_GenSmoothNormals |
-									aiProcess_FixInfacingNormals |
+	                              aiProcess_GenSmoothNormals |
+	                              aiProcess_FixInfacingNormals |
 	                              aiProcess_Triangulate |
-	                              aiProcess_CalcTangentSpace | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices | aiProcess_FixInfacingNormals | aiProcess_SortByPType);
+	                              aiProcess_CalcTangentSpace | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices |
+	                              aiProcess_FixInfacingNormals | aiProcess_SortByPType);
 
 	if (!scn) {
 		ERROR_LOG("Failed to load scene: " + fileName);
@@ -214,7 +214,8 @@ std::unique_ptr<DemoEntity> DemoScene::LoadModel(const std::string& fileName) no
 
 			result->AddChild(entity);
 		}
-	} else {
+	}
+	else {
 		ERROR_LOG("The model has no root node.");
 		return nullptr;
 	}
@@ -1082,18 +1083,26 @@ DemoScene::~DemoScene()
 {
 	const auto& device = G_VulkanDevice;
 
+	for (auto mesh : m_Meshes) {
+		delete mesh;
+	}
+	m_Meshes.clear();
+
 	vkDestroySampler(device, m_TextureSampler, nullptr);
 
 	//No need to free descriptor sets. They are taken care of by the Vulkan driver.
 	//Just destroy the descriptor set layout and the descriptor pool.
 	vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayouts.sceneMatrices, nullptr);
 	vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayouts.material, nullptr);
+	vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayouts.gBufferAndLights, nullptr);
 
 	vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
+	vkDestroyDescriptorPool(device, m_ImGUIDescriptorPool, nullptr);
 
 	vkDestroyPipeline(device, m_Pipelines.deferred, nullptr);
-
 	vkDestroyPipeline(device, m_Pipelines.display, nullptr);
+
+	vkDestroySampler(device, m_TextureSampler, nullptr);
 
 	vkDestroyPipelineLayout(device, m_PipelineLayouts.deferred, nullptr);
 	vkDestroyPipelineLayout(device, m_PipelineLayouts.display, nullptr);
@@ -1149,7 +1158,7 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displa
 
 	if (!m_GBuffer.Create(size,
 	                      VK_FILTER_NEAREST,
-						  VK_FILTER_NEAREST,
+	                      VK_FILTER_NEAREST,
 	                      VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE)) {
 		ERROR_LOG("Failed to create GBuffer!");
 		return false;
@@ -1173,9 +1182,6 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displa
 
 	return true;
 }
-
-static constexpr f64 spawnRate{ 100.0f };
-static f64 entitiesToSpawn{ 0.0f };
 
 void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 {
@@ -1233,31 +1239,31 @@ void DemoScene::DrawEntity(DemoEntity* entity, VkCommandBuffer commandBuffer) no
 		};
 
 		vkCmdBindDescriptorSets(commandBuffer,
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			m_PipelineLayouts.deferred,
-			0,
-			static_cast<ui32>(descriptorSets.size()),
-			descriptorSets.data(),
-			0,
-			nullptr);
+		                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+		                        m_PipelineLayouts.deferred,
+		                        0,
+		                        static_cast<ui32>(descriptorSets.size()),
+		                        descriptorSets.data(),
+		                        0,
+		                        nullptr);
 
 		const auto& xform = entity->GetXform();
 
 		vkCmdPushConstants(commandBuffer,
-			m_PipelineLayouts.deferred,
-			VK_SHADER_STAGE_VERTEX_BIT,
-			0,
-			sizeof(Mat4f),
-			&xform);
+		                   m_PipelineLayouts.deferred,
+		                   VK_SHADER_STAGE_VERTEX_BIT,
+		                   0,
+		                   sizeof(Mat4f),
+		                   &xform);
 
 		std::array<Vec4f, 2> materialProperties{ material->diffuse, material->specular };
 
 		vkCmdPushConstants(commandBuffer,
-			m_PipelineLayouts.deferred,
-			VK_SHADER_STAGE_FRAGMENT_BIT,
-			sizeof(Mat4f),
-			2 * sizeof(Vec4f),
-			materialProperties.data());
+		                   m_PipelineLayouts.deferred,
+		                   VK_SHADER_STAGE_FRAGMENT_BIT,
+		                   sizeof(Mat4f),
+		                   2 * sizeof(Vec4f),
+		                   materialProperties.data());
 
 		mesh->Draw(commandBuffer);
 	}
@@ -1276,6 +1282,8 @@ void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
 		DrawEntity(entity.get(), commandBuffer);
 	}
 }
+
+static std::vector<float> f{ 1.0, 2.0, 3.0, 4.0 };
 
 void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 {
@@ -1306,23 +1314,77 @@ void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 	// 1. Show a simple window.
 	// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
 	ImGui::Begin("Metrics");
-	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
-	            ImGui::GetIO().Framerate);
+	ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
+
+	const auto deviceType = G_VulkanDevice.GetPhysicalDevice().properties.deviceType;
+
+	const char* type{nullptr};
+
+	switch (deviceType) {
+	case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+		type = "Other";
+		break;
+	case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+		type = "Integrated GPU";
+		break;
+	case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+		type = "Discrete GPU";
+		break;
+	case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+		type = "Virtual GPU";
+		break;
+	case VK_PHYSICAL_DEVICE_TYPE_CPU:
+		type = "CPU";
+		break;
+	default: ;
+	}
+
+	ImGui::Text("Device ID: %d", G_VulkanDevice.GetPhysicalDevice().properties.deviceID);
+	ImGui::Text("Device type: %s", type);
+	ImGui::Text("Vendor: %d", G_VulkanDevice.GetPhysicalDevice().properties.vendorID);
+	ImGui::Text("Driver Version: %d", G_VulkanDevice.GetPhysicalDevice().properties.driverVersion);
+
 	ImGui::NewLine();
 	ImGui::Separator();
 	ImGui::NewLine();
 
-	if (ImGui::Combo("Active attachment", &m_CurrentAttachment, m_AttachmentComboItems.data(), m_AttachmentComboItems.size())) {
+	if (ImGui::Combo("Active attachment", &m_CurrentAttachment, m_AttachmentComboItems.data(),
+	                 m_AttachmentComboItems.size())) {
 		LOG("Value changed to: " + std::to_string(m_CurrentAttachment));
 	}
 
-	ImGui::End();
+	ImGui::NewLine();
+	ImGui::Separator();
+	ImGui::NewLine();
 
-	//    // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow().
-	//
-	//    bool show_test_window = true;
-	//    ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
-	//    ImGui::ShowTestWindow(&show_test_window);
+	auto& application = G_Application;
+
+	char buff[60];
+
+	snprintf(buff, 60, "FPS\nAvg: %f\nMin: %f\nMax: %f", application.averageFps, application.minFps,
+		application.maxFps);
+	ImGui::PlotLines(buff, application.fpsAverages.data(), application.fpsAverages.size(), 0, "",
+		0.0, application.maxFps, ImVec2(0, 80));
+
+	snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.wholeFrameAverage, application.minWholeFrame,
+	         application.maxWholeFrame);
+	ImGui::PlotLines(buff, application.wholeFrameAverages.data(), application.wholeFrameAverages.size(), 0, "",
+	                 0.0, application.maxWholeFrame, ImVec2(0, 80));
+
+	snprintf(buff, 60, "CPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.cpuTimeAverage, 0.0,
+	         application.maxCpuTime);
+	ImGui::PlotLines(buff, application.cpuTimeAverages.data(), application.cpuTimeAverages.size(), 0, "",
+	                 0.0, application.maxCpuTime, ImVec2(0, 80));
+
+	snprintf(buff, 60, "GPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.gpuTimeAverage, application.minGpuTime,
+	         application.maxGpuTime);
+	ImGui::PlotLines(buff, application.gpuTimeAverages.data(), application.gpuTimeAverages.size(), 0, "",
+	                 0.0, application.maxGpuTime, ImVec2(0, 80));
+
+	ImGui::NewLine();
+	ImGui::Text("Running time: %f s", application.GetTimer().GetSec());
+	ImGui::Text("Frame count: %d", application.frameCount);
+	ImGui::End();
 
 	ImGui_ImplGlfwVulkan_Render(commandBuffer);
 }

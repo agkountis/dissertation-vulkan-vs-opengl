@@ -22,7 +22,7 @@
 #include "vulkan_command_pool.h"
 #include "vulkan_framebuffer.h"
 #include "vulkan_query_pool.h"
-#include <deque>
+#include <array>
 
 class VulkanApplication : public Application {
 private:
@@ -186,32 +186,48 @@ private:
 	 */
 	virtual bool CreateFramebuffers() noexcept;
 
-	std::deque<f64> m_WholeFrameTimeSamples;
 
-	std::deque<f64> m_CpuTimeSamples;
-
-	std::deque<f64> m_GpuTimeSamples;
 
 	i32 m_SampleWindow{ 60 }; //frames
 
-protected:
-	f64 wholeFrameTime{ 0.0 };
+public:
+	std::vector<f32> wholeFrameTimeSamples;
 
-	f64 cpuTime{ 0.0 };
+	std::vector<f32> cpuTimeSamples;
 
-	f64 gpuTime{ 0.0 };
+	std::vector<f32> gpuTimeSamples;
+
+	f32 wholeFrameTime{ 0.0 };
+
+	f32 cpuTime{ 0.0 };
+
+	f32 gpuTime{ 0.0 };
 
 	i64 frameCount{ 0 };
 
-	f64 wholeFrameMovingAverage{ 0.0 };
+	f32 averageFps{ 0.0 };
+	std::array<f32, 60> fpsAverages{};
+	f32 minFps{ std::numeric_limits<f32>::max() };
+	f32 maxFps{ std::numeric_limits<f32>::min() };
 
-	f64 cpuTimeMovingAverage{ 0.0 };
+	f32 wholeFrameAverage{ 0.0 };
+	std::array<f32, 60> wholeFrameAverages{};
+	f32 minWholeFrame{ std::numeric_limits<f32>::max() };
+	f32 maxWholeFrame{ std::numeric_limits<f32>::min() };
 
-	f64 gpuTimeMovingAverage{ 0.0 };
+	f32 cpuTimeAverage{ 0.0 };
+	f32 minCpuTime{ std::numeric_limits<f32>::max() };
+	f32 maxCpuTime{ std::numeric_limits<f32>::min() };
+	std::array<f32, 60> cpuTimeAverages{};
 
-public:
+	f32 gpuTimeAverage{ 0.0 };
+	std::array<f32, 60> gpuTimeAverages{};
+	f32 minGpuTime{ std::numeric_limits<f32>::max() };
+	f32 maxGpuTime{ std::numeric_limits<f32>::min() };
 
 	std::vector<VulkanQueryPool> queryPools;
+
+	bool updateGraphs = false;
 
 	double w1, w2;
 	/**

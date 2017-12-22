@@ -292,8 +292,6 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	GetTimer().Start();
-
 	VulkanInfrastructureContext::Register(&m_Instance,
 	                                      &m_Device,
 	                                      &m_ResourceManager,
@@ -379,11 +377,17 @@ bool VulkanApplication::Initialize() noexcept
 		queryPool.Initialize(VK_QUERY_TYPE_TIMESTAMP, 2, VK_NULL_HANDLE);
 	}
 
-	return CreateFramebuffers();
+	if (!CreateFramebuffers()) {
+		ERROR_LOG("Failed to create framebuffers.");
+		return false;
+	}
+
+	return true;
 }
 
 i32 VulkanApplication::Run() noexcept
 {
+	GetTimer().Start();
 	while (!glfwWindowShouldClose(m_Window) && !ShouldTerminate()) {
 		glfwPollEvents();
 
@@ -400,7 +404,7 @@ i32 VulkanApplication::Run() noexcept
 		}
 
 		std::vector<ui64> gpuResults;
-		queryPools[m_CurrentBuffer].GetResults(gpuResults); //this stalls on multithreaded build.
+		queryPools[m_CurrentBuffer].GetResults(gpuResults);
 
 		const auto nanosInAnIncrement{ m_Device.GetPhysicalDevice().properties.limits.timestampPeriod };
 
@@ -408,37 +412,77 @@ i32 VulkanApplication::Run() noexcept
 		cpuTime = wholeFrameTime - gpuTime;
 
 		// Calculate moving averages
-		if (frameCount < m_SampleWindow) {
-			m_WholeFrameTimeSamples.push_back(wholeFrameTime);
-			m_CpuTimeSamples.push_back(cpuTime);
-			m_GpuTimeSamples.push_back(gpuTime);
-		}
-		else {
-			m_WholeFrameTimeSamples.pop_front();
-			m_CpuTimeSamples.pop_front();
-			m_GpuTimeSamples.pop_front();
+		static float accum{ 0 };
+		accum += wholeFrameTime;
+		wholeFrameTimeSamples.push_back(wholeFrameTime);
+		cpuTimeSamples.push_back(cpuTime);
+		gpuTimeSamples.push_back(gpuTime);
 
-			m_WholeFrameTimeSamples.push_back(wholeFrameTime);
-			m_CpuTimeSamples.push_back(cpuTime);
-			m_GpuTimeSamples.push_back(gpuTime);
-
+		if (accum > 1000.0f) {
+			const auto size = wholeFrameTimeSamples.size();
 			auto wholeFrameTimeSum{ 0.0 };
 			auto cpuTimeSum{ 0.0 };
 			auto gpuTimeSum{ 0.0 };
 
-			for (int i = 0; i < m_SampleWindow; ++i) {
-				wholeFrameTimeSum += m_WholeFrameTimeSamples[i];
-				cpuTimeSum += m_CpuTimeSamples[i];
-				gpuTimeSum += m_GpuTimeSamples[i];
+			for (int i = 0; i < size; ++i) {
+				wholeFrameTimeSum += wholeFrameTimeSamples[i];
+				cpuTimeSum += cpuTimeSamples[i];
+				gpuTimeSum += gpuTimeSamples[i];
+			}
+			wholeFrameAverage = wholeFrameTimeSum / static_cast<f32>(size);
+			averageFps = 1000.0f / wholeFrameAverage;
+			cpuTimeAverage = cpuTimeSum / static_cast<f32>(size);
+			gpuTimeAverage = gpuTimeSum / static_cast<f32>(size);
+
+			if (wholeFrameTime < minWholeFrame) {
+				minWholeFrame = wholeFrameTime;
 			}
 
-			wholeFrameMovingAverage = wholeFrameTimeSum / static_cast<f64>(m_SampleWindow);
-			cpuTimeMovingAverage = cpuTimeSum / static_cast<f64>(m_SampleWindow);
-			gpuTimeMovingAverage = gpuTimeSum / static_cast<f64>(m_SampleWindow);
-		}
+			if (averageFps < minFps) {
+				minFps = averageFps;
+			}
 
-//		std::cout << "frame: " << frameCount << " " << "ms/frame: " << wholeFrameMovingAverage << " " << "Cpu: " << cpuTimeMovingAverage << "ms"
-//				<< " Gpu: " << gpuTimeMovingAverage << "ms" << " running time:" << GetTimer().GetSec() * 1000.0 << std::endl;
+			if (averageFps > maxFps) {
+				maxFps = averageFps;
+			}
+
+			if (wholeFrameTime > maxWholeFrame) {
+				maxWholeFrame = wholeFrameTime;
+			}
+
+			if (cpuTimeAverage < minCpuTime) {
+				minCpuTime = cpuTimeAverage;
+			}
+
+			if (cpuTimeAverage > maxCpuTime) {
+				maxCpuTime = cpuTimeAverage;
+			}
+
+			if (gpuTimeAverage < minGpuTime) {
+				minGpuTime = gpuTimeAverage;
+			}
+
+			if (gpuTimeAverage > maxGpuTime) {
+				maxGpuTime = gpuTimeAverage;
+			}
+
+			std::rotate(fpsAverages.begin(), ++fpsAverages.begin(), fpsAverages.end());
+			std::rotate(wholeFrameAverages.begin(), ++wholeFrameAverages.begin(), wholeFrameAverages.end());
+			std::rotate(cpuTimeAverages.begin(), ++cpuTimeAverages.begin(), cpuTimeAverages.end());
+			std::rotate(gpuTimeAverages.begin(), ++gpuTimeAverages.begin(), gpuTimeAverages.end());
+
+			fpsAverages.back() = averageFps;
+			wholeFrameAverages.back() = wholeFrameAverage;
+			cpuTimeAverages.back() = cpuTimeAverage;
+			gpuTimeAverages.back() = gpuTimeAverage;
+
+			wholeFrameTimeSamples.clear();
+			cpuTimeSamples.clear();
+			gpuTimeSamples.clear();
+
+			updateGraphs = true;
+			accum = 0;
+		}
 
 		prev = now;
 		++frameCount;

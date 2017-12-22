@@ -179,6 +179,7 @@ DemoApplication::DemoApplication(const ApplicationSettings& settings)
 DemoApplication::~DemoApplication() noexcept
 {
 	vkDeviceWaitIdle(G_VulkanDevice);
+	//vkFreeCommandBuffers(G_VulkanDevice, G_VulkanDevice.GetCommandPool(), 1, &m_DeferredCommandBuffer);
 }
 
 

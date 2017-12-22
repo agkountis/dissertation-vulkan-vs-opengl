@@ -140,7 +140,7 @@ void DemoApplication::Draw() noexcept
 	PostDraw();
 
 	// Less than 30fps (larger than 33.3 ms per frame) signals termination.
-	if (wholeFrameMovingAverage > 33.3) {
+	if (wholeFrameAverage > 33.3) {
 		SetTermination(true);
 	}
 }
