@@ -2,6 +2,7 @@
 #include "vulkan_infrastructure_context.h"
 #include <array>
 #include <algorithm>
+#include <fstream>
 
 // Private functions -------------------------------
 bool VulkanApplication::CreateInstance() noexcept
@@ -400,11 +401,6 @@ i32 VulkanApplication::Run() noexcept
 		const auto now = GetTimer().GetSec();
 		wholeFrameTime = (now - prev) * 1000.0;
 
-		if (GetDuration() > 0.0f && now > GetDuration()) {
-			//SetTermination(true);
-			benchmarkComplete = true;
-		}
-
 		std::vector<ui64> gpuResults;
 		queryPools[m_CurrentBuffer].GetResults(gpuResults);
 
@@ -413,8 +409,11 @@ i32 VulkanApplication::Run() noexcept
 		gpuTime = (gpuResults[1] - gpuResults[0]) * nanosInAnIncrement * 1e-6;
 		cpuTime = wholeFrameTime - gpuTime;
 
-		if (!benchmarkComplete) {
+		if (cpuTime < 0.0f) {
+			cpuTime = 0.0f;
+		}
 
+		if (!benchmarkComplete) {
 			// Calculate moving averages
 			static float accum{ 0 };
 			accum += wholeFrameTime;
@@ -426,7 +425,7 @@ i32 VulkanApplication::Run() noexcept
 			totalCpuTimeSamples.push_back(cpuTime);
 			totalGpuTimeSamples.push_back(gpuTime);
 
-			if (accum > 1000.0f) {
+			if (accum > 1000.0f || calculateResults) {
 				const auto size = wholeFrameTimeSamples.size();
 				auto wholeFrameTimeSum{ 0.0 };
 				auto cpuTimeSum{ 0.0 };
@@ -439,6 +438,9 @@ i32 VulkanApplication::Run() noexcept
 				}
 				wholeFrameAverage = wholeFrameTimeSum / static_cast<f32>(size);
 				averageFps = 1000.0f / wholeFrameAverage;
+
+				totalFpsSamples.push_back(averageFps);
+
 				cpuTimeAverage = cpuTimeSum / static_cast<f32>(size);
 				gpuTimeAverage = gpuTimeSum / static_cast<f32>(size);
 
@@ -474,29 +476,35 @@ i32 VulkanApplication::Run() noexcept
 
 			prev = now;
 			++frameCount;
-		} else {
-			if (!resultsCalculated) {
-				maxTotalFrameTime = *std::max_element(totalFrameTimeSamples.cbegin(), totalFrameTimeSamples.cend());
-				minTotalFrameTime = *std::min_element(totalFrameTimeSamples.cbegin(), totalFrameTimeSamples.cend());
+		}
 
-				maxTotalCpuTime = *std::max_element(totalCpuTimeSamples.cbegin(), totalCpuTimeSamples.cend());
-				minTotalCpuTime = *std::min_element(totalCpuTimeSamples.cbegin(), totalCpuTimeSamples.cend());
+		if (calculateResults) {
 
-				maxTotalGpuTime = *std::max_element(totalGpuTimeSamples.cbegin(), totalGpuTimeSamples.cend());
-				minTotalGpuTime = *std::min_element(totalGpuTimeSamples.cbegin(), totalGpuTimeSamples.cend());
+			maxTotalFrameTime = *std::max_element(totalFrameTimeSamples.cbegin(), totalFrameTimeSamples.cend());
+			minTotalFrameTime = *std::min_element(totalFrameTimeSamples.cbegin(), totalFrameTimeSamples.cend());
 
-				for (auto i = 0; i < totalFrameTimeSamples.size(); ++i) {
-					avgTotalFrameTime += totalFrameTimeSamples[i];
-					avgTotalCpuTime += totalCpuTimeSamples[i];
-					avgTotalGpuTime += totalGpuTimeSamples[i];
-				}
+			maxTotalCpuTime = *std::max_element(totalCpuTimeSamples.cbegin(), totalCpuTimeSamples.cend());
+			minTotalCpuTime = *std::min_element(totalCpuTimeSamples.cbegin(), totalCpuTimeSamples.cend());
 
-				avgTotalFrameTime /= static_cast<f32>(totalFrameTimeSamples.size());
-				avgTotalCpuTime /= static_cast<f32>(totalCpuTimeSamples.size());
-				avgTotalGpuTime /= static_cast<f32>(totalGpuTimeSamples.size());
+			maxTotalGpuTime = *std::max_element(totalGpuTimeSamples.cbegin(), totalGpuTimeSamples.cend());
+			minTotalGpuTime = *std::min_element(totalGpuTimeSamples.cbegin(), totalGpuTimeSamples.cend());
 
-				resultsCalculated = true;
+			for (auto i = 0; i < totalFrameTimeSamples.size(); ++i) {
+				avgTotalFrameTime += totalFrameTimeSamples[i];
+				avgTotalCpuTime += totalCpuTimeSamples[i];
+				avgTotalGpuTime += totalGpuTimeSamples[i];
 			}
+
+			avgTotalFrameTime /= static_cast<f32>(totalFrameTimeSamples.size());
+			avgTotalCpuTime /= static_cast<f32>(totalCpuTimeSamples.size());
+			avgTotalGpuTime /= static_cast<f32>(totalGpuTimeSamples.size());
+
+			benchmarkComplete = true;
+			calculateResults = false;
+		}
+
+		if (GetDuration() > 0.0f && now > GetDuration() && !benchmarkComplete) {
+			calculateResults = true;
 		}
 	}
 
@@ -535,4 +543,32 @@ void VulkanApplication::PostDraw() noexcept
 	}
 
 	w2 = GetTimer().GetSec();
+}
+
+void VulkanApplication::SaveToCsv(const std::string& fname)
+{
+	std::ofstream stream{ fname + ".csv" };
+
+	stream << "Whole Frame Time,CPU Time,GPU Time\n";
+
+	for (auto i = 0; i < totalFrameTimeSamples.size(); ++i) {
+		stream << totalFrameTimeSamples[i] << "," << totalCpuTimeSamples[i] << "," << totalGpuTimeSamples[i] << "\n";
+	}
+
+	stream << "\nFPS,Whole Frame Time,CPU Time,GPU Time\n";
+
+	for (auto i = 0; i < fpsAverages.size(); ++i) {
+		stream << fpsAverages[i] << "," << wholeFrameAverages[i] << "," << cpuTimeAverages[i] << "," << gpuTimeAverages[i] <<
+				"\n";
+	}
+
+	stream.close();
+
+	//	stream.open(fname + "_AveragedPerSecond.csv");
+	//
+	//	stream << "FPS,Whole Frame Time,CPU Time,GPU Time\n";
+	//
+	//	for (auto i = 0; i < fpsAverages.size(); ++i) {
+	//		stream << fpsAverages[i] << "," << wholeFrameAverages[i] << "," << cpuTimeAverages[i] << "," << gpuTimeAverages[i] << "\n";
+	//	}
 }

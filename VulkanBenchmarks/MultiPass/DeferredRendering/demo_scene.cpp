@@ -12,6 +12,7 @@
 #include <functional>
 #include <assimp/cimport.h>
 #include <assimp/postprocess.h>
+#include "imgui_internal.h"
 
 
 // Vulkan clip space has inverted Y and half Z.
@@ -1321,7 +1322,7 @@ void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 
 	ImGui_ImplGlfwVulkan_NewFrame();
 
-	if (!application.resultsCalculated) {
+	if (!application.benchmarkComplete) {
 		// 1. Show a simple window.
 		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
 		ImGui::Begin("Metrics");
@@ -1396,7 +1397,7 @@ void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 		ImGui::Text("Frame count: %d", application.frameCount);
 		ImGui::End();
 	} else {
-		ImGui::Begin("Benchmark Results");
+		ImGui::Begin("Benchmark Results", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 		ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
 
 		const auto deviceType = G_VulkanDevice.GetPhysicalDevice().properties.deviceType;
@@ -1433,6 +1434,13 @@ void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 
 		char buff[60];
 
+		snprintf(buff, 60, "FPS\nAvg: %f\nMin: %f\nMax: %f", application.averageFps, application.minFps,
+			application.maxFps);
+		ImGui::PlotLines(buff, application.totalFpsSamples.data(), application.totalFpsSamples.size(), 0, "",
+			0.0, application.maxFps, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+
 		snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalFrameTime, application.minTotalFrameTime,
 			application.maxTotalFrameTime);
 		ImGui::PlotLines(buff, application.totalFrameTimeSamples.data(), application.totalFrameTimeSamples.size(), 0, "",
@@ -1453,9 +1461,20 @@ void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 			application.minTotalGpuTime, application.maxTotalGpuTime, ImVec2(1750, 100));
 
 		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		ImGui::Text("Total Frames: %d", application.frameCount);
+		ImGui::Text("Average FPS: %f", 1000.0f / application.avgTotalFrameTime);
+		ImGui::Text("Average frame time: %f", application.avgTotalFrameTime);
+		ImGui::Text("Avera CPU time: %f", application.avgTotalCpuTime);
+		ImGui::Text("Average GPU time: %f", application.avgTotalGpuTime);
+
+		ImGui::NewLine();
 
 		if (ImGui::Button("Save to CSV")) {
-			LOG("Button Pressed");
+			LOG("Saving to CSV");
+			application.SaveToCsv("DeferredShadedScene_Metrics");
 		}
 
 		ImGui::End();

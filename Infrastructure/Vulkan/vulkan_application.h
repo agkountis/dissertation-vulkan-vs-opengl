@@ -192,14 +192,13 @@ private:
 
 	std::vector<f32> gpuTimeSamples;
 
-	bool benchmarkComplete = false;
+	bool calculateResults = false;
 
 public:
 	std::vector<f32> totalFrameTimeSamples;
-
 	std::vector<f32> totalCpuTimeSamples;
-
 	std::vector<f32> totalGpuTimeSamples;
+	std::vector<f32> totalFpsSamples;
 
 	f32 wholeFrameTime{ 0.0f };
 
@@ -243,7 +242,7 @@ public:
 
 	std::vector<VulkanQueryPool> queryPools;
 
-	bool resultsCalculated = false;
+	bool benchmarkComplete = false;
 
 	double w1, w2;
 	/**
@@ -308,6 +307,8 @@ public:
 	void PreDraw() noexcept override;
 
 	void PostDraw() noexcept override;
+
+	void SaveToCsv(const std::string& fname);
 };
 
 #endif // VULKAN_APPLICATION_H_
