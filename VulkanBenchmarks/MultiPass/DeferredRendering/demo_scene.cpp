@@ -1170,6 +1170,10 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displa
 
 	m_Entities.push_back(LoadModel("models/scene.fbx"));
 
+	for (auto& entity : m_Entities) {
+		entity->Update(0.0f);
+	}
+
 	if (!PrepareUniforms()) {
 		ERROR_LOG("Failed to prepare the scene's uniforms");
 		return false;
@@ -1313,82 +1317,149 @@ void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 	// using gl_VertexIndex. see display.vert
 	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
-	ImGui_ImplGlfwVulkan_NewFrame();
-
-	// 1. Show a simple window.
-	// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
-	ImGui::Begin("Metrics");
-	ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
-
-	const auto deviceType = G_VulkanDevice.GetPhysicalDevice().properties.deviceType;
-
-	const char* type{nullptr};
-
-	switch (deviceType) {
-	case VK_PHYSICAL_DEVICE_TYPE_OTHER:
-		type = "Other";
-		break;
-	case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-		type = "Integrated GPU";
-		break;
-	case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-		type = "Discrete GPU";
-		break;
-	case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
-		type = "Virtual GPU";
-		break;
-	case VK_PHYSICAL_DEVICE_TYPE_CPU:
-		type = "CPU";
-		break;
-	default: ;
-	}
-
-	ImGui::Text("Device ID: %d", G_VulkanDevice.GetPhysicalDevice().properties.deviceID);
-	ImGui::Text("Device type: %s", type);
-	ImGui::Text("Vendor: %d", G_VulkanDevice.GetPhysicalDevice().properties.vendorID);
-	ImGui::Text("Driver Version: %d", G_VulkanDevice.GetPhysicalDevice().properties.driverVersion);
-
-	ImGui::NewLine();
-	ImGui::Separator();
-	ImGui::NewLine();
-
-	if (ImGui::Combo("Active attachment", &m_CurrentAttachment, m_AttachmentComboItems.data(),
-	                 m_AttachmentComboItems.size())) {
-		LOG("Value changed to: " + std::to_string(m_CurrentAttachment));
-	}
-
-	ImGui::NewLine();
-	ImGui::Separator();
-	ImGui::NewLine();
-
 	auto& application = G_Application;
 
-	char buff[60];
+	ImGui_ImplGlfwVulkan_NewFrame();
 
-	snprintf(buff, 60, "FPS\nAvg: %f\nMin: %f\nMax: %f", application.averageFps, application.minFps,
-		application.maxFps);
-	ImGui::PlotLines(buff, application.fpsAverages.data(), application.fpsAverages.size(), 0, "",
-		0.0, application.maxFps, ImVec2(0, 80));
+	if (!application.resultsCalculated) {
+		// 1. Show a simple window.
+		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
+		ImGui::Begin("Metrics");
+		ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
 
-	snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.wholeFrameAverage, application.minWholeFrame,
-	         application.maxWholeFrame);
-	ImGui::PlotLines(buff, application.wholeFrameAverages.data(), application.wholeFrameAverages.size(), 0, "",
-	                 0.0, application.maxWholeFrame, ImVec2(0, 80));
+		const auto deviceType = G_VulkanDevice.GetPhysicalDevice().properties.deviceType;
 
-	snprintf(buff, 60, "CPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.cpuTimeAverage, 0.0,
-	         application.maxCpuTime);
-	ImGui::PlotLines(buff, application.cpuTimeAverages.data(), application.cpuTimeAverages.size(), 0, "",
-	                 0.0, application.maxCpuTime, ImVec2(0, 80));
+		const char* type{ nullptr };
 
-	snprintf(buff, 60, "GPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.gpuTimeAverage, application.minGpuTime,
-	         application.maxGpuTime);
-	ImGui::PlotLines(buff, application.gpuTimeAverages.data(), application.gpuTimeAverages.size(), 0, "",
-	                 0.0, application.maxGpuTime, ImVec2(0, 80));
+		switch (deviceType) {
+		case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+			type = "Other";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+			type = "Integrated GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+			type = "Discrete GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+			type = "Virtual GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_CPU:
+			type = "CPU";
+			break;
+		default:;
+		}
 
-	ImGui::NewLine();
-	ImGui::Text("Running time: %f s", application.GetTimer().GetSec());
-	ImGui::Text("Frame count: %d", application.frameCount);
-	ImGui::End();
+		ImGui::Text("Device ID: %d", G_VulkanDevice.GetPhysicalDevice().properties.deviceID);
+		ImGui::Text("Device type: %s", type);
+		ImGui::Text("Vendor: %d", G_VulkanDevice.GetPhysicalDevice().properties.vendorID);
+		ImGui::Text("Driver Version: %d", G_VulkanDevice.GetPhysicalDevice().properties.driverVersion);
+
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		if (ImGui::Combo("Active attachment", &m_CurrentAttachment, m_AttachmentComboItems.data(),
+			m_AttachmentComboItems.size())) {
+			LOG("Value changed to: " + std::to_string(m_CurrentAttachment));
+		}
+
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		char buff[60];
+
+		ImGui::Text("Average value real time graphs (refresh per sec)");
+		snprintf(buff, 60, "FPS\nAvg: %f\nMin: %f\nMax: %f", application.averageFps, application.minFps,
+			application.maxFps);
+		ImGui::PlotLines(buff, application.fpsAverages.data(), application.fpsAverages.size(), 0, "",
+			0.0, application.maxFps, ImVec2(0, 80));
+
+		snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.wholeFrameAverage, application.minWholeFrame,
+			application.maxWholeFrame);
+		ImGui::PlotLines(buff, application.wholeFrameAverages.data(), application.wholeFrameAverages.size(), 0, "",
+			0.0, application.maxWholeFrame, ImVec2(0, 80));
+
+		snprintf(buff, 60, "CPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.cpuTimeAverage, application.minCpuTime,
+			application.maxCpuTime);
+		ImGui::PlotLines(buff, application.cpuTimeAverages.data(), application.cpuTimeAverages.size(), 0, "",
+			0.0, application.maxCpuTime, ImVec2(0, 80));
+
+		snprintf(buff, 60, "GPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.gpuTimeAverage, application.minGpuTime,
+			application.maxGpuTime);
+		ImGui::PlotLines(buff, application.gpuTimeAverages.data(), application.gpuTimeAverages.size(), 0, "",
+			0.0, application.maxGpuTime, ImVec2(0, 80));
+
+		ImGui::NewLine();
+		ImGui::Text("Running time: %f s", application.GetTimer().GetSec());
+		ImGui::Text("Frame count: %d", application.frameCount);
+		ImGui::End();
+	} else {
+		ImGui::Begin("Benchmark Results");
+		ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
+
+		const auto deviceType = G_VulkanDevice.GetPhysicalDevice().properties.deviceType;
+
+		const char* type{ nullptr };
+
+		switch (deviceType) {
+		case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+			type = "Other";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+			type = "Integrated GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+			type = "Discrete GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+			type = "Virtual GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_CPU:
+			type = "CPU";
+			break;
+		default:;
+		}
+
+		ImGui::Text("Device ID: %d", G_VulkanDevice.GetPhysicalDevice().properties.deviceID);
+		ImGui::Text("Device type: %s", type);
+		ImGui::Text("Vendor: %d", G_VulkanDevice.GetPhysicalDevice().properties.vendorID);
+		ImGui::Text("Driver Version: %d", G_VulkanDevice.GetPhysicalDevice().properties.driverVersion);
+
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		char buff[60];
+
+		snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalFrameTime, application.minTotalFrameTime,
+			application.maxTotalFrameTime);
+		ImGui::PlotLines(buff, application.totalFrameTimeSamples.data(), application.totalFrameTimeSamples.size(), 0, "",
+			application.minTotalFrameTime, application.maxTotalFrameTime, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+
+		snprintf(buff, 60, "CPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalCpuTime, application.minTotalCpuTime,
+			application.maxTotalCpuTime);
+		ImGui::PlotLines(buff, application.totalCpuTimeSamples.data(), application.totalCpuTimeSamples.size(), 0, "",
+			application.minTotalCpuTime, application.maxTotalCpuTime, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+
+		snprintf(buff, 60, "GPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalGpuTime, application.minTotalGpuTime,
+			application.maxTotalGpuTime);
+		ImGui::PlotLines(buff, application.totalGpuTimeSamples.data(), application.totalGpuTimeSamples.size(), 0, "",
+			application.minTotalGpuTime, application.maxTotalGpuTime, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+
+		if (ImGui::Button("Save to CSV")) {
+			LOG("Button Pressed");
+		}
+
+		ImGui::End();
+	}
 
 	ImGui_ImplGlfwVulkan_Render(commandBuffer);
 }

@@ -18,18 +18,9 @@ void DemoApplication::EnableFeatures() noexcept
 
 bool DemoApplication::BuildCommandBuffers() noexcept
 {
-	if (!BuildDeferredPassCommandBuffer()) {
-		ERROR_LOG("Failed to build deferred command buffer.");
-		return false;
-	}
-
-	if (!BuildDisplayCommandBuffer()) {
-		ERROR_LOG("Failed to build display command buffer.");
-		return false;
-	}
-
 	return true;
 }
+
 
 bool DemoApplication::BuildDeferredPassCommandBuffer()
 {
@@ -117,53 +108,53 @@ bool DemoApplication::BuildDisplayCommandBuffer()
 	renderPassBeginInfo.clearValueCount = 2;
 	renderPassBeginInfo.pClearValues = clearValues;
 
-	// Command buffers are re-recorded per frame so we do not need a command buffer per framebuffer.
-	// Use the first one of the available command buffers already allocated.
-	const auto bufferIndex = GetCurrentBufferIndex();
 
-	const auto commandBuffer = GetCommandBuffers()[bufferIndex];
+	const auto& commandBuffers = GetCommandBuffers();
+	for (auto i = 0; i < commandBuffers.size(); ++i) {
 
-	renderPassBeginInfo.framebuffer = GetFramebuffers()[bufferIndex];
+		const auto commandBuffer = commandBuffers[i];
+		renderPassBeginInfo.framebuffer = GetFramebuffers()[i];
 
-	VkResult result = vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+		VkResult result = vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
 
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to begin command buffer.");
-		return false;
-	}
+		if (result != VK_SUCCESS) {
+			ERROR_LOG("Failed to begin command buffer.");
+			return false;
+		}
 
-	vkCmdResetQueryPool(commandBuffer, queryPools[bufferIndex], 0, 2);
+		vkCmdResetQueryPool(commandBuffer, queryPools[i], 0, 2);
 
-	vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPools[bufferIndex], 0);
+		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPools[i], 0);
 
-	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	VkViewport viewport{};
-	viewport.x = 0;
-	viewport.y = 0;
-	viewport.width = swapChainExtent.width;
-	viewport.height = swapChainExtent.height;
+		VkViewport viewport{};
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width = swapChainExtent.width;
+		viewport.height = swapChainExtent.height;
 
-	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-	VkRect2D scissor{};
-	scissor.extent = renderPassBeginInfo.renderArea.extent;
-	scissor.offset.x = 0;
-	scissor.offset.y = 0;
+		VkRect2D scissor{};
+		scissor.extent = renderPassBeginInfo.renderArea.extent;
+		scissor.offset.x = 0;
+		scissor.offset.y = 0;
 
-	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	m_DemoScene.DrawFullscreenQuad(commandBuffer);
+		m_DemoScene.DrawFullscreenQuad(commandBuffer);
 
-	vkCmdEndRenderPass(commandBuffer);
+		vkCmdEndRenderPass(commandBuffer);
 
-	vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPools[bufferIndex], 1);
+		vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPools[i], 1);
 
-	result = vkEndCommandBuffer(commandBuffer);
+		result = vkEndCommandBuffer(commandBuffer);
 
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to end command buffer.");
-		return false;
+		if (result != VK_SUCCESS) {
+			ERROR_LOG("Failed to end command buffer.");
+			return false;
+		}
 	}
 
 	return true;
@@ -179,7 +170,6 @@ DemoApplication::DemoApplication(const ApplicationSettings& settings)
 DemoApplication::~DemoApplication() noexcept
 {
 	vkDeviceWaitIdle(G_VulkanDevice);
-	//vkFreeCommandBuffers(G_VulkanDevice, G_VulkanDevice.GetCommandPool(), 1, &m_DeferredCommandBuffer);
 }
 
 
@@ -195,9 +185,13 @@ bool DemoApplication::Initialize() noexcept
 
 	m_DeferredCommandBuffer = G_VulkanDevice.CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
-
 	if (!m_DeferredSemaphore.Create()) {
 		ERROR_LOG("Failed to create semaphore for the deferred render pass.");
+		return false;
+	}
+
+	if (!BuildDeferredPassCommandBuffer()) {
+		ERROR_LOG("Failed to build deferred command buffer.");
 		return false;
 	}
 
@@ -215,7 +209,10 @@ void DemoApplication::Draw() noexcept
 {
 	PreDraw();
 
-	BuildCommandBuffers();
+	if (!BuildDisplayCommandBuffer()) {
+		ERROR_LOG("Failed to build display command buffer.");
+		return;
+	}
 
 	auto& submitInfo = GetSubmitInfo();
 	submitInfo.commandBufferCount = 1;

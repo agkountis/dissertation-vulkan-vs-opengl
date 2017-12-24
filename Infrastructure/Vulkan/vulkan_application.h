@@ -186,24 +186,40 @@ private:
 	 */
 	virtual bool CreateFramebuffers() noexcept;
 
-
-
-	i32 m_SampleWindow{ 60 }; //frames
-
-public:
 	std::vector<f32> wholeFrameTimeSamples;
 
 	std::vector<f32> cpuTimeSamples;
 
 	std::vector<f32> gpuTimeSamples;
 
-	f32 wholeFrameTime{ 0.0 };
+	bool benchmarkComplete = false;
 
-	f32 cpuTime{ 0.0 };
+public:
+	std::vector<f32> totalFrameTimeSamples;
 
-	f32 gpuTime{ 0.0 };
+	std::vector<f32> totalCpuTimeSamples;
+
+	std::vector<f32> totalGpuTimeSamples;
+
+	f32 wholeFrameTime{ 0.0f };
+
+	f32 cpuTime{ 0.0f };
+
+	f32 gpuTime{ 0.0f };
 
 	i64 frameCount{ 0 };
+
+	f32 maxTotalFrameTime{ std::numeric_limits<f32>::min() };
+	f32 maxTotalCpuTime{ std::numeric_limits<f32>::min() };
+	f32 maxTotalGpuTime{ std::numeric_limits<f32>::min() };
+
+	f32 avgTotalFrameTime{ 0.0f };
+	f32 avgTotalCpuTime{ 0.0f };
+	f32 avgTotalGpuTime{ 0.0f };
+
+	f32 minTotalFrameTime{ std::numeric_limits<f32>::max() };
+	f32 minTotalCpuTime{ std::numeric_limits<f32>::max() };
+	f32 minTotalGpuTime{ std::numeric_limits<f32>::max() };
 
 	f32 averageFps{ 0.0 };
 	std::array<f32, 60> fpsAverages{};
@@ -227,7 +243,7 @@ public:
 
 	std::vector<VulkanQueryPool> queryPools;
 
-	bool updateGraphs = false;
+	bool resultsCalculated = false;
 
 	double w1, w2;
 	/**
