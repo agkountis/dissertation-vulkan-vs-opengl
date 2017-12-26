@@ -11,8 +11,6 @@ private:
 
 	VkCommandBuffer m_DeferredCommandBuffer{ VK_NULL_HANDLE };
 
-	VkCommandBuffer m_UiCommandBuffer{ VK_NULL_HANDLE };
-
 	VulkanSemaphore m_DeferredSemaphore;
 
 	void EnableFeatures() noexcept override;

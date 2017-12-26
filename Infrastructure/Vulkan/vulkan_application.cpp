@@ -210,6 +210,11 @@ const std::vector<VulkanFramebuffer>& VulkanApplication::GetFramebuffers() const
 	return m_SwapChainFrameBuffers;
 }
 
+const VulkanDepthStencil& VulkanApplication::GetDepthStencil() const noexcept
+{
+	return m_DepthStencil;
+}
+
 VkRenderPass VulkanApplication::GetRenderPass() const noexcept
 {
 	return m_RenderPass;
@@ -503,8 +508,16 @@ i32 VulkanApplication::Run() noexcept
 			calculateResults = false;
 		}
 
-		if (GetDuration() > 0.0f && now > GetDuration() && !benchmarkComplete) {
-			calculateResults = true;
+		if (!frameRateTermination) {
+			if (GetDuration() > 0.0f && now > GetDuration() && !benchmarkComplete) {
+				totalAppDuration = now;
+				calculateResults = true;
+			}
+		} else {
+			if (wholeFrameAverage > 33.3 && !benchmarkComplete) {
+				totalAppDuration = now;
+				calculateResults = true;
+			}
 		}
 	}
 
@@ -513,10 +526,7 @@ i32 VulkanApplication::Run() noexcept
 
 void VulkanApplication::PreDraw() noexcept
 {
-	VkResult result{
-		m_SwapChain.GetNextImageIndex(m_PresentComplete,
-		                              m_CurrentBuffer)
-	};
+	VkResult result{ m_SwapChain.GetNextImageIndex(m_PresentComplete, m_CurrentBuffer) };
 
 	while (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		const auto& extent = m_SwapChain.GetExtent();
@@ -551,24 +561,19 @@ void VulkanApplication::SaveToCsv(const std::string& fname)
 
 	stream << "Whole Frame Time,CPU Time,GPU Time\n";
 
-	for (auto i = 0; i < totalFrameTimeSamples.size(); ++i) {
+	for (auto i = 0u; i < totalFrameTimeSamples.size(); ++i) {
 		stream << totalFrameTimeSamples[i] << "," << totalCpuTimeSamples[i] << "," << totalGpuTimeSamples[i] << "\n";
 	}
 
 	stream << "\nFPS,Whole Frame Time,CPU Time,GPU Time\n";
 
-	for (auto i = 0; i < fpsAverages.size(); ++i) {
+	for (auto i = 0u; i < fpsAverages.size(); ++i) {
 		stream << fpsAverages[i] << "," << wholeFrameAverages[i] << "," << cpuTimeAverages[i] << "," << gpuTimeAverages[i] <<
 				"\n";
 	}
 
-	stream.close();
+	stream << "\nAverage FPS,Average Frame Time,Average CPU Time,Average GPU Time\n";
+	stream << 1000.0f / avgTotalFrameTime << "," << avgTotalFrameTime << "," << avgTotalCpuTime << "," << avgTotalGpuTime;
 
-	//	stream.open(fname + "_AveragedPerSecond.csv");
-	//
-	//	stream << "FPS,Whole Frame Time,CPU Time,GPU Time\n";
-	//
-	//	for (auto i = 0; i < fpsAverages.size(); ++i) {
-	//		stream << fpsAverages[i] << "," << wholeFrameAverages[i] << "," << cpuTimeAverages[i] << "," << gpuTimeAverages[i] << "\n";
-	//	}
+	stream.close();
 }

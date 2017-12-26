@@ -7,10 +7,13 @@ set(SOURCE_FILES main.cpp
         demo_scene.h
         demo_scene.cpp
 		sdr/default.vert
-		sdr/default.frag)
+		sdr/default.frag
+		${IMGUI_SOURCE}
+	    ${IMGUI_VULKAN_IMPL})
 
 include_directories(../../../Infrastructure/Core)
 include_directories(../../../Infrastructure/Vulkan)
+include_directories(${IMGUI_INCLUDE_PATH})
 
 if(MSVC)
 	set(SHADER_FILES sdr/default.vert
@@ -27,6 +30,7 @@ if(MSVC)
 	source_group(Shaders FILES ${SHADER_FILES})
 	source_group(Textures FILES ${TEXTURE_FILES})
 	source_group(Configuration ${CONFIGURATION_FILES})
+	source_group(ImGUI FILES ${IMGUI_SOURCE} ${IMGUI_VULKAN_IMPL})
 
 	set_target_properties(PreRecordedCmdBuffers PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 	set_target_properties(PreRecordedCmdBuffers PROPERTIES FOLDER VulkanBenchmarks/CommandBufferRecording)

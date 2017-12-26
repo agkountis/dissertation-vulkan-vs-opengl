@@ -58,11 +58,11 @@ private:
 	} m_PipelineLayouts;
 
 	struct {
-		int position{ -1 };
-		int normal{ -1 };
-		int albedo{ -1 };
-		int specular{ -1 };
-		int depth{ -1 };
+		i32 position{ -1 };
+		i32 normal{ -1 };
+		i32 albedo{ -1 };
+		i32 specular{ -1 };
+		i32 depth{ -1 };
 	} m_AttachmentIndices;
 
 	// All textures will be sampled with a single sampler.
@@ -73,8 +73,10 @@ private:
 	LightsUbo m_Lights;
 
 	//UI -------------------------------
-    mutable int m_CurrentAttachment{ 0 };
+    mutable i32 m_CurrentAttachment{ 0 };
 	std::array<const char*, 6> m_AttachmentComboItems{ "Lit", "Position", "Normals", "Albedo", "Specular", "Depth" };
+
+	i64 m_SceneVertexCount{ 0 };
 	// ---------------------------
 
 	// Model Loading--------------------
@@ -97,9 +99,11 @@ private:
 
 	bool CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass displayRenderPass) noexcept;
 
-	bool InitializeImGUI(const VkRenderPass renderpass) noexcept;
+	bool InitializeImGui(VkRenderPass renderPass) noexcept;
 
 	void DrawEntity(DemoEntity* entity, VkCommandBuffer commandBuffer) noexcept;
+
+	void DrawUi(VkCommandBuffer commandBuffer) const noexcept;
 
 public:
 	~DemoScene();
@@ -110,7 +114,7 @@ public:
 
 	void Draw(VkCommandBuffer commandBuffer) noexcept;
 
-	void DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept;
+	void DrawFullscreenQuad(const VkCommandBuffer commandBuffer) const noexcept;
 
 	const VulkanRenderTarget& GetGBuffer() const noexcept;
 };

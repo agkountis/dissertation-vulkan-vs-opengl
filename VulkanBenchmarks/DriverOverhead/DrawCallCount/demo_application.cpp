@@ -103,6 +103,8 @@ bool DemoApplication::Initialize() noexcept
 		return false;
 	}
 
+	G_Application.frameRateTermination = true;
+
 	return true;
 }
 
@@ -138,11 +140,6 @@ void DemoApplication::Draw() noexcept
 	}
 
 	PostDraw();
-
-	// Less than 30fps (larger than 33.3 ms per frame) signals termination.
-	if (wholeFrameAverage > 33.3) {
-		SetTermination(true);
-	}
 }
 
 void DemoApplication::OnResize(const Vec2i& size) noexcept

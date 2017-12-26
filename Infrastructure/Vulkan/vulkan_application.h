@@ -169,22 +169,7 @@ private:
  	 */
 	bool CreateCommandBuffers() noexcept;
 
-	/**
-	 * \brief Function for derived classes to override to set up the application
-	 * specific render passes.
-	 * \return TRUE if successful, FALSE otherwise.
-	 */
-	virtual bool CreateRenderPasses() noexcept;
 
-	/**
-	 * \brief Function for derived classes to override to set up the application
-	 * specific framebuffers and the swap chain's framebuffers.
-	 * \details Swap chain framebuffer creation is deferred to the derived classes
-	 * due to the fact that it depends on a render pass, and render passes are application
-	 * specific.
-	 * \return TRUE if successful, FALSE otherwise.
-	 */
-	virtual bool CreateFramebuffers() noexcept;
 
 	std::vector<f32> wholeFrameTimeSamples;
 
@@ -193,6 +178,24 @@ private:
 	std::vector<f32> gpuTimeSamples;
 
 	bool calculateResults = false;
+
+protected:
+	/**
+	* \brief Function for derived classes to override to set up the application
+	* specific render passes.
+	* \return TRUE if successful, FALSE otherwise.
+	*/
+	virtual bool CreateRenderPasses() noexcept;
+
+	/**
+	* \brief Function for derived classes to override to set up the application
+	* specific framebuffers and the swap chain's framebuffers.
+	* \details Swap chain framebuffer creation is deferred to the derived classes
+	* due to the fact that it depends on a render pass, and render passes are application
+	* specific.
+	* \return TRUE if successful, FALSE otherwise.
+	*/
+	virtual bool CreateFramebuffers() noexcept;
 
 public:
 	std::vector<f32> totalFrameTimeSamples;
@@ -205,6 +208,8 @@ public:
 	f32 cpuTime{ 0.0f };
 
 	f32 gpuTime{ 0.0f };
+
+	f32 totalAppDuration{ 0.0 };
 
 	i64 frameCount{ 0 };
 
@@ -242,9 +247,13 @@ public:
 
 	std::vector<VulkanQueryPool> queryPools;
 
-	bool benchmarkComplete = false;
+	bool benchmarkComplete{ false };
 
-	double w1, w2;
+	bool frameRateTermination{ false };
+
+	f64 w1{ 0.0 };
+	f64 w2{ 0.0 };
+
 	/**
 	 * \brief VulkanApplication's constructor.
 	 * \param settings The settings of the application.
@@ -275,6 +284,8 @@ public:
 	const std::vector<VkCommandBuffer>& GetCommandBuffers() const noexcept;
 
 	const std::vector<VulkanFramebuffer>& GetFramebuffers() const noexcept;
+
+	const VulkanDepthStencil& GetDepthStencil() const noexcept;
 
 	VkRenderPass GetRenderPass() const noexcept;
 

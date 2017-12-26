@@ -23,14 +23,6 @@ static const Mat4f s_ClipCorrectionMat{
 	0.0f, 0.0f, 0.5f, 1.0f
 };
 
-static std::mt19937 s_Rng;
-
-static auto RealRangeRng(const f32 begin, const f32 end)
-{
-	std::uniform_real_distribution<f32> distribution{ begin, end };
-	return distribution(s_Rng);
-}
-
 // Private functions -------------------------------------------------
 
 //Model loading --------------------------------------
@@ -54,6 +46,8 @@ void DemoScene::LoadMeshes(const aiScene* scene) noexcept
 		if (aiMesh->HasPositions()) {
 			std::vector<Vertex> vertices;
 			vertices.resize(aiMesh->mNumVertices);
+
+			m_SceneVertexCount += aiMesh->mNumVertices;
 
 			for (auto j = 0; j < vertices.size(); ++j) {
 				vertices[j].position = Vec3f{ aiMesh->mVertices[j].x, aiMesh->mVertices[j].y, aiMesh->mVertices[j].z };
@@ -992,7 +986,7 @@ bool DemoScene::CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass display
 	return true;
 }
 
-bool DemoScene::InitializeImGUI(const VkRenderPass renderPass) noexcept
+bool DemoScene::InitializeImGui(const VkRenderPass renderPass) noexcept
 {
 	VkDescriptorPoolSize pool_size[11] =
 	{
@@ -1117,10 +1111,6 @@ DemoScene::~DemoScene()
 
 bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displayRenderPass) noexcept
 {
-	using namespace std::chrono;
-	const auto seed = high_resolution_clock::now().time_since_epoch().count();
-	s_Rng = std::mt19937(seed);
-
 	if (!m_PipelineCache.Create()) {
 		return false;
 	}
@@ -1185,11 +1175,7 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displa
 		return false;
 	}
 
-	if (!InitializeImGUI(displayRenderPass)) {
-		return false;
-	}
-
-	return true;
+	return InitializeImGui(displayRenderPass);
 }
 
 void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
@@ -1283,41 +1269,8 @@ void DemoScene::DrawEntity(DemoEntity* entity, VkCommandBuffer commandBuffer) no
 	}
 }
 
-void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
+void DemoScene::DrawUi(const VkCommandBuffer commandBuffer) const noexcept
 {
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipelines.deferred);
-
-	for (const auto& entity : m_Entities) {
-		DrawEntity(entity.get(), commandBuffer);
-	}
-}
-
-static std::vector<float> f{ 1.0, 2.0, 3.0, 4.0 };
-
-void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
-{
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipelines.display);
-	vkCmdBindDescriptorSets(commandBuffer,
-	                        VK_PIPELINE_BIND_POINT_GRAPHICS,
-	                        m_PipelineLayouts.display,
-	                        0,
-	                        1,
-	                        &m_DescriptorSets.display,
-	                        0,
-	                        nullptr);
-
-	vkCmdPushConstants(commandBuffer,
-	                   m_PipelineLayouts.display,
-	                   VK_SHADER_STAGE_FRAGMENT_BIT,
-	                   0,
-	                   sizeof(int),
-	                   &m_CurrentAttachment);
-
-	// Draws a triangle that fills the whole screen. 3 VS invocations only and gets turned into a quad due to clipping.
-	// tc[0, 0] is at the top left. No need for vertex buffers. Positions and texture coordinates are generated in the vertex shader
-	// using gl_VertexIndex. see display.vert
-	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-
 	auto& application = G_Application;
 
 	ImGui_ImplGlfwVulkan_NewFrame();
@@ -1393,10 +1346,12 @@ void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 			0.0, application.maxGpuTime, ImVec2(0, 80));
 
 		ImGui::NewLine();
+		ImGui::Text("Total Vertex Count: %lld", m_SceneVertexCount);
 		ImGui::Text("Running time: %f s", application.GetTimer().GetSec());
-		ImGui::Text("Frame count: %d", application.frameCount);
+		ImGui::Text("Frame count: %lld", application.frameCount);
 		ImGui::End();
-	} else {
+	}
+	else {
 		ImGui::Begin("Benchmark Results", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 		ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
 
@@ -1464,11 +1419,13 @@ void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 		ImGui::Separator();
 		ImGui::NewLine();
 
-		ImGui::Text("Total Frames: %d", application.frameCount);
+		ImGui::Text("Total Vertex Count: %lld", m_SceneVertexCount);
+		ImGui::Text("Total Frames: %lld", application.frameCount);
+		ImGui::Text("Total duration: %f s", application.totalAppDuration);
 		ImGui::Text("Average FPS: %f", 1000.0f / application.avgTotalFrameTime);
-		ImGui::Text("Average frame time: %f", application.avgTotalFrameTime);
-		ImGui::Text("Avera CPU time: %f", application.avgTotalCpuTime);
-		ImGui::Text("Average GPU time: %f", application.avgTotalGpuTime);
+		ImGui::Text("Average frame time: %f ms", application.avgTotalFrameTime);
+		ImGui::Text("Average CPU time: %f ms", application.avgTotalCpuTime);
+		ImGui::Text("Average GPU time: %f ms", application.avgTotalGpuTime);
 
 		ImGui::NewLine();
 
@@ -1477,10 +1434,51 @@ void DemoScene::DrawFullscreenQuad(VkCommandBuffer commandBuffer) const noexcept
 			application.SaveToCsv("DeferredShadedScene_Metrics");
 		}
 
+		if (ImGui::Button("Exit Application")) {
+			LOG("Terminating application.");
+			application.SetTermination(true);
+		}
+
 		ImGui::End();
 	}
 
 	ImGui_ImplGlfwVulkan_Render(commandBuffer);
+}
+
+void DemoScene::Draw(const VkCommandBuffer commandBuffer) noexcept
+{
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipelines.deferred);
+
+	for (const auto& entity : m_Entities) {
+		DrawEntity(entity.get(), commandBuffer);
+	}
+}
+
+void DemoScene::DrawFullscreenQuad(const VkCommandBuffer commandBuffer) const noexcept
+{
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipelines.display);
+	vkCmdBindDescriptorSets(commandBuffer,
+	                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+	                        m_PipelineLayouts.display,
+	                        0,
+	                        1,
+	                        &m_DescriptorSets.display,
+	                        0,
+	                        nullptr);
+
+	vkCmdPushConstants(commandBuffer,
+	                   m_PipelineLayouts.display,
+	                   VK_SHADER_STAGE_FRAGMENT_BIT,
+	                   0,
+	                   sizeof(int),
+	                   &m_CurrentAttachment);
+
+	// Draws a triangle that fills the whole screen. 3 VS invocations only and gets turned into a quad due to clipping.
+	// tc[0, 0] is at the top left. No need for vertex buffers. Positions and texture coordinates are generated in the vertex shader
+	// using gl_VertexIndex. see display.vert
+	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+
+	DrawUi(commandBuffer);
 }
 
 const VulkanRenderTarget& DemoScene::GetGBuffer() const noexcept
