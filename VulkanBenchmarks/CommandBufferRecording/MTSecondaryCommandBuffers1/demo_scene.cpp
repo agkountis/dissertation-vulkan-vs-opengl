@@ -7,6 +7,8 @@
 #include <algorithm>
 #include "demo_scene.h"
 #include "vulkan_application.h"
+#include "imgui.h"
+#include "imgui_impl_glfw_vulkan.h"
 
 // Vulkan clip space has inverted Y and half Z.
 static const Mat4f s_ClipCorrectionMat{1.0f, 0.0f, 0.0f, 0.0f,
@@ -42,17 +44,17 @@ bool DemoScene::SpawnEntity() noexcept
 
         auto &material = entity->GetMaterial();
 
-        material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelDiff5.png",
+        material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan.jpg",
                                                                               TEX_DIFFUSE,
                                                                               VK_FORMAT_R8G8B8A8_UNORM,
                                                                               VK_IMAGE_ASPECT_COLOR_BIT);
 
-        material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelSpec5.png",
+        material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan_spec.png",
                                                                                TEX_SPECULAR,
                                                                                VK_FORMAT_R8G8B8A8_UNORM,
                                                                                VK_IMAGE_ASPECT_COLOR_BIT);
 
-        material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelNorm5.png",
+        material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan_norm.png",
                                                                              TEX_NORMAL,
                                                                              VK_FORMAT_R8G8B8A8_UNORM,
                                                                              VK_IMAGE_ASPECT_COLOR_BIT);
@@ -559,6 +561,99 @@ bool DemoScene::CreatePipelines(const VkExtent2D swapChainExtent, const VkRender
     return true;
 }
 
+bool DemoScene::InitializeImGui(const VkRenderPass renderPass) noexcept
+{
+	VkDescriptorPoolSize pool_size[11] =
+	{
+		{ VK_DESCRIPTOR_TYPE_SAMPLER, 1 },
+	{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+	{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1 },
+	{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
+	{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1 },
+	{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1 },
+	{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
+	{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1 },
+	{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1 },
+	{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1 },
+	{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1 }
+	};
+
+	VkDescriptorPoolCreateInfo pool_info{};
+	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	pool_info.maxSets = 1;
+	pool_info.poolSizeCount = 11;
+	pool_info.pPoolSizes = pool_size;
+	VkResult result{ vkCreateDescriptorPool(G_VulkanDevice, &pool_info, nullptr, &m_ImGUIDescriptorPool) };
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create ImGUI descriptor pool.");
+		return false;
+	}
+
+	ImGui_ImplGlfwVulkan_Init_Data init_data{};
+	init_data.allocator = nullptr;
+	init_data.gpu = G_VulkanDevice.GetPhysicalDevice();
+	init_data.device = G_VulkanDevice;
+	init_data.render_pass = renderPass;
+	init_data.pipeline_cache = m_PipelineCache;
+	init_data.descriptor_pool = m_ImGUIDescriptorPool;
+	init_data.check_vk_result = [](auto res)
+	{
+		if (res != VK_SUCCESS) { ERROR_LOG("ImGUI Vulkan intialization failed!"); }
+	};
+
+	if (!ImGui_ImplGlfwVulkan_Init(G_Application.GetWindow(), true, &init_data)) {
+		ERROR_LOG("Failed to initialize ImGUI.");
+		return false;
+	}
+
+	const VkCommandBuffer commandBuffer{ G_VulkanDevice.CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY) };
+
+	VkCommandBufferBeginInfo begin_info{};
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+	result = vkBeginCommandBuffer(commandBuffer, &begin_info);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to begin command buffer for Font uploading (ImGUI)");
+		return false;
+	}
+
+	ImGui_ImplGlfwVulkan_CreateFontsTexture(commandBuffer);
+
+	VkFenceCreateInfo fenceCreateInfo{};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
+	VkFence fence;
+	result = vkCreateFence(G_VulkanDevice, &fenceCreateInfo, nullptr, &fence);
+
+	if (result != VK_SUCCESS) {
+		ERROR_LOG("Failed to create fence.");
+		return false;
+	}
+
+	vkEndCommandBuffer(commandBuffer);
+
+	if (!G_VulkanDevice.SubmitCommandBuffer(commandBuffer,
+		G_VulkanDevice.GetQueue(QueueFamily::TRANSFER),
+		fence)) {
+		ERROR_LOG("Failed to submit command buffer for Font uploading.");
+		return false;
+	}
+
+
+	ImGui_ImplGlfwVulkan_InvalidateFontUploadObjects();
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.Colors[ImGuiCol_TitleBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.6f);
+	style.Colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
+	style.Colors[ImGuiCol_MenuBarBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+	style.Colors[ImGuiCol_Header] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+
+	return true;
+}
+
 // -------------------------------------------------------------------
 DemoScene::~DemoScene()
 {
@@ -572,15 +667,18 @@ DemoScene::~DemoScene()
     vkDestroyDescriptorSetLayout(device, m_DescriptorSetLayouts.material, nullptr);
 
     vkDestroyDescriptorPool(device, m_DescriptorPool, nullptr);
+	vkDestroyDescriptorPool(device, m_ImGUIDescriptorPool, nullptr);
 
     vkDestroyPipeline(device, m_Pipelines.solid, nullptr);
 
     vkDestroyPipeline(device, m_Pipelines.wireframe, nullptr);
 
     vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
+
+	ImGui_ImplGlfwVulkan_Shutdown();
 }
 
-bool DemoScene::Initialize(const VkExtent2D swapChainExtent, const VkRenderPass renderPass) noexcept
+bool DemoScene::Initialize(const VkExtent2D swapChainExtent, const VkRenderPass renderPass, VkRenderPass uiRenderPass) noexcept
 {
     if (!SpawnEntity()) {
         ERROR_LOG("Failed to generate scene's entities.");
@@ -605,21 +703,20 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, const VkRenderPass 
         return false;
     }
 
-    return true;
+	UniformBufferObject ubo{};
+	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 60.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
+
+	const auto aspect = static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height);
+
+	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 200.0f);
+
+	m_MatricesUbo.Fill(&ubo, sizeof ubo);
+
+    return InitializeImGui(uiRenderPass);
 }
 
 void DemoScene::Update(const VkExtent2D swapChainExtent, const i64 msec, f64 dt) noexcept
 {
-    UniformBufferObject ubo{};
-    ubo.view = glm::lookAt(Vec3f{0.0f, 0.0f, 80.0f}, Vec3f{}, Vec3f{0.0f, 1.0f, 0.0f});
-
-    //ubo.view = glm::rotate(ubo.view, msec / 1000.0f * glm::radians(5.0f), Vec3f{1.0f, 1.0f, 1.0f});
-
-	const auto aspect = static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height);
-
-    ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 200.0f);
-
-    m_MatricesUbo.Fill(&ubo, sizeof ubo);
 }
 
 void DemoScene::Draw(const VkCommandBuffer commandBuffer) noexcept
@@ -727,3 +824,169 @@ void DemoScene::DrawSingle(int entityIndex,
 
 }
 
+void DemoScene::DrawUi(const VkCommandBuffer commandBuffer) const noexcept
+{
+	auto& application = G_Application;
+
+	ImGui_ImplGlfwVulkan_NewFrame();
+
+	if (!application.benchmarkComplete) {
+		// 1. Show a simple window.
+		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
+		ImGui::Begin("Metrics");
+		ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
+
+		const auto deviceType = G_VulkanDevice.GetPhysicalDevice().properties.deviceType;
+
+		const char* type{ nullptr };
+
+		switch (deviceType) {
+		case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+			type = "Other";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+			type = "Integrated GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+			type = "Discrete GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+			type = "Virtual GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_CPU:
+			type = "CPU";
+			break;
+		default:;
+		}
+
+		ImGui::Text("Device ID: %d", G_VulkanDevice.GetPhysicalDevice().properties.deviceID);
+		ImGui::Text("Device type: %s", type);
+		ImGui::Text("Vendor: %d", G_VulkanDevice.GetPhysicalDevice().properties.vendorID);
+		ImGui::Text("Driver Version: %d", G_VulkanDevice.GetPhysicalDevice().properties.driverVersion);
+
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		char buff[60];
+
+		ImGui::Text("Average value real time graphs (refresh per sec)");
+		snprintf(buff, 60, "FPS\nAvg: %f\nMin: %f\nMax: %f", application.averageFps, application.minFps,
+			application.maxFps);
+		ImGui::PlotLines(buff, application.fpsAverages.data(), application.fpsAverages.size(), 0, "",
+			0.0, application.maxFps, ImVec2(0, 80));
+
+		snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.wholeFrameAverage, application.minWholeFrame,
+			application.maxWholeFrame);
+		ImGui::PlotLines(buff, application.wholeFrameAverages.data(), application.wholeFrameAverages.size(), 0, "",
+			0.0, application.maxWholeFrame, ImVec2(0, 80));
+
+		snprintf(buff, 60, "CPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.cpuTimeAverage, application.minCpuTime,
+			application.maxCpuTime);
+		ImGui::PlotLines(buff, application.cpuTimeAverages.data(), application.cpuTimeAverages.size(), 0, "",
+			0.0, application.maxCpuTime, ImVec2(0, 80));
+
+		snprintf(buff, 60, "GPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.gpuTimeAverage, application.minGpuTime,
+			application.maxGpuTime);
+		ImGui::PlotLines(buff, application.gpuTimeAverages.data(), application.gpuTimeAverages.size(), 0, "",
+			0.0, application.maxGpuTime, ImVec2(0, 80));
+
+		ImGui::NewLine();
+		ImGui::Text("Total Vertex Count: %d", ENTITY_COUNT * 24);
+		ImGui::Text("Running time: %f s", application.GetTimer().GetSec());
+		ImGui::Text("Frame count: %lld", application.frameCount);
+		ImGui::End();
+	}
+	else {
+		ImGui::Begin("Benchmark Results", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+		ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
+
+		const auto deviceType = G_VulkanDevice.GetPhysicalDevice().properties.deviceType;
+
+		const char* type{ nullptr };
+
+		switch (deviceType) {
+		case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+			type = "Other";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+			type = "Integrated GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+			type = "Discrete GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+			type = "Virtual GPU";
+			break;
+		case VK_PHYSICAL_DEVICE_TYPE_CPU:
+			type = "CPU";
+			break;
+		default:;
+		}
+
+		ImGui::Text("Device ID: %d", G_VulkanDevice.GetPhysicalDevice().properties.deviceID);
+		ImGui::Text("Device type: %s", type);
+		ImGui::Text("Vendor: %d", G_VulkanDevice.GetPhysicalDevice().properties.vendorID);
+		ImGui::Text("Driver Version: %d", G_VulkanDevice.GetPhysicalDevice().properties.driverVersion);
+
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		char buff[60];
+
+		snprintf(buff, 60, "FPS\nAvg: %f\nMin: %f\nMax: %f", application.averageFps, application.minFps,
+			application.maxFps);
+		ImGui::PlotLines(buff, application.totalFpsSamples.data(), application.totalFpsSamples.size(), 0, "",
+			0.0, application.maxFps, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+
+		snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalFrameTime, application.minTotalFrameTime,
+			application.maxTotalFrameTime);
+		ImGui::PlotLines(buff, application.totalFrameTimeSamples.data(), application.totalFrameTimeSamples.size(), 0, "",
+			application.minTotalFrameTime, application.maxTotalFrameTime, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+
+		snprintf(buff, 60, "CPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalCpuTime, application.minTotalCpuTime,
+			application.maxTotalCpuTime);
+		ImGui::PlotLines(buff, application.totalCpuTimeSamples.data(), application.totalCpuTimeSamples.size(), 0, "",
+			application.minTotalCpuTime, application.maxTotalCpuTime, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+
+		snprintf(buff, 60, "GPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalGpuTime, application.minTotalGpuTime,
+			application.maxTotalGpuTime);
+		ImGui::PlotLines(buff, application.totalGpuTimeSamples.data(), application.totalGpuTimeSamples.size(), 0, "",
+			application.minTotalGpuTime, application.maxTotalGpuTime, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		ImGui::Text("Total Vertex Count: %d", ENTITY_COUNT * 24);
+		ImGui::Text("Total Frames: %lld", application.frameCount);
+		ImGui::Text("Total duration: %f s", application.totalAppDuration);
+		ImGui::Text("Average FPS: %f", 1000.0f / application.avgTotalFrameTime);
+		ImGui::Text("Average frame time: %f ms", application.avgTotalFrameTime);
+		ImGui::Text("Average CPU time: %f ms", application.avgTotalCpuTime);
+		ImGui::Text("Average GPU time: %f ms", application.avgTotalGpuTime);
+
+		ImGui::NewLine();
+
+		if (ImGui::Button("Save to CSV")) {
+			LOG("Saving to CSV");
+			application.SaveToCsv("PerFrameCommandBuffers_Metrics");
+		}
+
+		if (ImGui::Button("Exit Application")) {
+			LOG("Terminating application.");
+			application.SetTermination(true);
+		}
+
+		ImGui::End();
+	}
+
+	ImGui_ImplGlfwVulkan_Render(commandBuffer);
+}

@@ -18,6 +18,8 @@ private:
 
 	VkDescriptorPool m_DescriptorPool{ VK_NULL_HANDLE };
 
+	VkDescriptorPool m_ImGUIDescriptorPool{ VK_NULL_HANDLE };
+
 	struct {
 		VkDescriptorSetLayout sceneMatrices{ VK_NULL_HANDLE };
 		VkDescriptorSetLayout material{ VK_NULL_HANDLE };
@@ -49,10 +51,12 @@ private:
 
 	bool CreatePipelines(VkExtent2D swapChainExtent, VkRenderPass renderPass) noexcept;
 
+	bool InitializeImGui(const VkRenderPass renderPass) noexcept;
+
 public:
 	~DemoScene();
 
-	bool Initialize(VkExtent2D swapChainExtent, VkRenderPass renderPass) noexcept;
+	bool Initialize(VkExtent2D swapChainExtent, VkRenderPass renderPass, VkRenderPass uiRenderPass) noexcept;
 
 	void Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept;
 
@@ -61,6 +65,8 @@ public:
 	void DrawSingle(int entityIndex,
 	                VkCommandBuffer commandBuffer,
 	                VkCommandBufferInheritanceInfo inheritanceInfo) const noexcept;
+
+	void DrawUi(const VkCommandBuffer commandBuffer) const noexcept;
 };
 
 #endif //DISSERTATION_DEMO_SCENE_H
