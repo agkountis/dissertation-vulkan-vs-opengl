@@ -47,17 +47,17 @@ bool DemoScene::SpawnEntity() noexcept
 
 		auto& material = entity->GetMaterial();
 
-		material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelDiff5.png",
+		material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("../../../Assets/vulkan.jpg",
 		                                                                      TEX_DIFFUSE,
 		                                                                      VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                      VK_IMAGE_ASPECT_COLOR_BIT);
 
-		material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelSpec5.png",
+		material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("../../../Assets/vulkan_spec.png",
 		                                                                       TEX_SPECULAR,
 		                                                                       VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                       VK_IMAGE_ASPECT_COLOR_BIT);
 
-		material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/tunnelNorm5.png",
+		material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("../../../Assets/vulkan_norm.png",
 		                                                                     TEX_NORMAL,
 		                                                                     VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                     VK_IMAGE_ASPECT_COLOR_BIT);
@@ -622,13 +622,8 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, const VkRenderPass 
 		return false;
 	}
 
-	return true;
-}
-
-void DemoScene::Update(const VkExtent2D swapChainExtent, const i64 msec, f64 dt) noexcept
-{
 	UniformBufferObject ubo{};
-	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 80.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
+	ubo.view = glm::lookAt(Vec3f{ 0.0f, 0.0f, 65.0f }, Vec3f{}, Vec3f{ 0.0f, 1.0f, 0.0f });
 
 	//ubo.view = glm::rotate(ubo.view, msec / 1000.0f * glm::radians(5.0f), Vec3f{1.0f, 1.0f, 1.0f});
 
@@ -637,6 +632,12 @@ void DemoScene::Update(const VkExtent2D swapChainExtent, const i64 msec, f64 dt)
 	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(45.0f), aspect, 0.1f, 200.0f);
 
 	m_MatricesUbo.Fill(&ubo, sizeof ubo);
+
+	return true;
+}
+
+void DemoScene::Update(const VkExtent2D swapChainExtent, const i64 msec, f64 dt) noexcept
+{
 }
 
 void DemoScene::Draw(const VkCommandBuffer commandBuffer) noexcept

@@ -17,9 +17,8 @@ if(MSVC)
 	set(SHADER_FILES sdr/display.vert
 		sdr/display.frag sdr/deferred.vert sdr/deferred.frag)
 
-	set(TEXTURE_FILES textures/tunnelDiff5.png
-		textures/tunnelSpec5.png
-		textures/tunnelNorm5.png)
+	set(TEXTURE_FILES ../../../Assets/diff2.jpg
+		)
 
 	set(CONFIGURATION_FILES config/config.cfg)
 

@@ -52,17 +52,17 @@ bool DemoScene::SpawnEntity() noexcept
 
 		auto& material = entity->GetMaterial();
 
-		material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan.jpg",
+		material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("../../../Assets/vulkan.jpg",
 		                                                                        TEX_DIFFUSE,
 		                                                                        VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                        VK_IMAGE_ASPECT_COLOR_BIT);
 
-		material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan_spec.png",
+		material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("../../../Assets/vulkan_spec.png",
 		                                                                         TEX_SPECULAR,
 		                                                                         VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                         VK_IMAGE_ASPECT_COLOR_BIT);
 
-		material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/vulkan_norm.png",
+		material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("../../../Assets/vulkan_norm.png",
 		                                                                       TEX_NORMAL,
 		                                                                       VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                       VK_IMAGE_ASPECT_COLOR_BIT);

@@ -92,7 +92,7 @@ void DemoScene::LoadMaterials(const aiScene* scene) noexcept
 	material.diffuse = Vec4f{ 1.0f };
 	material.specular = Vec4f{ 1.0f };
 
-	auto GetFileName = [](std::string path) -> std::string
+	const auto GetFileName = [](std::string path) -> std::string
 	{
 		auto sepUnix = '/';
 
@@ -117,21 +117,21 @@ void DemoScene::LoadMaterials(const aiScene* scene) noexcept
 		aiString path;
 		aiGetMaterialTexture(aiMaterial, aiTextureType_DIFFUSE, 0, &path);
 
-		material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("textures/" + GetFileName(path.data),
+		material.textures[TEX_DIFFUSE] = G_ResourceManager.Get<VulkanTexture>("../../../Assets/" + GetFileName(path.data),
 		                                                                      TEX_DIFFUSE,
 		                                                                      VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                      VK_IMAGE_ASPECT_COLOR_BIT);
 
 		aiMaterial->GetTexture(aiTextureType_SPECULAR, 0, &path);
 
-		material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("textures/" + GetFileName(path.data),
+		material.textures[TEX_SPECULAR] = G_ResourceManager.Get<VulkanTexture>("../../../Assets/" + GetFileName(path.data),
 		                                                                       TEX_SPECULAR,
 		                                                                       VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                       VK_IMAGE_ASPECT_COLOR_BIT);
 
 		aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &path);
 
-		material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("textures/" + GetFileName(path.data),
+		material.textures[TEX_NORMAL] = G_ResourceManager.Get<VulkanTexture>("../../../Assets/" + GetFileName(path.data),
 		                                                                     TEX_NORMAL,
 		                                                                     VK_FORMAT_R8G8B8A8_UNORM,
 		                                                                     VK_IMAGE_ASPECT_COLOR_BIT);
@@ -1159,7 +1159,7 @@ bool DemoScene::Initialize(const VkExtent2D swapChainExtent, VkRenderPass displa
 		return false;
 	}
 
-	m_Entities.push_back(LoadModel("models/scene.fbx"));
+	m_Entities.push_back(LoadModel("../../../Assets/scene.fbx"));
 
 	for (auto& entity : m_Entities) {
 		entity->Update(0.0f);
@@ -1185,12 +1185,11 @@ void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 	}
 
 	MatricesUbo ubo{};
-	float radius = 20.0f;
-	Vec3f eye{ sin(msec / 3000.0f) * radius, 3.0f, cos(msec / 3000.0f) * radius };
+	const auto radius = 20.0f;
+	const Vec3f eye{ sin(msec / 3000.0f) * radius, 3.0f, cos(msec / 3000.0f) * radius };
 	ubo.view = glm::lookAt(eye, Vec3f{ 0.0, 6.0f, 0.0f }, Vec3f{ 0.0f, 1.0f, 0.0f });
-	//ubo.view = glm::rotate(ubo.view, msec / 3000.0f, Vec3f{ 0.0, 1.0, 0.0 });
 
-	f32 aspect{ static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height) };
+	const auto aspect = static_cast<f32>(swapChainExtent.width) / static_cast<f32>(swapChainExtent.height);
 
 	ubo.projection = s_ClipCorrectionMat * glm::perspective(glm::radians(60.0f), aspect, 0.1f, 2000.0f);
 
@@ -1276,8 +1275,6 @@ void DemoScene::DrawUi(const VkCommandBuffer commandBuffer) const noexcept
 	ImGui_ImplGlfwVulkan_NewFrame();
 
 	if (!application.benchmarkComplete) {
-		// 1. Show a simple window.
-		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
 		ImGui::Begin("Metrics");
 		ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
 

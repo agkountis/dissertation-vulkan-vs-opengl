@@ -17,9 +17,9 @@ if(MSVC)
 	set(SHADER_FILES sdr/default.vert
 		sdr/default.frag)
 
-	set(TEXTURE_FILES textures/vulkan.jpg
-		textures/vulkan_spec.png
-		textures/vulkan_norm.png)
+	set(TEXTURE_FILES ../../../Assets/vulkan.jpg
+		../../../Assets/vulkan_spec.png
+		../../../Assets/vulkan_norm.png)
 
 	set(CONFIGURATION_FILES config/config.cfg)
 
