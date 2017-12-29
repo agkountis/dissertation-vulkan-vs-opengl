@@ -12,9 +12,15 @@ private:
 
 	ThreadPool m_ThreadPool;
 
+	VkCommandBuffer m_UiCommandBuffer{ VK_NULL_HANDLE };
+
+	VulkanSemaphore m_UiSemaphore;
+
+	VkRenderPass m_UiRenderPass{ VK_NULL_HANDLE };
+
 	struct ThreadData {
 		VkCommandPool commandPool{ VK_NULL_HANDLE };
-		VkCommandBuffer secondaryCommandBuffer;
+		VkCommandBuffer secondaryCommandBuffer{ VK_NULL_HANDLE };
 		std::tuple<int, int> startEndIndices;
 	};
 
@@ -23,6 +29,12 @@ private:
 	void EnableFeatures() noexcept override;
 
 	bool BuildCommandBuffers() noexcept override;
+
+	void DrawUi() const noexcept;
+
+	// Override to create a new render pass for the UI that does not clear the
+	// framebuffers but writes on top of them.
+	bool CreateRenderPasses() noexcept override;
 
 public:
 	explicit DemoApplication(const ApplicationSettings& settings);

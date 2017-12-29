@@ -11,7 +11,7 @@
 #include "imgui.h"
 #include "vulkan_application.h"
 
-#define ENTITY_COUNT 5000
+static constexpr int ENTITY_COUNT = 5000;
 
 // Vulkan clip space has inverted Y and half Z.
 static const Mat4f s_ClipCorrectionMat{
@@ -29,17 +29,17 @@ bool DemoScene::SpawnEntity() noexcept
 	}
 
 	using namespace std::chrono;
-	auto seed = high_resolution_clock::now().time_since_epoch().count();
+	const auto seed = high_resolution_clock::now().time_since_epoch().count();
 	std::mt19937 rng{ static_cast<ui32>(seed) };
 
-	auto realRangeRng = [&rng](float rangeBegin, float rangeEnd)
+	const auto realRangeRng = [&rng](float rangeBegin, float rangeEnd)
 	{
 		std::uniform_real_distribution<float> r(rangeBegin, rangeEnd);
 
 		return r(rng);
 	};
 
-	for (int i = 0; i < ENTITY_COUNT; ++i) {
+	for (auto i = 0; i < ENTITY_COUNT; ++i) {
 
 		auto entity = std::make_unique<DemoEntity>(&m_CubeMesh);
 
@@ -110,7 +110,7 @@ bool DemoScene::CreateTextureSampler() noexcept
 	samplerCreateInfo.minLod = 0.0f;
 	samplerCreateInfo.maxLod = 0.0f;
 
-	VkResult result{ vkCreateSampler(G_VulkanDevice, &samplerCreateInfo, nullptr, &m_TextureSampler) };
+	const auto result = vkCreateSampler(G_VulkanDevice, &samplerCreateInfo, nullptr, &m_TextureSampler);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create texture sampler.");
@@ -822,12 +822,13 @@ void DemoScene::DrawUi(const VkCommandBuffer commandBuffer) const noexcept
 		ImGui::Text("Average frame time: %f ms", application.avgTotalFrameTime);
 		ImGui::Text("Average CPU time: %f ms", application.avgTotalCpuTime);
 		ImGui::Text("Average GPU time: %f ms", application.avgTotalGpuTime);
+		ImGui::Text("99th percentile (lower is better): %f ms", application.percentile99th);
 
 		ImGui::NewLine();
 
 		if (ImGui::Button("Save to CSV")) {
 			LOG("Saving to CSV");
-			application.SaveToCsv("DeferredShadedScene_Metrics");
+			application.SaveToCsv("PerFrameCmdBuffers_Metrics");
 		}
 
 		if (ImGui::Button("Exit Application")) {

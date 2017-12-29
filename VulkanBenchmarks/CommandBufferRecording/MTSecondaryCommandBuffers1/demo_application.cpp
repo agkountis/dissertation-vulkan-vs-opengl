@@ -26,7 +26,7 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 	clearValues[1].depthStencil = { 1.0f, 0 };
 
-	VkExtent2D swapChainExtent{ GetSwapChain().GetExtent() };
+	const auto& swapChainExtent = GetSwapChain().GetExtent();
 
 	VkRenderPassBeginInfo renderPassBeginInfo{};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -43,7 +43,7 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 	// Use the 1st command buffer of the base class as the primary one.
 	const auto& primaryCmdBuffer = GetCommandBuffers()[0];
 
-	VkResult result{ vkBeginCommandBuffer(primaryCmdBuffer, &commandBufferBeginInfo) };
+	auto result = vkBeginCommandBuffer(primaryCmdBuffer, &commandBufferBeginInfo);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to begin command buffer.");
@@ -61,9 +61,9 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 	commandBufferInheritanceInfo.renderPass = GetRenderPass();
 	commandBufferInheritanceInfo.framebuffer = renderPassBeginInfo.framebuffer;
 
-	int entityIndex = 0;
-	for (int i = 0; i < m_PerThreadData.size(); ++i) {
-		for (int j = 0; j < m_PerThreadData[i].secondaryCommandBuffers.size(); ++j) {
+	auto entityIndex = 0;
+	for (auto i = 0u; i < m_PerThreadData.size(); ++i) {
+		for (auto j = 0u; j < m_PerThreadData[i].secondaryCommandBuffers.size(); ++j) {
 			m_ThreadPool.AddTask(i, [=]()
 			{
 				GetScene().DrawSingle(entityIndex, m_PerThreadData[i].secondaryCommandBuffers[j],
@@ -95,12 +95,12 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 	return true;
 }
 
-void DemoApplication::DrawUi() noexcept
+void DemoApplication::DrawUi() const noexcept
 {
 	VkCommandBufferBeginInfo commandBufferBeginInfo{};
 	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-	VkExtent2D swapChainExtent{ GetSwapChain().GetExtent() };
+	const auto& swapChainExtent = GetSwapChain().GetExtent();
 
 	VkRenderPassBeginInfo renderPassBeginInfo{};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -219,12 +219,10 @@ bool DemoApplication::CreateRenderPasses() noexcept
 	renderPassInfo.dependencyCount = static_cast<ui32>(dependencies.size());
 	renderPassInfo.pDependencies = dependencies.data();
 
-	VkResult result{
-		vkCreateRenderPass(G_VulkanDevice,
-		&renderPassInfo,
-		nullptr,
-		&m_UiRenderPass)
-	};
+	const auto result = vkCreateRenderPass(G_VulkanDevice,
+	                                       &renderPassInfo,
+	                                       nullptr,
+	                                       &m_UiRenderPass);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create render pass.");
@@ -249,8 +247,6 @@ DemoApplication::~DemoApplication()
 	}
 
 	vkDestroyRenderPass(G_VulkanDevice, m_UiRenderPass, nullptr);
-
-	vkDestroyFence(G_VulkanDevice, m_RenderFence, nullptr);
 }
 
 bool DemoApplication::Initialize() noexcept
@@ -289,16 +285,6 @@ bool DemoApplication::Initialize() noexcept
 		                                                                         VK_COMMAND_BUFFER_LEVEL_SECONDARY);
 	}
 
-	VkFenceCreateInfo fenceCreateInfo{};
-	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-
-	const auto result{ vkCreateFence(G_VulkanDevice, &fenceCreateInfo, nullptr, &m_RenderFence) };
-
-	if (result != VK_SUCCESS) {
-		ERROR_LOG("Failed to create fence.");
-		return false;
-	}
-
 	return true;
 }
 
@@ -324,11 +310,9 @@ void DemoApplication::Draw() noexcept
 
 	w1 = GetTimer().GetSec();
 
-	VkResult result{
-		vkQueueSubmit(G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
-		              1,
-		              &submitInfo, VK_NULL_HANDLE)
-	};
+	auto result = vkQueueSubmit(G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
+	                                1,
+	                                &submitInfo, VK_NULL_HANDLE);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to submit the command buffer.");
@@ -348,14 +332,6 @@ void DemoApplication::Draw() noexcept
 		ERROR_LOG("Failed to submit the command buffer.");
 		return;
 	}
-
-	//	result = vkWaitForFences(G_VulkanDevice, 1, &m_RenderFence, VK_TRUE, std::numeric_limits<ui64>::max());
-	//
-	//	if (result != VK_SUCCESS) {
-	//		ERROR_LOG("Wait for fences failed.");
-	//		return;
-	//	}
-	//	vkResetFences(G_VulkanDevice, 1, &m_RenderFence);
 
 	PostDraw();
 }

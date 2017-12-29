@@ -86,12 +86,12 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 	return true;
 }
 
-void DemoApplication::DrawUi() noexcept
+void DemoApplication::DrawUi() const noexcept
 {
 	VkCommandBufferBeginInfo commandBufferBeginInfo{};
 	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-	VkExtent2D swapChainExtent{ GetSwapChain().GetExtent() };
+	const auto& swapChainExtent{ GetSwapChain().GetExtent() };
 
 	VkRenderPassBeginInfo renderPassBeginInfo{};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

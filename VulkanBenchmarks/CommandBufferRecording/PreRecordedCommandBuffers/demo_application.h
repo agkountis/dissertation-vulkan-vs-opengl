@@ -19,7 +19,7 @@ private:
 
 	bool BuildCommandBuffers() noexcept override;
 
-	void DrawUi() noexcept;
+	void DrawUi() const noexcept;
 
 	// Override to create a new render pass for the UI that does not clear the
 	// framebuffers but writes on top of them.

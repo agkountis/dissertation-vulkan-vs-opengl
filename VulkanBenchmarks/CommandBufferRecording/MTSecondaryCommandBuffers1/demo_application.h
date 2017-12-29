@@ -25,13 +25,11 @@ private:
 
 	std::vector<ThreadData> m_PerThreadData;
 
-	VkFence m_RenderFence{ VK_NULL_HANDLE };
-
 	void EnableFeatures() noexcept override;
 
 	bool BuildCommandBuffers() noexcept override;
 
-	void DrawUi() noexcept;
+	void DrawUi() const noexcept;
 
 	// Override to create a new render pass for the UI that does not clear the
 	// framebuffers but writes on top of them.

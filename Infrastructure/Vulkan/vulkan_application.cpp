@@ -13,7 +13,7 @@ bool VulkanApplication::CreateInstance() noexcept
 	appInfo.pEngineName = GetSettings().name.c_str();
 	appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 54);
 
-	auto instanceExtensions = m_Window.GetExtensions();
+	auto instanceExtensions = VulkanWindow::GetExtensions();
 
 #if !NDEBUG
 	instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
@@ -47,11 +47,9 @@ bool VulkanApplication::CreateCommandBuffers() noexcept
 	commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	commandBufferAllocateInfo.commandBufferCount = static_cast<ui32>(m_DrawCommandBuffers.size());
 
-	VkResult result{
-		vkAllocateCommandBuffers(m_Device,
-		                         &commandBufferAllocateInfo,
-		                         m_DrawCommandBuffers.data())
-	};
+	const auto result = vkAllocateCommandBuffers(m_Device,
+	                                             &commandBufferAllocateInfo,
+	                                             m_DrawCommandBuffers.data());
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to allocate command buffers.");
@@ -136,12 +134,10 @@ bool VulkanApplication::CreateRenderPasses() noexcept
 	renderPassInfo.dependencyCount = static_cast<ui32>(dependencies.size());
 	renderPassInfo.pDependencies = dependencies.data();
 
-	VkResult result{
-		vkCreateRenderPass(m_Device,
-		                   &renderPassInfo,
-		                   nullptr,
-		                   &m_RenderPass)
-	};
+	const auto result = vkCreateRenderPass(m_Device,
+	                                       &renderPassInfo,
+	                                       nullptr,
+	                                       &m_RenderPass);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create render pass.");
@@ -157,7 +153,7 @@ bool VulkanApplication::CreateFramebuffers() noexcept
 
 	const auto& swapChainImageViews = m_SwapChain.GetImageViews();
 
-	auto swapChainExtent = m_SwapChain.GetExtent();
+	const auto swapChainExtent = m_SwapChain.GetExtent();
 
 	for (int i = 0; i < swapChainImageViews.size(); ++i) {
 		const std::vector<VkImageView> attachments{ swapChainImageViews[i], m_DepthStencil.GetImageView() };
@@ -254,8 +250,8 @@ bool VulkanApplication::Reshape(const Vec2ui& size) noexcept
 		return false;
 	}
 
-	for (ui32 i = 0; i < m_SwapChainFrameBuffers.size(); ++i) {
-		m_SwapChainFrameBuffers[i].Destroy();
+	for (auto& swapChainFrameBuffer : m_SwapChainFrameBuffers) {
+		swapChainFrameBuffer.Destroy();
 	}
 
 	for (ui32 i = 0; i < m_SwapChainFrameBuffers.size(); ++i) {
@@ -340,7 +336,7 @@ bool VulkanApplication::Initialize() noexcept
 		return false;
 	}
 
-	const VkFormat depthStencilFormat{ m_Device.GetPhysicalDevice().GetSupportedDepthFormat() };
+	const auto depthStencilFormat = m_Device.GetPhysicalDevice().GetSupportedDepthFormat();
 
 	if (depthStencilFormat == VK_FORMAT_UNDEFINED) {
 		ERROR_LOG("Could not find supported depth format.");
@@ -398,7 +394,7 @@ i32 VulkanApplication::Run() noexcept
 	while (!glfwWindowShouldClose(m_Window) && !ShouldTerminate()) {
 		glfwPollEvents();
 
-		static f64 prev = 0.0;
+		static auto prev = 0.0;
 
 		Update();
 		Draw();
@@ -494,7 +490,7 @@ i32 VulkanApplication::Run() noexcept
 			maxTotalGpuTime = *std::max_element(totalGpuTimeSamples.cbegin(), totalGpuTimeSamples.cend());
 			minTotalGpuTime = *std::min_element(totalGpuTimeSamples.cbegin(), totalGpuTimeSamples.cend());
 
-			for (auto i = 0; i < totalFrameTimeSamples.size(); ++i) {
+			for (auto i = 0u; i < totalFrameTimeSamples.size(); ++i) {
 				avgTotalFrameTime += totalFrameTimeSamples[i];
 				avgTotalCpuTime += totalCpuTimeSamples[i];
 				avgTotalGpuTime += totalGpuTimeSamples[i];
@@ -503,6 +499,22 @@ i32 VulkanApplication::Run() noexcept
 			avgTotalFrameTime /= static_cast<f32>(totalFrameTimeSamples.size());
 			avgTotalCpuTime /= static_cast<f32>(totalCpuTimeSamples.size());
 			avgTotalGpuTime /= static_cast<f32>(totalGpuTimeSamples.size());
+
+			auto frameTimeVecCopy = totalFrameTimeSamples;
+
+			std::sort(frameTimeVecCopy.begin(), frameTimeVecCopy.end(), [](auto a, auto b) { return a < b; });
+
+			auto index = 0.99f * frameTimeVecCopy.size();
+
+			auto integral = 0.0f;
+			const auto fractional = modff(index, &integral);
+
+			if (fractional == 0.0f) {
+				percentile99th = frameTimeVecCopy[static_cast<i32>(index)];
+			} else {
+				index = std::round(index);
+				percentile99th = frameTimeVecCopy[index];
+			}
 
 			benchmarkComplete = true;
 			calculateResults = false;
@@ -513,7 +525,8 @@ i32 VulkanApplication::Run() noexcept
 				totalAppDuration = now;
 				calculateResults = true;
 			}
-		} else {
+		}
+		else {
 			if (wholeFrameAverage > 33.3 && !benchmarkComplete) {
 				totalAppDuration = now;
 				calculateResults = true;
@@ -574,6 +587,9 @@ void VulkanApplication::SaveToCsv(const std::string& fname)
 
 	stream << "\nAverage FPS,Average Frame Time,Average CPU Time,Average GPU Time\n";
 	stream << 1000.0f / avgTotalFrameTime << "," << avgTotalFrameTime << "," << avgTotalCpuTime << "," << avgTotalGpuTime;
+
+	stream << "\n99th percentile\n";
+	stream << percentile99th;
 
 	stream.close();
 }

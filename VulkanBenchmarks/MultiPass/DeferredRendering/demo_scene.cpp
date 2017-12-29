@@ -1423,6 +1423,7 @@ void DemoScene::DrawUi(const VkCommandBuffer commandBuffer) const noexcept
 		ImGui::Text("Average frame time: %f ms", application.avgTotalFrameTime);
 		ImGui::Text("Average CPU time: %f ms", application.avgTotalCpuTime);
 		ImGui::Text("Average GPU time: %f ms", application.avgTotalGpuTime);
+		ImGui::Text("99th percentile (lower is better): %f ms", application.percentile99th);
 
 		ImGui::NewLine();
 

@@ -245,6 +245,8 @@ public:
 	f32 minGpuTime{ std::numeric_limits<f32>::max() };
 	f32 maxGpuTime{ std::numeric_limits<f32>::min() };
 
+	f32 percentile99th{ 0.0f };
+
 	std::vector<VulkanQueryPool> queryPools;
 
 	bool benchmarkComplete{ false };

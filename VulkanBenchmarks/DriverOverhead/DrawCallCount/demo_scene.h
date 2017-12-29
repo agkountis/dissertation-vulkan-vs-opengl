@@ -63,6 +63,8 @@ public:
 	void Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept;
 
 	void Draw(VkCommandBuffer commandBuffer) noexcept;
+
+	void SaveToCsv(const std::string& fname) const;
 };
 
 #endif //DISSERTATION_DEMO_SCENE_H

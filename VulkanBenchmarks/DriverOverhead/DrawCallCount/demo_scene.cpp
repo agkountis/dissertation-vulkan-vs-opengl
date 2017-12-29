@@ -10,6 +10,7 @@
 #include <vulkan_application.h>
 #include "imgui_impl_glfw_vulkan.h"
 #include "imgui.h"
+#include <fstream>
 
 // Vulkan clip space has inverted Y and half Z.
 static const Mat4f s_ClipCorrectionMat{
@@ -796,12 +797,13 @@ void DemoScene::DrawUi(const VkCommandBuffer commandBuffer) const noexcept
 		ImGui::Text("Average frame time: %f ms", application.avgTotalFrameTime);
 		ImGui::Text("Average CPU time: %f ms", application.avgTotalCpuTime);
 		ImGui::Text("Average GPU time: %f ms", application.avgTotalGpuTime);
+		ImGui::Text("99th percentile (lower is better): %f ms", application.percentile99th);
 
 		ImGui::NewLine();
 
 		if (ImGui::Button("Save to CSV")) {
 			LOG("Saving to CSV");
-			application.SaveToCsv("DrawCallCount_Metrics");
+			SaveToCsv("DrawCallCount_Metrics");
 		}
 
 		if (ImGui::Button("Exit Application")) {
@@ -920,9 +922,6 @@ void DemoScene::Update(VkExtent2D swapChainExtent, i64 msec, f64 dt) noexcept
 			entity->Update(dt);
 		}
 	}
-	else {
-		LOG("BENCH ENDED!");
-	}
 }
 
 void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
@@ -969,4 +968,34 @@ void DemoScene::Draw(VkCommandBuffer commandBuffer) noexcept
 	}
 
 	DrawUi(commandBuffer);
+}
+
+void DemoScene::SaveToCsv(const std::string& fname) const
+{
+	const auto& app = G_Application;
+	std::ofstream stream{ fname + ".csv" };
+
+	stream << "Whole Frame Time,CPU Time,GPU Time\n";
+
+	for (auto i = 0u; i < app.totalFrameTimeSamples.size(); ++i) {
+		stream << app.totalFrameTimeSamples[i] << "," << app.totalCpuTimeSamples[i] << "," << app.totalGpuTimeSamples[i] << "\n";
+	}
+
+	stream << "\nFPS,Whole Frame Time,CPU Time,GPU Time\n";
+
+	for (auto i = 0u; i < app.fpsAverages.size(); ++i) {
+		stream << app.fpsAverages[i] << "," << app.wholeFrameAverages[i] << "," << app.cpuTimeAverages[i] << "," << app.gpuTimeAverages[i] <<
+				"\n";
+	}
+
+	stream << "\nAverage FPS,Average Frame Time,Average CPU Time,Average GPU Time\n";
+	stream << 1000.0f / app.avgTotalFrameTime << "," << app.avgTotalFrameTime << "," << app.avgTotalCpuTime << "," << app.avgTotalGpuTime;
+
+	stream << "\nDraw Calls per Frame\n";
+	stream << m_Entities.size();
+
+	stream << "\n99th percentile\n";
+	stream << app.percentile99th;
+
+	stream.close();
 }

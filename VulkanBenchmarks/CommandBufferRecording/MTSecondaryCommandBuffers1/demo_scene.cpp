@@ -24,10 +24,10 @@ bool DemoScene::SpawnEntity() noexcept
     }
 
     using namespace std::chrono;
-    auto seed = high_resolution_clock::now().time_since_epoch().count();
+    const auto seed = high_resolution_clock::now().time_since_epoch().count();
     std::mt19937 rng{static_cast<ui32>(seed)};
 
-    auto realRangeRng = [&rng](float rangeBegin, float rangeEnd) {
+    const auto realRangeRng = [&rng](float rangeBegin, float rangeEnd) {
         std::uniform_real_distribution<float> r(rangeBegin, rangeEnd);
 
         return r(rng);
@@ -98,7 +98,7 @@ bool DemoScene::CreateTextureSampler() noexcept
     samplerCreateInfo.minLod = 0.0f;
     samplerCreateInfo.maxLod = 0.0f;
 
-    VkResult result{vkCreateSampler(G_VulkanDevice, &samplerCreateInfo, nullptr, &m_TextureSampler)};
+    const auto result = vkCreateSampler(G_VulkanDevice, &samplerCreateInfo, nullptr, &m_TextureSampler);
 
     if (result != VK_SUCCESS) {
         ERROR_LOG("Failed to create texture sampler.");
@@ -608,7 +608,7 @@ bool DemoScene::InitializeImGui(const VkRenderPass renderPass) noexcept
 		return false;
 	}
 
-	const VkCommandBuffer commandBuffer{ G_VulkanDevice.CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY) };
+	const auto commandBuffer = G_VulkanDevice.CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
 	VkCommandBufferBeginInfo begin_info{};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -771,7 +771,7 @@ void DemoScene::DrawSingle(int entityIndex,
 
     vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
 
-    auto extent = G_Application.GetSwapChain().GetExtent();
+    const auto& extent = G_Application.GetSwapChain().GetExtent();
 
     VkViewport viewport{};
     viewport.width = static_cast<float>(extent.width);
@@ -972,6 +972,7 @@ void DemoScene::DrawUi(const VkCommandBuffer commandBuffer) const noexcept
 		ImGui::Text("Average frame time: %f ms", application.avgTotalFrameTime);
 		ImGui::Text("Average CPU time: %f ms", application.avgTotalCpuTime);
 		ImGui::Text("Average GPU time: %f ms", application.avgTotalGpuTime);
+		ImGui::Text("99th percentile (lower is better): %f ms", application.percentile99th);
 
 		ImGui::NewLine();
 
