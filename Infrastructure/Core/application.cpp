@@ -1,6 +1,7 @@
 #include <string>
 #include "application.h"
 #include "cfg.h"
+#include "logger.h"
 
 Application::Application(const ApplicationSettings& settings)
 		: m_Settings{ settings }

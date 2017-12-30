@@ -2,7 +2,6 @@
 #define APPLICATION_H_
 #include "types.h"
 #include "timer.h"
-#include "resource_manager.h"
 #include <string>
 
 struct ApplicationSettings {

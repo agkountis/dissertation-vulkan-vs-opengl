@@ -23,17 +23,17 @@ if(MSVC)
 
 	set(CONFIGURATION_FILES config/config.cfg)
 
-	add_executable(MTSecondaryCmdBuffers2 ${SOURCE_FILES} ${SHADER_FILES} ${TEXTURE_FILES} ${CONFIGURATION_FILES})
+	add_executable(VK_MTSecondaryCmdBuffers2 ${SOURCE_FILES} ${SHADER_FILES} ${TEXTURE_FILES} ${CONFIGURATION_FILES})
 
 	source_group(Shaders FILES ${SHADER_FILES})
 	source_group(Textures FILES ${TEXTURE_FILES})
 	source_group(Configuration FILES ${CONFIGURATION_FILES})
 	source_group(ImGUI FILES ${IMGUI_SOURCE} ${IMGUI_VULKAN_IMPL})
 
-	set_target_properties(MTSecondaryCmdBuffers2 PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-	set_target_properties(MTSecondaryCmdBuffers2 PROPERTIES FOLDER VulkanBenchmarks/CommandBufferRecording)
+	set_target_properties(VK_MTSecondaryCmdBuffers2 PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+	set_target_properties(VK_MTSecondaryCmdBuffers2 PROPERTIES FOLDER VulkanBenchmarks/CommandBufferRecording)
 else()
-	add_executable(MTSecondaryCmdBuffers2 ${SOURCE_FILES})
+	add_executable(VK_MTSecondaryCmdBuffers2 ${SOURCE_FILES})
 endif()
 
-target_link_libraries(MTSecondaryCmdBuffers2 VulkanInfrastructure)
+target_link_libraries(VK_MTSecondaryCmdBuffers2 VulkanInfrastructure)

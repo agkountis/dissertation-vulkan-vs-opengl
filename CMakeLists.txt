@@ -20,7 +20,7 @@ ${DEPENDENCIES_PATH}/imgui/stb_textedit.h
 ${DEPENDENCIES_PATH}/imgui/stb_truetype.h)
 
 set(IMGUI_VULKAN_IMPL ${DEPENDENCIES_PATH}/imgui/imgui_impl_glfw_vulkan.h ${DEPENDENCIES_PATH}/imgui/imgui_impl_glfw_vulkan.cpp)
-
+set(IMGUI_OPENGL_IMPL ${DEPENDENCIES_PATH}/imgui/imgui_impl_glfw_gl3.h ${DEPENDENCIES_PATH}/imgui/imgui_impl_glfw_gl3.cpp)
 set(IMGUI_INCLUDE_PATH ${DEPENDENCIES_PATH}/imgui)
 
 include_directories(${DEPENDENCIES_PATH}/include)
@@ -44,9 +44,12 @@ elseif(MSVC)
     include_directories(C:/VulkanSDK/1.0.65.0/Include)
 
     set(VULKAN_LIB C:/VulkanSDK/1.0.65.0/Lib32/vulkan-1.lib)
+	set(GL_LIB opengl32.lib)
+	set(GLEW_LIB ${DEPENDENCIES_PATH}/lib/glew32.lib)
     set(GLFW_LIB C:/usr/lib/glfw3.lib)
 
     set(VULKAN_APP_LIBRARIES ${VULKAN_LIB} ${GLFW_LIB})
+	set(OPENGL_APP_LIBRARIES ${GL_LIB} ${GLEW_LIB} ${GLFW_LIB})
 	set(ASSIMP_LIBRARIES ${DEPENDENCIES_PATH}/lib/assimp.lib)
 
 	set(CMAKE_MSVCIDE_RUN_PATH ${DEPENDENCIES_PATH}/bin)
@@ -63,3 +66,4 @@ endif()
 
 add_subdirectory(Infrastructure)
 add_subdirectory(VulkanBenchmarks)
+add_subdirectory(OpenGLBenchmarks)
