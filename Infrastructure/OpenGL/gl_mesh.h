@@ -3,7 +3,7 @@
 #include "mesh.h"
 #include <GL/glew.h>
 
-class GLMesh final : Mesh {
+class GLMesh final : public Mesh {
 private:
 	GLuint m_Vao{ 0 };
 

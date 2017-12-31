@@ -3,7 +3,11 @@ set(SOURCE_FILES gl_application.h
 				 gl_window.h
 				 gl_window.cpp
 				 gl_mesh.h
-				 gl_mesh.cpp)
+				 gl_mesh.cpp
+				 gl_shader.h
+				 gl_shader.cpp
+				 gl_program_pipeline.h
+				 gl_program_pipeline.cpp)
 
 include_directories(../Core)
 

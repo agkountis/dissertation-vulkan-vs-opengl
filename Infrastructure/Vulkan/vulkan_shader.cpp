@@ -24,7 +24,7 @@ bool VulkanShader::Load(const std::string& fileName) noexcept
 		return false;
 	}
 
-	i64 fileSize{ file.tellg() };
+	const auto fileSize = file.tellg();
 
 	assert(fileSize > 0);
 
@@ -33,7 +33,6 @@ bool VulkanShader::Load(const std::string& fileName) noexcept
 
 	file.seekg(0);
 	file.read(buffer.data(), fileSize);
-
 	file.close();
 
 	VkShaderModuleCreateInfo shaderModuleCreateInfo{};
@@ -41,7 +40,7 @@ bool VulkanShader::Load(const std::string& fileName) noexcept
 	shaderModuleCreateInfo.codeSize = static_cast<ui32>(buffer.size());
 	shaderModuleCreateInfo.pCode = reinterpret_cast<const ui32*>(buffer.data());
 
-	VkResult result{ vkCreateShaderModule(G_VulkanDevice, &shaderModuleCreateInfo, nullptr, &m_ShaderModule) };
+	const auto result = vkCreateShaderModule(G_VulkanDevice, &shaderModuleCreateInfo, nullptr, &m_ShaderModule);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to load vulkan shader: " + fileName +". Reason: Failed to create shader module.");

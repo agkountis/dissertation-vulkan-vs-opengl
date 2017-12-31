@@ -1,0 +1,109 @@
+#include "gl_program_pipeline.h"
+#include <algorithm>
+#include "logger.h"
+
+GLProgramPipeline::~GLProgramPipeline()
+{
+	glDeleteProgramPipelines(1, &m_Id);
+}
+
+void GLProgramPipeline::AddShader(const GLShader* shader) noexcept
+{
+	const auto found = std::find_if(m_Shaders.cbegin(),
+	                                m_Shaders.cend(),
+	                                [shader](const auto a)
+	                                {
+		                                return a->GetType() == shader->GetType();
+	                                });
+
+	if (found != m_Shaders.end()) {
+		ERROR_LOG("Shader of type " + GLShader::TypeToString((*found)->GetType()) + " already exists in the pipeline.");
+	}
+
+	m_Shaders.push_back(shader);
+}
+
+bool GLProgramPipeline::Create() noexcept
+{
+	if (m_Shaders.empty()) {
+		ERROR_LOG("No shaders attached to the pipeline. Please use AddShader(...) to add shaders to the pipeline before calling Create().");
+		return false;
+	}
+
+	glCreateProgramPipelines(1, &m_Id);
+	assert(glGetError() == GL_NO_ERROR);
+
+	for (const auto shader : m_Shaders) {
+		const auto progId = glCreateProgram();
+		assert(glGetError() == GL_NO_ERROR);
+
+		if (!progId) {
+			ERROR_LOG("Failed to create Shader program for shader: { id:" + std::to_string(shader->GetId()) + ", type:" + GLShader::TypeToString(shader->GetType()) + "}");
+			return false;
+		}
+
+		glProgramParameteri(progId, GL_PROGRAM_SEPARABLE, GL_TRUE); //must be called before linking
+		assert(glGetError() == GL_NO_ERROR);
+
+		glAttachShader(progId, *shader);
+		assert(glGetError() == GL_NO_ERROR);
+
+		glLinkProgram(progId);
+		assert(glGetError() == GL_NO_ERROR);
+
+		GLint linkStatus{ 0 };
+		glGetProgramiv(progId, GL_LINK_STATUS, &linkStatus);
+		assert(glGetError() == GL_NO_ERROR);
+
+		if (linkStatus != GL_TRUE) {
+			ERROR_LOG("Failed to link Shader program for shader: { id:" + std::to_string(shader->GetId()) + ", type:" + GLShader::TypeToString(shader->GetType()) + "}");
+
+			GLint errBufferSize = 0;
+			glGetProgramiv(progId, GL_INFO_LOG_LENGTH, &errBufferSize);
+			assert(glGetError() == GL_NO_ERROR);
+
+			std::string err;
+			err.resize(errBufferSize);
+
+			glGetProgramInfoLog(progId, errBufferSize, nullptr, err.data());
+			assert(glGetError() == GL_NO_ERROR);
+
+			ERROR_LOG(err);
+
+			return false;
+		}
+
+		glDetachShader(progId, *shader);
+		assert(glGetError() == GL_NO_ERROR);
+
+		m_ShaderPrograms.push_back(progId);
+
+		glUseProgramStages(m_Id, GLShader::GLType(shader->GetType()), progId);
+		assert(glGetError() == GL_NO_ERROR);
+	}
+
+	assert(glGetError() == GL_NO_ERROR);
+
+	GLint a;
+	glGetProgramPipelineiv(m_Id, GL_VERTEX_SHADER, &a);
+
+	GLint b;
+	glGetProgramPipelineiv(m_Id, GL_FRAGMENT_SHADER, &b);
+
+	return true;
+}
+
+void GLProgramPipeline::Bind() const noexcept
+{
+	if (!glIsProgramPipeline(m_Id)) {
+		return;
+	}
+	glBindProgramPipeline(m_Id);
+	ui32 a = glGetError();
+	assert(a == GL_NO_ERROR);
+}
+
+void GLProgramPipeline::Unbind() const noexcept
+{
+	glBindProgramPipeline(0);
+}
