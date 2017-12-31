@@ -47,7 +47,7 @@ bool GLApplication::Initialize() noexcept
 	}
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	glDisable(GL_MULTISAMPLE);
 
 	return true;

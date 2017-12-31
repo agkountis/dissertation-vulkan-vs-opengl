@@ -30,7 +30,7 @@ public:
 	 * \brief Getter of the resource id
 	 * \return Resource ID
 	 */
-	ui32 GetId() const noexcept
+	ui32 GetResourceId() const noexcept
 	{
 		return m_Id;
 	}

@@ -3,7 +3,7 @@
 #include <vector>
 #include <fstream>
 
-GLShader::GLShader(const GLShaderType type) noexcept
+GLShader::GLShader(const GLShaderStageType type) noexcept
 	: m_Type{ type }
 {
 }
@@ -34,22 +34,22 @@ bool GLShader::Load(const std::string& fileName) noexcept
 	file.close();
 
 	switch (m_Type) {
-	case GLShaderType::VERTEX:
+	case VERTEX:
 		m_Id = glCreateShader(GL_VERTEX_SHADER);
 		break;
-	case GLShaderType::TESSELATION_CONTROL:
+	case TESSELATION_CONTROL:
 		m_Id = glCreateShader(GL_TESS_CONTROL_SHADER);
 		break;
-	case GLShaderType::TESSELATION_EVALUATION:
+	case TESSELATION_EVALUATION:
 		m_Id = glCreateShader(GL_TESS_EVALUATION_SHADER);
 		break;
-	case GLShaderType::GEOMETRY:
+	case GEOMETRY:
 		m_Id = glCreateShader(GL_GEOMETRY_SHADER);
 		break;
-	case GLShaderType::FRAGMENT:
+	case FRAGMENT:
 		m_Id = glCreateShader(GL_FRAGMENT_SHADER);
 		break;
-	case GLShaderType::COMPUTE:
+	case COMPUTE:
 		m_Id = glCreateShader(GL_COMPUTE_SHADER);
 		break;
 	default:
@@ -97,12 +97,13 @@ bool GLShader::Load(const std::string& fileName) noexcept
 	return true;
 }
 
-GLShaderType GLShader::GetType() const noexcept
+GLShaderStageType GLShader::GetType() const noexcept
 {
 	return m_Type;
 }
 
-GLShader::operator GLuint() const noexcept
+GLuint GLShader::GetId() const noexcept
 {
 	return m_Id;
 }
+

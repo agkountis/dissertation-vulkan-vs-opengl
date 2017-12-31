@@ -3,7 +3,7 @@
 #include "resource.h"
 #include <GL/glew.h>
 
-enum class GLShaderType {
+enum GLShaderStageType {
 	VERTEX,
 	TESSELATION_CONTROL,
 	TESSELATION_EVALUATION,
@@ -16,53 +16,53 @@ class GLShader final : public Resource {
 private:
 	GLuint m_Id{ 0 };
 
-	GLShaderType m_Type;
+	GLShaderStageType m_Type;
 
 public:
-	explicit GLShader(const GLShaderType type) noexcept;
+	explicit GLShader(const GLShaderStageType type) noexcept;
 
 	~GLShader();
 
 	bool Load(const std::string& fileName) noexcept override;
 
-	GLShaderType GetType() const noexcept;
+	GLShaderStageType GetType() const noexcept;
 
-	operator GLuint() const noexcept;
+	GLuint GetId() const noexcept;
 
-	static std::string TypeToString(GLShaderType type)
+	static std::string TypeToString(GLShaderStageType type)
 	{
 		switch (type) {
-		case GLShaderType::VERTEX:
+		case VERTEX:
 			return "VERTEX";
-		case GLShaderType::TESSELATION_CONTROL:
+		case TESSELATION_CONTROL:
 			return "TESSELATION_CONTROL";
-		case GLShaderType::TESSELATION_EVALUATION:
+		case TESSELATION_EVALUATION:
 			return "TESSELATION_EVALUATION";
-		case GLShaderType::GEOMETRY:
+		case GEOMETRY:
 			return "GEOMETRY";
-		case GLShaderType::FRAGMENT:
+		case FRAGMENT:
 			return "FRAGMENT";
-		case GLShaderType::COMPUTE:
+		case COMPUTE:
 			return "COMPUTE";
 		default:
 			return "VALUE NOT RECOGNIZED";
 		}
 	}
 
-	static GLbitfield GLType(const GLShaderType type)
+	static GLbitfield GLType(const GLShaderStageType type)
 	{
 		switch (type) {
-		case GLShaderType::VERTEX:
+		case VERTEX:
 			return GL_VERTEX_SHADER_BIT;
-		case GLShaderType::TESSELATION_CONTROL:
+		case TESSELATION_CONTROL:
 			return GL_TESS_CONTROL_SHADER_BIT;
-		case GLShaderType::TESSELATION_EVALUATION:
+		case TESSELATION_EVALUATION:
 			return GL_TESS_EVALUATION_SHADER_BIT;
-		case GLShaderType::GEOMETRY:
+		case GEOMETRY:
 			return GL_GEOMETRY_SHADER_BIT;
-		case GLShaderType::FRAGMENT:
+		case FRAGMENT:
 			return GL_FRAGMENT_SHADER_BIT;
-		case GLShaderType::COMPUTE:
+		case COMPUTE:
 			return GL_COMPUTE_SHADER_BIT;
 		}
 

@@ -1,15 +1,16 @@
 #ifndef GL_PROGRAM_PIPELINE_H_
 #define GL_PROGRAM_PIPELINE_H_
 #include <GL/glew.h>
-#include <vector>
+#include <array>
 #include "gl_shader.h"
+#include <string>
 
 class GLProgramPipeline final {
 private:
 	GLuint m_Id{ 0 };
 
-	std::vector<const GLShader*> m_Shaders;
-	std::vector<GLuint> m_ShaderPrograms;
+	std::array<const GLShader*, 6> m_Shaders{};
+	std::array<GLuint, 6> m_ShaderPrograms{};
 
 public:
 	~GLProgramPipeline();
@@ -21,6 +22,8 @@ public:
 	void Bind() const noexcept;
 
 	void Unbind() const noexcept;
+
+	void SetMatrix4f(const std::string& name, const Mat4f& value, const GLShaderStageType stage);
 };
 
 #endif //GL_PROGRAM_PIPELINE_H_

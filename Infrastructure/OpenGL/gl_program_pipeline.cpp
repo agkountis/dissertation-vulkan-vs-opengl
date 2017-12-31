@@ -9,18 +9,11 @@ GLProgramPipeline::~GLProgramPipeline()
 
 void GLProgramPipeline::AddShader(const GLShader* shader) noexcept
 {
-	const auto found = std::find_if(m_Shaders.cbegin(),
-	                                m_Shaders.cend(),
-	                                [shader](const auto a)
-	                                {
-		                                return a->GetType() == shader->GetType();
-	                                });
-
-	if (found != m_Shaders.end()) {
-		ERROR_LOG("Shader of type " + GLShader::TypeToString((*found)->GetType()) + " already exists in the pipeline.");
+	if (m_Shaders[shader->GetType()]) {
+		ERROR_LOG("Shader of type " + GLShader::TypeToString(shader->GetType()) + " already exists in the pipeline.");
 	}
 
-	m_Shaders.push_back(shader);
+	m_Shaders[shader->GetType()] = shader;
 }
 
 bool GLProgramPipeline::Create() noexcept
@@ -31,9 +24,15 @@ bool GLProgramPipeline::Create() noexcept
 	}
 
 	glCreateProgramPipelines(1, &m_Id);
+	glBindProgramPipeline(m_Id);
 	assert(glGetError() == GL_NO_ERROR);
 
 	for (const auto shader : m_Shaders) {
+
+		if (!shader) {
+			continue;
+		}
+
 		const auto progId = glCreateProgram();
 		assert(glGetError() == GL_NO_ERROR);
 
@@ -45,7 +44,7 @@ bool GLProgramPipeline::Create() noexcept
 		glProgramParameteri(progId, GL_PROGRAM_SEPARABLE, GL_TRUE); //must be called before linking
 		assert(glGetError() == GL_NO_ERROR);
 
-		glAttachShader(progId, *shader);
+		glAttachShader(progId, shader->GetId());
 		assert(glGetError() == GL_NO_ERROR);
 
 		glLinkProgram(progId);
@@ -73,10 +72,10 @@ bool GLProgramPipeline::Create() noexcept
 			return false;
 		}
 
-		glDetachShader(progId, *shader);
+		glDetachShader(progId, shader->GetId());
 		assert(glGetError() == GL_NO_ERROR);
 
-		m_ShaderPrograms.push_back(progId);
+		m_ShaderPrograms[shader->GetType()] = progId;
 
 		glUseProgramStages(m_Id, GLShader::GLType(shader->GetType()), progId);
 		assert(glGetError() == GL_NO_ERROR);
@@ -106,4 +105,17 @@ void GLProgramPipeline::Bind() const noexcept
 void GLProgramPipeline::Unbind() const noexcept
 {
 	glBindProgramPipeline(0);
+}
+
+void GLProgramPipeline::SetMatrix4f(const std::string& name, const Mat4f& value, const GLShaderStageType stage)
+{
+	const auto programId = m_ShaderPrograms[stage];
+	const auto location = glGetProgramResourceLocation(programId, GL_UNIFORM, name.c_str());
+
+	if (location < 0) {
+		ERROR_LOG("Uniform: " + name + " is not active or does not exists in shader with ID: " + std::to_string(programId));
+		return;
+	}
+
+	glProgramUniformMatrix4fv(programId, location, 1, GL_FALSE, glm::value_ptr(value));
 }
