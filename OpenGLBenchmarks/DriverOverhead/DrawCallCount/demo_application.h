@@ -6,6 +6,8 @@ class DemoApplication final : public GLApplication {
 public:
 	DemoApplication(const ApplicationSettings& settings) noexcept;
 
+	~DemoApplication();
+
 	bool Initialize() noexcept override;
 
 	void Update() noexcept override;

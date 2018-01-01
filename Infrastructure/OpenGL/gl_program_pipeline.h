@@ -4,6 +4,8 @@
 #include <array>
 #include "gl_shader.h"
 #include <string>
+#include "gl_texture.h"
+#include "gl_texture_sampler.h"
 
 class GLProgramPipeline final {
 private:
@@ -24,6 +26,8 @@ public:
 	void Unbind() const noexcept;
 
 	void SetMatrix4f(const std::string& name, const Mat4f& value, const GLShaderStageType stage);
+
+	void SetTexture(const std::string& name, const GLTexture const* texture, const GLTextureSampler& sampler, const GLShaderStageType stage);
 };
 
 #endif //GL_PROGRAM_PIPELINE_H_

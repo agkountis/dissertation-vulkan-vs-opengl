@@ -1,5 +1,4 @@
 #include "gl_program_pipeline.h"
-#include <algorithm>
 #include "logger.h"
 
 GLProgramPipeline::~GLProgramPipeline()
@@ -83,12 +82,6 @@ bool GLProgramPipeline::Create() noexcept
 
 	assert(glGetError() == GL_NO_ERROR);
 
-	GLint a;
-	glGetProgramPipelineiv(m_Id, GL_VERTEX_SHADER, &a);
-
-	GLint b;
-	glGetProgramPipelineiv(m_Id, GL_FRAGMENT_SHADER, &b);
-
 	return true;
 }
 
@@ -118,4 +111,20 @@ void GLProgramPipeline::SetMatrix4f(const std::string& name, const Mat4f& value,
 	}
 
 	glProgramUniformMatrix4fv(programId, location, 1, GL_FALSE, glm::value_ptr(value));
+}
+
+void GLProgramPipeline::SetTexture(const std::string& name, const GLTexture* texture, const GLTextureSampler& sampler, const GLShaderStageType stage)
+{
+	const auto programId = m_ShaderPrograms[stage];
+	const auto location = glGetProgramResourceLocation(programId, GL_UNIFORM, name.c_str());
+
+	if (location < 0) {
+		ERROR_LOG("Uniform: " + name + " is not active or does not exists in shader with ID: " + std::to_string(programId));
+		return;
+	}
+
+	glBindTextureUnit(location, texture->GetId());
+	glBindSampler(location, sampler.GetId());
+	auto err = glGetError();
+	std::cout << err << std::endl;
 }
