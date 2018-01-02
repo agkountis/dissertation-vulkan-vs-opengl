@@ -27,7 +27,7 @@ public:
 
 	void SetMatrix4f(const std::string& name, const Mat4f& value, const GLShaderStageType stage);
 
-	void SetTexture(const std::string& name, const GLTexture const* texture, const GLTextureSampler& sampler, const GLShaderStageType stage);
+	void SetTexture(const std::string& name, const GLTexture* texture, const GLTextureSampler& sampler, const GLShaderStageType stage);
 };
 
 #endif //GL_PROGRAM_PIPELINE_H_
