@@ -285,6 +285,8 @@ bool DemoScene::Initialize() noexcept
 	m_Pipeline.SetTexture("specular", m_Material.textures[TEX_SPECULAR], m_TextureSampler, FRAGMENT);
 	m_Pipeline.SetTexture("normal",  m_Material.textures[TEX_NORMAL], m_TextureSampler, FRAGMENT);
 
+	G_Application.frameRateTermination = true;
+
 	assert(glGetError() == GL_NO_ERROR);
 
 	//TODO: Initialize Imgui here.
@@ -297,42 +299,25 @@ static f64 entitiesToSpawn{ 0.0f };
 
 void DemoScene::Update(i64 msec, f64 dt) noexcept
 {
-	//TODO: Remove. Temporary code
-	entitiesToSpawn += spawnRate * dt;
+	if (!G_Application.benchmarkComplete) {
+		entitiesToSpawn += spawnRate * dt;
 
-	i32 e = entitiesToSpawn;
+		i32 e = entitiesToSpawn;
 
-	entitiesToSpawn -= e;
+		entitiesToSpawn -= e;
 
-	auto i = 0;
-	while (i < e) {
-		SpawnEntity();
-		++i;
-	}
+		int i = 0;
+		while (i < e) {
+			SpawnEntity();
+			++i;
+		}
 
-	for (auto& entity : m_Entities) {
-		entity->Update(dt);
+		for (auto& entity : m_Entities) {
+			entity->Update(dt);
+		}
 	}
 
 	assert(glGetError() == GL_NO_ERROR);
-
-//	if (!G_Application.benchmarkComplete) {
-//		entitiesToSpawn += spawnRate * dt;
-//
-//		i32 e = entitiesToSpawn;
-//
-//		entitiesToSpawn -= e;
-//
-//		int i = 0;
-//		while (i < e) {
-//			SpawnEntity();
-//			++i;
-//		}
-//
-//		for (auto& entity : m_Entities) {
-//			entity->Update(dt);
-//		}
-//	}
 }
 
 void DemoScene::Draw() noexcept
@@ -348,30 +333,30 @@ void DemoScene::Draw() noexcept
 
 void DemoScene::SaveToCsv(const std::string& fname) const
 {
-//	const auto& app = G_Application;
-//	std::ofstream stream{ fname + ".csv" };
-//
-//	stream << "Whole Frame Time,CPU Time,GPU Time\n";
-//
-//	for (auto i = 0u; i < app.totalFrameTimeSamples.size(); ++i) {
-//		stream << app.totalFrameTimeSamples[i] << "," << app.totalCpuTimeSamples[i] << "," << app.totalGpuTimeSamples[i] << "\n";
-//	}
-//
-//	stream << "\nFPS,Whole Frame Time,CPU Time,GPU Time\n";
-//
-//	for (auto i = 0u; i < app.fpsAverages.size(); ++i) {
-//		stream << app.fpsAverages[i] << "," << app.wholeFrameAverages[i] << "," << app.cpuTimeAverages[i] << "," << app.gpuTimeAverages[i] <<
-//				"\n";
-//	}
-//
-//	stream << "\nAverage FPS,Average Frame Time,Average CPU Time,Average GPU Time\n";
-//	stream << 1000.0f / app.avgTotalFrameTime << "," << app.avgTotalFrameTime << "," << app.avgTotalCpuTime << "," << app.avgTotalGpuTime;
-//
-//	stream << "\nDraw Calls per Frame\n";
-//	stream << m_Entities.size();
-//
-//	stream << "\n99th percentile\n";
-//	stream << app.percentile99th;
-//
-//	stream.close();
+	const auto& app = G_Application;
+	std::ofstream stream{ fname + ".csv" };
+
+	stream << "Whole Frame Time,CPU Time,GPU Time\n";
+
+	for (auto i = 0u; i < app.totalFrameTimeSamples.size(); ++i) {
+		stream << app.totalFrameTimeSamples[i] << "," << app.totalCpuTimeSamples[i] << "," << app.totalGpuTimeSamples[i] << "\n";
+	}
+
+	stream << "\nFPS,Whole Frame Time,CPU Time,GPU Time\n";
+
+	for (auto i = 0u; i < app.fpsAverages.size(); ++i) {
+		stream << app.fpsAverages[i] << "," << app.wholeFrameAverages[i] << "," << app.cpuTimeAverages[i] << "," << app.gpuTimeAverages[i] <<
+				"\n";
+	}
+
+	stream << "\nAverage FPS,Average Frame Time,Average CPU Time,Average GPU Time\n";
+	stream << 1000.0f / app.avgTotalFrameTime << "," << app.avgTotalFrameTime << "," << app.avgTotalCpuTime << "," << app.avgTotalGpuTime;
+
+	stream << "\nDraw Calls per Frame\n";
+	stream << m_Entities.size();
+
+	stream << "\n99th percentile\n";
+	stream << app.percentile99th;
+
+	stream.close();
 }

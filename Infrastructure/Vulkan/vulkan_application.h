@@ -247,11 +247,11 @@ public:
 
 	f32 percentile99th{ 0.0f };
 
-	std::vector<VulkanQueryPool> queryPools;
-
 	bool benchmarkComplete{ false };
 
 	bool frameRateTermination{ false };
+
+	std::vector<VulkanQueryPool> queryPools;
 
 	f64 w1{ 0.0 };
 	f64 w2{ 0.0 };
