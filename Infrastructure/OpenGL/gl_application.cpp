@@ -1,6 +1,7 @@
 #include "GL/glew.h"
 #include "gl_application.h"
 #include "logger.h"
+#include "gl_infrastructure_context.h"
 
 GLApplication::GLApplication(const ApplicationSettings& settings) noexcept
 	: Application{ settings }
@@ -12,8 +13,6 @@ bool GLApplication::Initialize() noexcept
 	if (!Application::Initialize()) {
 		return false;
 	}
-
-	//todo : Register app to the GLAPP CONTEXT file;
 
 	const auto& settings = GetSettings();
 
@@ -46,8 +45,10 @@ bool GLApplication::Initialize() noexcept
 		return false;
 	}
 
+	GLInfrastructureContext::Register(&m_ResourceManager, this);
+
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glDisable(GL_MULTISAMPLE);
 
 	return true;

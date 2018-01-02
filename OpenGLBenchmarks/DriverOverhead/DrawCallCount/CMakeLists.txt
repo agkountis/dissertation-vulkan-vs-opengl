@@ -1,6 +1,11 @@
 set(SOURCE_FILES main.cpp
 		demo_application.h
 		demo_application.cpp
+		demo_entity.h
+		demo_entity.cpp
+		demo_material.h
+		demo_scene.h
+		demo_scene.cpp
 		${IMGUI_SOURCE}
 	    ${IMGUI_OPENGL_IMPL})
 

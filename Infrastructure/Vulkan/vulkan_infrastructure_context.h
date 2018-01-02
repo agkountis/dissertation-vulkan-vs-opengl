@@ -1,6 +1,5 @@
 #ifndef VULKAN_INFRASTRUCTURE_CONTEXT_H_
 #define VULKAN_INFRASTRUCTURE_CONTEXT_H_
-
 #include "resource_manager.h"
 #include "vulkan_instance.h"
 #include "vulkan_device.h"

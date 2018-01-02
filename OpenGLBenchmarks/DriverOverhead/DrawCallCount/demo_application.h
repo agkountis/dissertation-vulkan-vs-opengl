@@ -1,12 +1,14 @@
 #ifndef DEMO_APPLICATION_H_
 #define DEMO_APPLICATION_H_
+#include "demo_scene.h"
 #include "gl_application.h"
 
 class DemoApplication final : public GLApplication {
+private:
+	DemoScene m_DemoScene;
+
 public:
 	DemoApplication(const ApplicationSettings& settings) noexcept;
-
-	~DemoApplication();
 
 	bool Initialize() noexcept override;
 

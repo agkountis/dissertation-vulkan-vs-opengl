@@ -11,7 +11,9 @@ set(SOURCE_FILES gl_application.h
 				 gl_texture.h
 				 gl_texture.cpp
 				 gl_texture_sampler.h
-				 gl_texture_sampler.cpp)
+				 gl_texture_sampler.cpp
+				 gl_infrastructure_context.h
+				 gl_infrastructure_context.cpp)
 
 include_directories(../Core)
 
