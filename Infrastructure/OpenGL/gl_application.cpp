@@ -2,6 +2,7 @@
 #include "gl_application.h"
 #include "logger.h"
 #include "gl_infrastructure_context.h"
+#include <algorithm>
 
 GLApplication::GLApplication(const ApplicationSettings& settings) noexcept
 	: Application{ settings }

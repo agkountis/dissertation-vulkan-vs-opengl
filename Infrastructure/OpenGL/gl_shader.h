@@ -18,6 +18,10 @@ private:
 
 	GLShaderStageType m_Type;
 
+    bool CompileText(const std::string& fileName) const noexcept;
+
+    bool LoadSpirv(const std::string& fileName) const noexcept;
+
 public:
 	explicit GLShader(const GLShaderStageType type) noexcept;
 
