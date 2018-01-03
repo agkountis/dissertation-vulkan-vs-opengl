@@ -125,6 +125,4 @@ void GLProgramPipeline::SetTexture(const std::string& name, const GLTexture* tex
 
 	glBindTextureUnit(location, texture->GetId());
 	glBindSampler(location, sampler.GetId());
-	auto err = glGetError();
-	std::cout << err << std::endl;
 }

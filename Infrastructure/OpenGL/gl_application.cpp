@@ -23,6 +23,7 @@ bool GLApplication::Initialize() noexcept
 		return false;
 	}
 
+	glfwSwapInterval(0);
 	if (settings.vsync) {
 		glfwSwapInterval(1);
 	}

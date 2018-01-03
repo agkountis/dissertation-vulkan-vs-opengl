@@ -13,6 +13,7 @@
 #include "texture.h"
 #include "gl_texture.h"
 #include "gl_texture_sampler.h"
+#include "imgui_impl_glfw_gl3.h"
 
 static std::mt19937 s_Rng;
 static const GLfloat clearColor[]{0.0f, 0.0f, 0.0f, 0.0f};
@@ -51,184 +52,151 @@ bool DemoScene::SpawnEntity() noexcept
 
 void DemoScene::DrawUi() const noexcept
 {
-	//auto& application = G_Application;
+	auto& application = G_Application;
 
-//	ImGui_ImplGlfwVulkan_NewFrame();
-//
-//	if (!application.benchmarkComplete) {
-//		// 1. Show a simple window.
-//		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
-//		ImGui::Begin("Metrics");
-//		ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
-//
-//		const auto deviceType = G_VulkanDevice.GetPhysicalDevice().properties.deviceType;
-//
-//		const char* type{ nullptr };
-//
-//		switch (deviceType) {
-//		case VK_PHYSICAL_DEVICE_TYPE_OTHER:
-//			type = "Other";
-//			break;
-//		case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-//			type = "Integrated GPU";
-//			break;
-//		case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-//			type = "Discrete GPU";
-//			break;
-//		case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
-//			type = "Virtual GPU";
-//			break;
-//		case VK_PHYSICAL_DEVICE_TYPE_CPU:
-//			type = "CPU";
-//			break;
-//		default: ;
-//		}
-//
-//		ImGui::Text("Device ID: %d", G_VulkanDevice.GetPhysicalDevice().properties.deviceID);
-//		ImGui::Text("Device type: %s", type);
-//		ImGui::Text("Vendor: %d", G_VulkanDevice.GetPhysicalDevice().properties.vendorID);
-//		ImGui::Text("Driver Version: %d", G_VulkanDevice.GetPhysicalDevice().properties.driverVersion);
-//
-//		ImGui::NewLine();
-//		ImGui::Separator();
-//		ImGui::NewLine();
-//
-//		char buff[60];
-//
-//		ImGui::Text("Average value real time graphs (refresh per sec)");
-//		snprintf(buff, 60, "FPS\nAvg: %f\nMin: %f\nMax: %f", application.averageFps, application.minFps,
-//		         application.maxFps);
-//		ImGui::PlotLines(buff, application.fpsAverages.data(), application.fpsAverages.size(), 0, "",
-//		                 0.0, application.maxFps, ImVec2(0, 80));
-//
-//		snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.wholeFrameAverage,
-//		         application.minWholeFrame,
-//		         application.maxWholeFrame);
-//		ImGui::PlotLines(buff, application.wholeFrameAverages.data(), application.wholeFrameAverages.size(), 0, "",
-//		                 0.0, application.maxWholeFrame, ImVec2(0, 80));
-//
-//		snprintf(buff, 60, "CPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.cpuTimeAverage,
-//		         application.minCpuTime,
-//		         application.maxCpuTime);
-//		ImGui::PlotLines(buff, application.cpuTimeAverages.data(), application.cpuTimeAverages.size(), 0, "",
-//		                 0.0, application.maxCpuTime, ImVec2(0, 80));
-//
-//		snprintf(buff, 60, "GPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.gpuTimeAverage,
-//		         application.minGpuTime,
-//		         application.maxGpuTime);
-//		ImGui::PlotLines(buff, application.gpuTimeAverages.data(), application.gpuTimeAverages.size(), 0, "",
-//		                 0.0, application.maxGpuTime, ImVec2(0, 80));
-//
-//		ImGui::NewLine();
-//		ImGui::Text("Total Vertex Count: %d", m_Entities.size() * 24);
-//		ImGui::Text("Draw calls: %u", m_Entities.size());
-//		ImGui::Text("Running time: %f s", application.GetTimer().GetSec());
-//		ImGui::Text("Frame count: %lld", application.frameCount);
-//		ImGui::End();
-//	}
-//	else {
-//		ImGui::Begin("Benchmark Results", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-//		ImGui::Text("Device name: %s", G_VulkanDevice.GetPhysicalDevice().properties.deviceName);
-//
-//		const auto deviceType = G_VulkanDevice.GetPhysicalDevice().properties.deviceType;
-//
-//		const char* type{ nullptr };
-//
-//		switch (deviceType) {
-//		case VK_PHYSICAL_DEVICE_TYPE_OTHER:
-//			type = "Other";
-//			break;
-//		case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-//			type = "Integrated GPU";
-//			break;
-//		case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-//			type = "Discrete GPU";
-//			break;
-//		case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
-//			type = "Virtual GPU";
-//			break;
-//		case VK_PHYSICAL_DEVICE_TYPE_CPU:
-//			type = "CPU";
-//			break;
-//		default: ;
-//		}
-//
-//		ImGui::Text("Device ID: %d", G_VulkanDevice.GetPhysicalDevice().properties.deviceID);
-//		ImGui::Text("Device type: %s", type);
-//		ImGui::Text("Vendor: %d", G_VulkanDevice.GetPhysicalDevice().properties.vendorID);
-//		ImGui::Text("Driver Version: %d", G_VulkanDevice.GetPhysicalDevice().properties.driverVersion);
-//
-//		ImGui::NewLine();
-//		ImGui::Separator();
-//		ImGui::NewLine();
-//
-//		char buff[60];
-//
-//		snprintf(buff, 60, "FPS\nAvg: %f\nMin: %f\nMax: %f", application.averageFps, application.minFps,
-//		         application.maxFps);
-//		ImGui::PlotLines(buff, application.totalFpsSamples.data(), application.totalFpsSamples.size(), 0, "",
-//		                 0.0, application.maxFps, ImVec2(1750, 100));
-//
-//		ImGui::NewLine();
-//
-//		snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalFrameTime,
-//		         application.minTotalFrameTime,
-//		         application.maxTotalFrameTime);
-//		ImGui::PlotLines(buff, application.totalFrameTimeSamples.data(), application.totalFrameTimeSamples.size(), 0, "",
-//		                 application.minTotalFrameTime, application.maxTotalFrameTime, ImVec2(1750, 100));
-//
-//		ImGui::NewLine();
-//
-//		snprintf(buff, 60, "CPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalCpuTime,
-//		         application.minTotalCpuTime,
-//		         application.maxTotalCpuTime);
-//		ImGui::PlotLines(buff, application.totalCpuTimeSamples.data(), application.totalCpuTimeSamples.size(), 0, "",
-//		                 application.minTotalCpuTime, application.maxTotalCpuTime, ImVec2(1750, 100));
-//
-//		ImGui::NewLine();
-//
-//		snprintf(buff, 60, "GPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalGpuTime,
-//		         application.minTotalGpuTime,
-//		         application.maxTotalGpuTime);
-//		ImGui::PlotLines(buff, application.totalGpuTimeSamples.data(), application.totalGpuTimeSamples.size(), 0, "",
-//		                 application.minTotalGpuTime, application.maxTotalGpuTime, ImVec2(1750, 100));
-//
-//		ImGui::NewLine();
-//		ImGui::Separator();
-//		ImGui::NewLine();
-//
-//		ImGui::Text("Total Vertex Count: %d", m_Entities.size() * 24);
-//		ImGui::Text("Draw calls: %u", m_Entities.size());
-//		ImGui::Text("Total Frames: %lld", application.frameCount);
-//		ImGui::Text("Total duration: %f s", application.totalAppDuration);
-//		ImGui::Text("Average FPS: %f", 1000.0f / application.avgTotalFrameTime);
-//		ImGui::Text("Average frame time: %f ms", application.avgTotalFrameTime);
-//		ImGui::Text("Average CPU time: %f ms", application.avgTotalCpuTime);
-//		ImGui::Text("Average GPU time: %f ms", application.avgTotalGpuTime);
-//		ImGui::Text("99th percentile (lower is better): %f ms", application.percentile99th);
-//
-//		ImGui::NewLine();
-//
-//		if (ImGui::Button("Save to CSV")) {
-//			LOG("Saving to CSV");
-//			SaveToCsv("DrawCallCount_Metrics");
-//		}
-//
-//		if (ImGui::Button("Exit Application")) {
-//			LOG("Terminating application.");
-//			application.SetTermination(true);
-//		}
-//
-//		ImGui::End();
-//	}
-//
-//	ImGui_ImplGlfwVulkan_Render(commandBuffer);
+	ImGui_ImplGlfwGL3_NewFrame();
+
+	const auto glVersion = glGetString(GL_VERSION);
+	const auto glRenderer = glGetString(GL_RENDERER);
+
+	GLint profileMask;
+	glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profileMask);
+
+	const char* profileType;
+	if (profileMask & GL_CONTEXT_CORE_PROFILE_BIT) {
+		profileType = "Core";
+	} else {
+		profileType = "Compatibility";
+	}
+
+	const auto vendor = glGetString(GL_VENDOR);
+
+	if (!application.benchmarkComplete) {
+		// 1. Show a simple window.
+		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
+		ImGui::Begin("Metrics");
+
+		ImGui::Text("OpenGL version: %s", glVersion);
+		ImGui::Text("OpenGL profile: %s", profileType);
+		ImGui::Text("OpenGL renderer: %s", glRenderer);
+		ImGui::Text("Vendor: %s", vendor);
+
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		char buff[60];
+
+		ImGui::Text("Average value real time graphs (refresh per sec)");
+		snprintf(buff, 60, "FPS\nAvg: %f\nMin: %f\nMax: %f", application.averageFps, application.minFps,
+		         application.maxFps);
+		ImGui::PlotLines(buff, application.fpsAverages.data(), application.fpsAverages.size(), 0, "",
+		                 0.0, application.maxFps, ImVec2(0, 80));
+
+		snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.wholeFrameAverage,
+		         application.minWholeFrame,
+		         application.maxWholeFrame);
+		ImGui::PlotLines(buff, application.wholeFrameAverages.data(), application.wholeFrameAverages.size(), 0, "",
+		                 0.0, application.maxWholeFrame, ImVec2(0, 80));
+
+		snprintf(buff, 60, "CPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.cpuTimeAverage,
+		         application.minCpuTime,
+		         application.maxCpuTime);
+		ImGui::PlotLines(buff, application.cpuTimeAverages.data(), application.cpuTimeAverages.size(), 0, "",
+		                 0.0, application.maxCpuTime, ImVec2(0, 80));
+
+		snprintf(buff, 60, "GPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.gpuTimeAverage,
+		         application.minGpuTime,
+		         application.maxGpuTime);
+		ImGui::PlotLines(buff, application.gpuTimeAverages.data(), application.gpuTimeAverages.size(), 0, "",
+		                 0.0, application.maxGpuTime, ImVec2(0, 80));
+
+		ImGui::NewLine();
+		ImGui::Text("Total Vertex Count: %d", m_Entities.size() * 24);
+		ImGui::Text("Draw calls: %u", m_Entities.size());
+		ImGui::Text("Running time: %f s", application.GetTimer().GetSec());
+		ImGui::Text("Frame count: %lld", application.frameCount);
+		ImGui::End();
+	}
+	else {
+		ImGui::Begin("Benchmark Results", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+		ImGui::Text("OpenGL version: %s", glVersion);
+		ImGui::Text("OpenGL profile: %s", profileType);
+		ImGui::Text("OpenGL renderer: %s", glRenderer);
+		ImGui::Text("Vendor: %s", vendor);
+
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		char buff[60];
+
+		snprintf(buff, 60, "FPS\nAvg: %f\nMin: %f\nMax: %f", application.averageFps, application.minFps,
+		         application.maxFps);
+		ImGui::PlotLines(buff, application.totalFpsSamples.data(), application.totalFpsSamples.size(), 0, "",
+		                 0.0, application.maxFps, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+
+		snprintf(buff, 60, "Frame time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalFrameTime,
+		         application.minTotalFrameTime,
+		         application.maxTotalFrameTime);
+		ImGui::PlotLines(buff, application.totalFrameTimeSamples.data(), application.totalFrameTimeSamples.size(), 0, "",
+		                 application.minTotalFrameTime, application.maxTotalFrameTime, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+
+		snprintf(buff, 60, "CPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalCpuTime,
+		         application.minTotalCpuTime,
+		         application.maxTotalCpuTime);
+		ImGui::PlotLines(buff, application.totalCpuTimeSamples.data(), application.totalCpuTimeSamples.size(), 0, "",
+		                 application.minTotalCpuTime, application.maxTotalCpuTime, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+
+		snprintf(buff, 60, "GPU time (ms)\nAvg: %f ms\nMin: %f ms\nMax: %f ms", application.avgTotalGpuTime,
+		         application.minTotalGpuTime,
+		         application.maxTotalGpuTime);
+		ImGui::PlotLines(buff, application.totalGpuTimeSamples.data(), application.totalGpuTimeSamples.size(), 0, "",
+		                 application.minTotalGpuTime, application.maxTotalGpuTime, ImVec2(1750, 100));
+
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		ImGui::Text("Total Vertex Count: %d", m_Entities.size() * 24);
+		ImGui::Text("Draw calls: %u", m_Entities.size());
+		ImGui::Text("Total Frames: %lld", application.frameCount);
+		ImGui::Text("Total duration: %f s", application.totalAppDuration);
+		ImGui::Text("Average FPS: %f", 1000.0f / application.avgTotalFrameTime);
+		ImGui::Text("Average frame time: %f ms", application.avgTotalFrameTime);
+		ImGui::Text("Average CPU time: %f ms", application.avgTotalCpuTime);
+		ImGui::Text("Average GPU time: %f ms", application.avgTotalGpuTime);
+		ImGui::Text("99th percentile (lower is better): %f ms", application.percentile99th);
+
+		ImGui::NewLine();
+
+		if (ImGui::Button("Save to CSV")) {
+			LOG("Saving to CSV");
+			SaveToCsv("GL_DrawCallCount_Metrics");
+		}
+
+		if (ImGui::Button("Exit Application")) {
+			LOG("Terminating application.");
+			application.SetTermination(true);
+		}
+
+		ImGui::End();
+	}
+
+	ImGui::Render();
 }
 
 // -------------------------------------------------------------------
 DemoScene::~DemoScene()
 {
-	//ImGui_ImplGlfwgl3_Shutdown();
+	ImGui_ImplGlfwGL3_Shutdown();
 }
 
 bool DemoScene::Initialize() noexcept
@@ -289,9 +257,7 @@ bool DemoScene::Initialize() noexcept
 
 	assert(glGetError() == GL_NO_ERROR);
 
-	//TODO: Initialize Imgui here.
-
-	return true;
+	return ImGui_ImplGlfwGL3_Init(G_Application.GetWindow(), true);
 }
 
 static constexpr f64 spawnRate{ 500.0f };
@@ -329,6 +295,8 @@ void DemoScene::Draw() noexcept
 		m_Pipeline.SetMatrix4f("model", entity->GetXform(), VERTEX);
 		entity->Draw();
 	}
+
+	DrawUi();
 }
 
 void DemoScene::SaveToCsv(const std::string& fname) const
