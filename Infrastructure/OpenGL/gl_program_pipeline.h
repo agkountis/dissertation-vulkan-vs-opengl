@@ -6,6 +6,7 @@
 #include <string>
 #include "gl_texture.h"
 #include "gl_texture_sampler.h"
+#include "gl_render_target.h"
 
 class GLProgramPipeline final {
 private:
@@ -14,10 +15,14 @@ private:
 	std::array<const GLShader*, 6> m_Shaders{};
 	std::array<GLuint, 6> m_ShaderPrograms{};
 
+	const GLRenderTarget* m_pRenderTarget{ nullptr };
+
 public:
 	~GLProgramPipeline();
 
 	void AddShader(const GLShader* shader) noexcept;
+
+	void SetRenderTarget(const GLRenderTarget* renderTarget) noexcept;
 
 	bool Create() noexcept;
 

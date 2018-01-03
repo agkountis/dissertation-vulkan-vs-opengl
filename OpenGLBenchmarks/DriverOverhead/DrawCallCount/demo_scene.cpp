@@ -14,9 +14,10 @@
 #include "gl_texture.h"
 #include "gl_texture_sampler.h"
 #include "imgui_impl_glfw_gl3.h"
+#include "gl_render_target.h"
 
 static std::mt19937 s_Rng;
-static const GLfloat clearColor[]{0.0f, 0.0f, 0.0f, 0.0f};
+static const GLfloat clearColor[]{ 0.0f, 0.0f, 0.0f, 0.0f };
 static const auto depthClearValue{ 1.0f };
 
 static auto RealRangeRng(const f32 begin, const f32 end)
@@ -65,7 +66,8 @@ void DemoScene::DrawUi() const noexcept
 	const char* profileType;
 	if (profileMask & GL_CONTEXT_CORE_PROFILE_BIT) {
 		profileType = "Core";
-	} else {
+	}
+	else {
 		profileType = "Compatibility";
 	}
 
@@ -216,7 +218,7 @@ bool DemoScene::Initialize() noexcept
 	samplerCreateInfo.wrapS = GL_REPEAT;
 	samplerCreateInfo.wrapT = GL_REPEAT;
 	samplerCreateInfo.wrapR = GL_REPEAT;
-	samplerCreateInfo.borderColor = {1.0, 1.0, 1.0, 1.0};
+	samplerCreateInfo.borderColor = { 1.0, 1.0, 1.0, 1.0 };
 
 	if (!m_TextureSampler.Create(samplerCreateInfo)) {
 		return false;
@@ -251,9 +253,33 @@ bool DemoScene::Initialize() noexcept
 
 	m_Pipeline.SetTexture("diffuse", m_Material.textures[TEX_DIFFUSE], m_TextureSampler, FRAGMENT);
 	m_Pipeline.SetTexture("specular", m_Material.textures[TEX_SPECULAR], m_TextureSampler, FRAGMENT);
-	m_Pipeline.SetTexture("normal",  m_Material.textures[TEX_NORMAL], m_TextureSampler, FRAGMENT);
+	m_Pipeline.SetTexture("normal", m_Material.textures[TEX_NORMAL], m_TextureSampler, FRAGMENT);
 
 	G_Application.frameRateTermination = true;
+
+	//TODO: move this to the deferred rendered scene.
+//	GLRenderTargetAttachmentCreateInfo floatAttachment{};
+//	floatAttachment.size = windowSize;
+//	floatAttachment.internalFormat = GL_RGBA16F;
+//
+//	GLRenderTargetAttachmentCreateInfo colorAttachment{};
+//	colorAttachment.size = windowSize;
+//	colorAttachment.internalFormat = GL_RGBA8;
+//
+//	GLRenderTargetAttachmentCreateInfo depthAttachment{};
+//	depthAttachment.size = windowSize;
+//	depthAttachment.internalFormat = GL_DEPTH_COMPONENT32F;
+//
+//	std::vector<GLRenderTargetAttachmentCreateInfo> attachments{
+//		floatAttachment, //Positions
+//		floatAttachment, //Normals
+//		colorAttachment, //Albedo
+//		colorAttachment, //Specular
+//		depthAttachment  //Depth
+//	};
+//
+//	GLRenderTarget rtarg;
+//	rtarg.Create(attachments);
 
 	assert(glGetError() == GL_NO_ERROR);
 
@@ -307,18 +333,21 @@ void DemoScene::SaveToCsv(const std::string& fname) const
 	stream << "Whole Frame Time,CPU Time,GPU Time\n";
 
 	for (auto i = 0u; i < app.totalFrameTimeSamples.size(); ++i) {
-		stream << app.totalFrameTimeSamples[i] << "," << app.totalCpuTimeSamples[i] << "," << app.totalGpuTimeSamples[i] << "\n";
+		stream << app.totalFrameTimeSamples[i] << "," << app.totalCpuTimeSamples[i] << "," << app.totalGpuTimeSamples[i] <<
+				"\n";
 	}
 
 	stream << "\nFPS,Whole Frame Time,CPU Time,GPU Time\n";
 
 	for (auto i = 0u; i < app.fpsAverages.size(); ++i) {
-		stream << app.fpsAverages[i] << "," << app.wholeFrameAverages[i] << "," << app.cpuTimeAverages[i] << "," << app.gpuTimeAverages[i] <<
+		stream << app.fpsAverages[i] << "," << app.wholeFrameAverages[i] << "," << app.cpuTimeAverages[i] << "," << app.
+				gpuTimeAverages[i] <<
 				"\n";
 	}
 
 	stream << "\nAverage FPS,Average Frame Time,Average CPU Time,Average GPU Time\n";
-	stream << 1000.0f / app.avgTotalFrameTime << "," << app.avgTotalFrameTime << "," << app.avgTotalCpuTime << "," << app.avgTotalGpuTime;
+	stream << 1000.0f / app.avgTotalFrameTime << "," << app.avgTotalFrameTime << "," << app.avgTotalCpuTime << "," << app.
+			avgTotalGpuTime;
 
 	stream << "\nDraw Calls per Frame\n";
 	stream << m_Entities.size();

@@ -15,6 +15,11 @@ void GLProgramPipeline::AddShader(const GLShader* shader) noexcept
 	m_Shaders[shader->GetType()] = shader;
 }
 
+void GLProgramPipeline::SetRenderTarget(const GLRenderTarget* renderTarget) noexcept
+{
+	m_pRenderTarget = renderTarget;
+}
+
 bool GLProgramPipeline::Create() noexcept
 {
 	if (m_Shaders.empty()) {
@@ -91,8 +96,15 @@ void GLProgramPipeline::Bind() const noexcept
 		return;
 	}
 	glBindProgramPipeline(m_Id);
-	ui32 a = glGetError();
-	assert(a == GL_NO_ERROR);
+
+	if (m_pRenderTarget) {
+		m_pRenderTarget->Bind();
+	}
+	else {
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	assert(glGetError() == GL_NO_ERROR);
 }
 
 void GLProgramPipeline::Unbind() const noexcept
