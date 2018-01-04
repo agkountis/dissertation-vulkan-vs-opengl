@@ -19,6 +19,9 @@ private:
 
 	const GLRenderTarget* m_pRenderTarget{ nullptr };
 
+	Vec4f m_ColorClearValue;
+	f32 m_DepthClearValue{ 1.0 };
+
 public:
 	~GLProgramPipeline();
 
@@ -32,10 +35,25 @@ public:
 
 	void Unbind() const noexcept;
 
+	void Clear() noexcept;
+
+	void SetColorClearValue(const Vec4f& colorClearValue) noexcept;
+
+	void SetDepthClearValue(const f32 depthClearValue) noexcept;
+
 	void SetMatrix4f(const std::string& name, const Mat4f& value, const GLShaderStageType stage);
 
-	void SetTexture(const std::string& name, const GLTexture* texture, const GLTextureSampler& sampler,
+	void SetTexture(const std::string& name,
+	                const GLTexture* texture,
+	                const GLTextureSampler& sampler,
 	                const GLShaderStageType stage);
+
+	void SetTexture(const std::string& name,
+	                const GLuint textureId,
+	                const GLTextureSampler& sampler,
+	                const GLShaderStageType stage);
+
+	void SetInteger(const std::string& name, const GLint value, const GLShaderStageType stage);
 
 	template <typename T>
 	void SetUniformBuffer(const std::string& name, const GLBuffer<T>& buffer, const GLShaderStageType stage)
@@ -44,7 +62,8 @@ public:
 		const auto index = glGetUniformBlockIndex(programId, name.c_str());
 
 		if (index == GL_INVALID_INDEX) {
-			ERROR_LOG("Cause: Invalid index -- Uniform block: " + name + "is not active or does not exist in shader with ID: " + std::to_string(programId));
+			ERROR_LOG("Cause: Invalid index -- Uniform block: " + name + "is not active or does not exist in shader with ID: " +
+				std::to_string(programId));
 			return;
 		}
 
@@ -52,7 +71,8 @@ public:
 		glGetActiveUniformBlockiv(programId, index, GL_UNIFORM_BLOCK_BINDING, &binding);
 
 		if (binding < 0) {
-			ERROR_LOG("Uniform block: " + name + "is not active or does not exist in shader with ID: " + std::to_string(programId));
+			ERROR_LOG("Uniform block: " + name + "is not active or does not exist in shader with ID: " + std::to_string(programId
+			));
 			return;
 		}
 

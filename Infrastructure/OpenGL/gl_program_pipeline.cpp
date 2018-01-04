@@ -22,7 +22,9 @@ void GLProgramPipeline::SetRenderTarget(const GLRenderTarget* renderTarget) noex
 bool GLProgramPipeline::Create() noexcept
 {
 	if (m_Shaders.empty()) {
-		ERROR_LOG("No shaders attached to the pipeline. Please use AddShader(...) to add shaders to the pipeline before calling Create().");
+		ERROR_LOG(
+			"No shaders attached to the pipeline. Please use AddShader(...) to add shaders to the pipeline before calling Create()."
+		);
 		return false;
 	}
 
@@ -40,7 +42,8 @@ bool GLProgramPipeline::Create() noexcept
 		assert(glGetError() == GL_NO_ERROR);
 
 		if (!progId) {
-			ERROR_LOG("Failed to create Shader program for shader: { id:" + std::to_string(shader->GetId()) + ", type:" + GLShader::TypeToString(shader->GetType()) + "}");
+			ERROR_LOG("Failed to create Shader program for shader: { id:" + std::to_string(shader->GetId()) + ", type:" +
+				GLShader::TypeToString(shader->GetType()) + "}");
 			return false;
 		}
 
@@ -58,7 +61,8 @@ bool GLProgramPipeline::Create() noexcept
 		assert(glGetError() == GL_NO_ERROR);
 
 		if (linkStatus != GL_TRUE) {
-			ERROR_LOG("Failed to link Shader program for shader: { id:" + std::to_string(shader->GetId()) + ", type:" + GLShader::TypeToString(shader->GetType()) + "}");
+			ERROR_LOG("Failed to link Shader program for shader: { id:" + std::to_string(shader->GetId()) + ", type:" + GLShader
+				::TypeToString(shader->GetType()) + "}");
 
 			GLint errBufferSize = 0;
 			glGetProgramiv(progId, GL_INFO_LOG_LENGTH, &errBufferSize);
@@ -111,6 +115,33 @@ void GLProgramPipeline::Unbind() const noexcept
 	glBindProgramPipeline(0);
 }
 
+void GLProgramPipeline::Clear() noexcept
+{
+	if (m_pRenderTarget) {
+		for (auto i = 0u; i < m_pRenderTarget->GetAttachmentCount(); ++i) {
+			glClearNamedFramebufferfv(m_pRenderTarget->GetId(), GL_COLOR, i, glm::value_ptr(m_ColorClearValue));
+			assert(glGetError() == GL_NO_ERROR);
+			glClearNamedFramebufferfv(m_pRenderTarget->GetId(), GL_DEPTH, 0, &m_DepthClearValue);
+			assert(glGetError() == GL_NO_ERROR);
+		}
+	} else {
+		glClearBufferfv(GL_COLOR, 0, glm::value_ptr(m_ColorClearValue));
+		assert(glGetError() == GL_NO_ERROR);
+		glClearBufferfv(GL_DEPTH, 0, &m_DepthClearValue);
+		assert(glGetError() == GL_NO_ERROR);
+	}
+}
+
+void GLProgramPipeline::SetColorClearValue(const Vec4f& colorClearValue) noexcept
+{
+	m_ColorClearValue = colorClearValue;
+}
+
+void GLProgramPipeline::SetDepthClearValue(const f32 depthClearValue) noexcept
+{
+	m_DepthClearValue = depthClearValue;
+}
+
 void GLProgramPipeline::SetMatrix4f(const std::string& name, const Mat4f& value, const GLShaderStageType stage)
 {
 	const auto programId = m_ShaderPrograms[stage];
@@ -124,7 +155,10 @@ void GLProgramPipeline::SetMatrix4f(const std::string& name, const Mat4f& value,
 	glProgramUniformMatrix4fv(programId, location, 1, GL_FALSE, glm::value_ptr(value));
 }
 
-void GLProgramPipeline::SetTexture(const std::string& name, const GLTexture* texture, const GLTextureSampler& sampler, const GLShaderStageType stage)
+void GLProgramPipeline::SetTexture(const std::string& name,
+                                   const GLTexture* texture,
+                                   const GLTextureSampler& sampler,
+                                   const GLShaderStageType stage)
 {
 	const auto programId = m_ShaderPrograms[stage];
 	const auto location = glGetProgramResourceLocation(programId, GL_UNIFORM, name.c_str());
@@ -136,4 +170,34 @@ void GLProgramPipeline::SetTexture(const std::string& name, const GLTexture* tex
 
 	glBindTextureUnit(location, texture->GetId());
 	glBindSampler(location, sampler.GetId());
+}
+
+void GLProgramPipeline::SetTexture(const std::string& name,
+                                   const GLuint textureId,
+                                   const GLTextureSampler& sampler,
+                                   const GLShaderStageType stage)
+{
+	const auto programId = m_ShaderPrograms[stage];
+	const auto location = glGetProgramResourceLocation(programId, GL_UNIFORM, name.c_str());
+
+	if (location < 0) {
+		ERROR_LOG("Uniform: " + name + " is not active or does not exist in shader with ID: " + std::to_string(programId));
+		return;
+	}
+
+	glBindTextureUnit(location, textureId);
+	glBindSampler(location, sampler.GetId());
+}
+
+void GLProgramPipeline::SetInteger(const std::string& name, const GLint value, const GLShaderStageType stage)
+{
+	const auto programId = m_ShaderPrograms[stage];
+	const auto location = glGetProgramResourceLocation(programId, GL_UNIFORM, name.c_str());
+
+	if (location < 0) {
+		ERROR_LOG("Uniform: " + name + " is not active or does not exist in shader with ID: " + std::to_string(programId));
+		return;
+	}
+
+	glProgramUniform1i(programId, location, value);
 }

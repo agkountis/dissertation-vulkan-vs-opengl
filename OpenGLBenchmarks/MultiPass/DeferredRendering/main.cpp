@@ -3,7 +3,7 @@
 int main(int argc, char* argv[])
 {
 	ApplicationSettings applicationSettings;
-	applicationSettings.name = "Vulkan - MultiPass - Deferred Shading";
+	applicationSettings.name = "OpenGL - MultiPass - Deferred Shading";
 	applicationSettings.windowResolution = Vec2i{ 1920, 1080 };
 	applicationSettings.windowPosition = Vec2i{ 10, 50 };
 	applicationSettings.vsync = false;

@@ -1,6 +1,6 @@
-#version 450
+#version 450 core
 #extension GL_ARB_separate_shader_objects : enable
-#extension GL_ARB_shading_language_420pack : enable
+//#extension GL_ARB_shading_language_420pack : enable
 
 layout(binding = 0) uniform sampler2D positionSampler;
 layout(binding = 1) uniform sampler2D normalSampler;
@@ -10,7 +10,7 @@ layout(binding = 4) uniform sampler2D depthSampler;
 
 const int lightCount = 4;
 
-layout(set = 0, binding = 5) uniform Lights {
+layout(std140, set = 0, binding = 5) uniform Lights {
 	vec4[lightCount] w_Positions;
 	vec4[lightCount] colors;
 	vec4[lightCount] radi;
@@ -57,7 +57,7 @@ vec4 shade(vec4 w_Pos, vec3 normal, vec4 albedo, vec4 specular)
 			L = normalize(L);
 
 			// Attenuation
-			float atten = lightsUbo.radi[i].x / (pow(dist, 2.0) + 1.0);
+			float atten = lightRadius / (pow(dist, 2.0) + 1.0);
 
             vec3 H = normalize(L + V);
 

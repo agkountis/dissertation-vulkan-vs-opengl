@@ -22,7 +22,6 @@ layout(location = 6) uniform int attachmentIndex;
 
 layout(location = 0) out vec4 outColor;
 
-
 vec4 linearizeDepth(vec2 uv)
 {
     float zNear = 1.0;    // TODO: Replace by the zNear of your perspective projection
@@ -80,7 +79,7 @@ void main()
 	vec4 albedo = texture(albedoSampler, inTexCoord);
     vec4 specular = texture(specularSampler, inTexCoord);
 
-    switch (attachmentIndex) {
+	switch (attachmentIndex) {
         case 0:
     	    outColor = shade(w_Pos, normal.xyz, albedo, specular);
             break;

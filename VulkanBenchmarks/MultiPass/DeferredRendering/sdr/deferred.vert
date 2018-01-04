@@ -1,6 +1,6 @@
-#version 450
+#version 450 core
 #extension GL_ARB_separate_shader_objects : enable
-#extension GL_ARB_shading_language_420pack : enable
+//#extension GL_ARB_shading_language_420pack : enable
 
 //Vertex attributes
 layout(location = 0) in vec3 inPosition;
@@ -10,7 +10,7 @@ layout(location = 3) in vec3 inColor;
 layout(location = 4) in vec2 inTexcoord;
 
 //Uniforms
-layout(set = 0, binding = 0) uniform UniformBufferObject {
+layout(std140, set = 0, binding = 0) uniform UniformBufferObject {
 	mat4 view;
 	mat4 projection;
 } ubo;
@@ -38,9 +38,7 @@ void main()
     vec4 localVertexPosition = vec4(inPosition, 1.0);
     gl_Position = ubo.projection * ubo.view * pushConstant.model * localVertexPosition;
 
-	vec4 w_Position = pushConstant.model * localVertexPosition;
-	w_Position.y = -w_Position.y;
-	w_outPosition = w_Position;
+	w_outPosition = pushConstant.model * localVertexPosition;
 
     mat3 normalMatrix = transpose(inverse(mat3(pushConstant.model)));
 

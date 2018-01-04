@@ -13,7 +13,8 @@
 #include "gl_application.h"
 #include "gl_texture.h"
 
-static const GLfloat clearColor[]{ 1.0f, 0.0f, 0.0f, 0.0f };
+static const GLfloat clearColor[]{ 0.0f, 0.0f, 0.0f, 0.0f };
+static const GLfloat clearColor2[]{ 0.0f, 0.0f, 1.0f, 0.0f };
 static const auto depthClearValue{ 1.0f };
 
 // Private functions -------------------------------------------------
@@ -35,6 +36,8 @@ void DemoScene::LoadMeshes(const aiScene* scene) noexcept
 		auto mesh = new GLMesh;
 
 		auto* aiMesh{ scene->mMeshes[i] };
+
+		m_SceneVertexCount += aiMesh->mNumVertices;
 
 		if (aiMesh->HasPositions()) {
 			std::vector<Vertex> vertices;
@@ -351,7 +354,6 @@ void DemoScene::Update(i64 msec, f64 dt) noexcept
 
 void DemoScene::DrawEntity(DemoEntity* entity) noexcept
 {
-	m_DeferredPipeline.SetMatrix4f("model", entity->GetXform(), VERTEX);
 	const auto mesh = entity->GetMesh();
 	if (mesh) {
 		const auto material = entity->GetMaterial();
@@ -361,6 +363,7 @@ void DemoScene::DrawEntity(DemoEntity* entity) noexcept
 			return;
 		}
 
+		m_DeferredPipeline.SetMatrix4f("model", entity->GetXform(), VERTEX);
 		m_DeferredPipeline.SetTexture("diffuseSampler", material->textures[TEX_DIFFUSE], m_TextureSampler, FRAGMENT);
 		m_DeferredPipeline.SetTexture("specularSampler", material->textures[TEX_SPECULAR], m_TextureSampler, FRAGMENT);
 		m_DeferredPipeline.SetTexture("normalSampler", material->textures[TEX_NORMAL], m_TextureSampler, FRAGMENT);
@@ -410,6 +413,15 @@ void DemoScene::DrawUi() const noexcept
 		ImGui::Separator();
 		ImGui::NewLine();
 
+		if (ImGui::Combo("Active attachment", &m_CurrentAttachment, m_AttachmentComboItems.data(),
+			m_AttachmentComboItems.size())) {
+			LOG("Value changed to: " + std::to_string(m_CurrentAttachment));
+		}
+
+		ImGui::NewLine();
+		ImGui::Separator();
+		ImGui::NewLine();
+
 		char buff[60];
 
 		ImGui::Text("Average value real time graphs (refresh per sec)");
@@ -437,8 +449,7 @@ void DemoScene::DrawUi() const noexcept
 		                 0.0, application.maxGpuTime, ImVec2(0, 80));
 
 		ImGui::NewLine();
-		ImGui::Text("Total Vertex Count: %d", m_Entities.size() * 24);
-		ImGui::Text("Draw calls: %u", m_Entities.size());
+		ImGui::Text("Total Vertex Count: %d", m_SceneVertexCount);
 		ImGui::Text("Running time: %f s", application.GetTimer().GetSec());
 		ImGui::Text("Frame count: %lld", application.frameCount);
 		ImGui::End();
@@ -450,15 +461,6 @@ void DemoScene::DrawUi() const noexcept
 		ImGui::Text("OpenGL profile: %s", profileType);
 		ImGui::Text("OpenGL renderer: %s", glRenderer);
 		ImGui::Text("Vendor: %s", vendor);
-
-		ImGui::NewLine();
-		ImGui::Separator();
-		ImGui::NewLine();
-
-		if (ImGui::Combo("Active attachment", &m_CurrentAttachment, m_AttachmentComboItems.data(),
-			m_AttachmentComboItems.size())) {
-			LOG("Value changed to: " + std::to_string(m_CurrentAttachment));
-		}
 
 		ImGui::NewLine();
 		ImGui::Separator();
@@ -499,8 +501,7 @@ void DemoScene::DrawUi() const noexcept
 		ImGui::Separator();
 		ImGui::NewLine();
 
-		ImGui::Text("Total Vertex Count: %d", m_Entities.size() * 24);
-		ImGui::Text("Draw calls: %u", m_Entities.size());
+		ImGui::Text("Total Vertex Count: %d", m_SceneVertexCount);
 		ImGui::Text("Total Frames: %lld", application.frameCount);
 		ImGui::Text("Total duration: %f s", application.totalAppDuration);
 		ImGui::Text("Average FPS: %f", 1000.0f / application.avgTotalFrameTime);
@@ -529,21 +530,36 @@ void DemoScene::DrawUi() const noexcept
 
 void DemoScene::Draw() noexcept
 {
-	glClearBufferfv(GL_COLOR, 0, clearColor);
+	glClearBufferfv(GL_COLOR, 4, clearColor);
 	glClearBufferfv(GL_DEPTH, 0, &depthClearValue);
+
+	m_DeferredPipeline.Clear();
 
 	for (const auto& entity : m_Entities) {
 		DrawEntity(entity.get());
 	}
 
 	m_DisplayPipeline.Bind();
+	m_DisplayPipeline.Clear();
 
-	glClearBufferfv(GL_COLOR, 0, clearColor);
+	m_DisplayPipeline.SetTexture("positionSampler", m_GBuffer.GetAttachment(0), m_AttachmentSampler, FRAGMENT);
+	m_DisplayPipeline.SetTexture("normalSampler", m_GBuffer.GetAttachment(1), m_AttachmentSampler, FRAGMENT);
+	m_DisplayPipeline.SetTexture("albedoSampler", m_GBuffer.GetAttachment(2), m_AttachmentSampler, FRAGMENT);
+	m_DisplayPipeline.SetTexture("specularSampler", m_GBuffer.GetAttachment(3), m_AttachmentSampler, FRAGMENT);
+	m_DisplayPipeline.SetTexture("depthSampler", m_GBuffer.GetAttachment(4), m_AttachmentSampler, FRAGMENT);
+
+	m_DisplayPipeline.SetInteger("attachmentIndex", m_CurrentAttachment, FRAGMENT);
+
+	glClearBufferfv(GL_COLOR, 0, clearColor2);
 	glClearBufferfv(GL_DEPTH, 0, &depthClearValue);
+
+	glFrontFace(GL_CW);
 
 	glBindVertexArray(m_FullscreenVA);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	glFrontFace(GL_CCW);
 
 	glBindVertexArray(0);
 

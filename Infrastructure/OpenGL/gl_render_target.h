@@ -25,6 +25,12 @@ public:
 	void Bind() const noexcept;
 
 	void Unbind() const noexcept;
+
+	GLuint GetAttachment(const i32 index) const noexcept;
+
+	size_t GetAttachmentCount() const noexcept;
+
+	GLuint GetId() const noexcept;
 };
 
 #endif //GL_RENDER_TARGET_H_

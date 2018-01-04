@@ -23,12 +23,15 @@ bool GLRenderTarget::Create(const std::vector<GLRenderTargetAttachmentCreateInfo
 		glCreateTextures(GL_TEXTURE_2D, attachmentsInfos.size(), m_Attachments.data());
 
 		auto colorAttachmentCount = 0;
+		std::vector<GLuint> outputLocations;
 		for (auto i = 0u; i < attachmentsInfos.size(); ++i) {
 			glTextureStorage2D(m_Attachments[i],
 			                   1,
 			                   attachmentsInfos[i].internalFormat,
 			                   attachmentsInfos[i].size.x,
 			                   attachmentsInfos[i].size.y);
+
+			assert(glGetError() == GL_NO_ERROR);
 
 			auto isDepthAttachment = false;
 
@@ -41,17 +44,23 @@ bool GLRenderTarget::Create(const std::vector<GLRenderTargetAttachmentCreateInfo
 
 			if (isDepthAttachment && !m_HasDepth) {
 				glNamedFramebufferTexture(m_Id, GL_DEPTH_ATTACHMENT, m_Attachments[i], 0);
+				assert(glGetError() == GL_NO_ERROR);
 				m_HasDepth = true;
 			}
 			else {
-				const auto outputLocation = GL_COLOR_ATTACHMENT0 + colorAttachmentCount++;
-				glNamedFramebufferTexture(m_Id, outputLocation, m_Attachments[i], 0);
-				glNamedFramebufferDrawBuffer(m_Id, outputLocation);
+				outputLocations.push_back(GL_COLOR_ATTACHMENT0 + colorAttachmentCount);
+				++colorAttachmentCount;
+				glNamedFramebufferTexture(m_Id, outputLocations.back(), m_Attachments[i], 0);
+				assert(glGetError() == GL_NO_ERROR);
 			}
 		}
+
+		glNamedFramebufferDrawBuffers(m_Id, outputLocations.size(), outputLocations.data());
+		assert(glGetError() == GL_NO_ERROR);
 	}
 
 	const auto status = glCheckNamedFramebufferStatus(m_Id, GL_DRAW_FRAMEBUFFER);
+	assert(glGetError() == GL_NO_ERROR);
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
 		switch (status) {
 		case GL_FRAMEBUFFER_UNDEFINED:
@@ -83,4 +92,19 @@ void GLRenderTarget::Bind() const noexcept
 void GLRenderTarget::Unbind() const noexcept
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+GLuint GLRenderTarget::GetAttachment(const i32 index) const noexcept
+{
+	return m_Attachments[index];
+}
+
+size_t GLRenderTarget::GetAttachmentCount() const noexcept
+{
+	return m_Attachments.size();
+}
+
+GLuint GLRenderTarget::GetId() const noexcept
+{
+	return m_Id;
 }

@@ -21,7 +21,7 @@ bool GLShader::CompileText(const std::string& fileName) const noexcept
     const std::string contents{ std::istreambuf_iterator<char>(file),
                                 std::istreambuf_iterator<char>() };
 
-    assert(contents.size() > 0);
+    assert(!contents.empty());
 
     const char* cptr = contents.c_str();
     glShaderSource(m_Id, 1, &cptr, nullptr);
@@ -168,7 +168,8 @@ bool GLShader::Load(const std::string& fileName) noexcept
         }
     }
 
-    return spirv ? LoadSpirv(fileName) : CompileText(fileName);
+//    return spirv ? LoadSpirv(fileName) : CompileText(fileName);
+	return CompileText(fileName);
 }
 
 GLShaderStageType GLShader::GetType() const noexcept
