@@ -257,30 +257,6 @@ bool DemoScene::Initialize() noexcept
 
 	G_Application.frameRateTermination = true;
 
-	//TODO: move this to the deferred rendered scene.
-//	GLRenderTargetAttachmentCreateInfo floatAttachment{};
-//	floatAttachment.size = windowSize;
-//	floatAttachment.internalFormat = GL_RGBA16F;
-//
-//	GLRenderTargetAttachmentCreateInfo colorAttachment{};
-//	colorAttachment.size = windowSize;
-//	colorAttachment.internalFormat = GL_RGBA8;
-//
-//	GLRenderTargetAttachmentCreateInfo depthAttachment{};
-//	depthAttachment.size = windowSize;
-//	depthAttachment.internalFormat = GL_DEPTH_COMPONENT32F;
-//
-//	std::vector<GLRenderTargetAttachmentCreateInfo> attachments{
-//		floatAttachment, //Positions
-//		floatAttachment, //Normals
-//		colorAttachment, //Albedo
-//		colorAttachment, //Specular
-//		depthAttachment  //Depth
-//	};
-//
-//	GLRenderTarget rtarg;
-//	rtarg.Create(attachments);
-
 	assert(glGetError() == GL_NO_ERROR);
 
 	return ImGui_ImplGlfwGL3_Init(G_Application.GetWindow(), true);

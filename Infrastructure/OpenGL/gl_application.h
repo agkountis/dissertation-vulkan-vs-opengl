@@ -89,6 +89,8 @@ public:
 	GLWindow& GetWindow() noexcept;
 
 	void Reshape(const Vec2ui& size) noexcept;
+
+	void SaveToCsv(const std::string& fname);
 };
 
 #endif //GL_APPLICATION_H_

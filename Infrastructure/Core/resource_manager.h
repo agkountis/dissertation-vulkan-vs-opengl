@@ -79,7 +79,7 @@ public:
 
 		resource = m_ResourcesByName[fileName];
 
-		return static_cast<T*>(resource);
+		return reinterpret_cast<T*>(resource);
 	}
 
 	/**

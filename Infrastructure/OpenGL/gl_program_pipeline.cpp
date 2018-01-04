@@ -1,5 +1,4 @@
 #include "gl_program_pipeline.h"
-#include "logger.h"
 
 GLProgramPipeline::~GLProgramPipeline()
 {
@@ -131,7 +130,7 @@ void GLProgramPipeline::SetTexture(const std::string& name, const GLTexture* tex
 	const auto location = glGetProgramResourceLocation(programId, GL_UNIFORM, name.c_str());
 
 	if (location < 0) {
-		ERROR_LOG("Uniform: " + name + " is not active or does not exists in shader with ID: " + std::to_string(programId));
+		ERROR_LOG("Uniform: " + name + " is not active or does not exist in shader with ID: " + std::to_string(programId));
 		return;
 	}
 

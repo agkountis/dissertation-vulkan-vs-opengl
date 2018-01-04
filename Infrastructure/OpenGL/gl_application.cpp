@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "gl_infrastructure_context.h"
 #include <algorithm>
+#include <fstream>
 
 GLApplication::GLApplication(const ApplicationSettings& settings) noexcept
 	: Application{ settings }
@@ -231,4 +232,30 @@ GLWindow& GLApplication::GetWindow() noexcept
 
 void GLApplication::Reshape(const Vec2ui& size) noexcept
 {
+}
+
+void GLApplication::SaveToCsv(const std::string& fname)
+{
+	std::ofstream stream{ fname + ".csv" };
+
+	stream << "Whole Frame Time,CPU Time,GPU Time\n";
+
+	for (auto i = 0u; i < totalFrameTimeSamples.size(); ++i) {
+		stream << totalFrameTimeSamples[i] << "," << totalCpuTimeSamples[i] << "," << totalGpuTimeSamples[i] << "\n";
+	}
+
+	stream << "\nFPS,Whole Frame Time,CPU Time,GPU Time\n";
+
+	for (auto i = 0u; i < fpsAverages.size(); ++i) {
+		stream << fpsAverages[i] << "," << wholeFrameAverages[i] << "," << cpuTimeAverages[i] << "," << gpuTimeAverages[i] <<
+				"\n";
+	}
+
+	stream << "\nAverage FPS,Average Frame Time,Average CPU Time,Average GPU Time\n";
+	stream << 1000.0f / avgTotalFrameTime << "," << avgTotalFrameTime << "," << avgTotalCpuTime << "," << avgTotalGpuTime;
+
+	stream << "\n99th percentile\n";
+	stream << percentile99th;
+
+	stream.close();
 }

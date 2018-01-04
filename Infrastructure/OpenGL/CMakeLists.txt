@@ -15,7 +15,8 @@ set(SOURCE_FILES gl_application.h
 				 gl_infrastructure_context.h
 				 gl_infrastructure_context.cpp
 				 gl_render_target.h
-				 gl_render_target.cpp)
+				 gl_render_target.cpp
+				 gl_buffer.h)
 
 include_directories(../Core)
 

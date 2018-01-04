@@ -11,6 +11,8 @@ private:
 
 	GLuint m_Ibo{ 0 };
 
+	ui32 m_MaterialIndex{ 0 };
+
 public:
 	GLMesh() = default;
 
@@ -19,6 +21,16 @@ public:
 	bool CreateBuffers() noexcept override;
 
 	void Draw() const noexcept;
+
+	void SetMaterialIndex(const ui32 materialIndex) noexcept
+	{
+		m_MaterialIndex = materialIndex;
+	}
+
+	ui32 GetMaterialIndex() const noexcept
+	{
+		return m_MaterialIndex;
+	}
 };
 
 #endif //GL_MESH_H_
