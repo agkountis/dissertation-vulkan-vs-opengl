@@ -17,18 +17,18 @@ if(MSVC)
 	set(SHADER_FILES sdr/default.vert
 		sdr/default.frag)
 
-	set(TEXTURE_FILES ../../../Assets/vulkan.jpg
-		../../../Assets/vulkan_spec.png
-		../../../Assets/vulkan_norm.png)
+	set(TEXTURE_FILES ../../../Assets/opengl.jpg
+		../../../Assets/opengl_spec.png
+		../../../Assets/opengl_norm.png)
 
 	set(CONFIGURATION_FILES config/config.cfg)
-
-	add_executable(GL_DrawCallCount ${SOURCE_FILES} ${SHADER_FILES} ${TEXTURE_FILES} ${CONFIGURATION_FILES})
 
 	source_group(Shaders FILES ${SHADER_FILES})
 	source_group(Textures FILES ${TEXTURE_FILES})
 	source_group(Configuration FILES ${CONFIGURATION_FILES})
 	source_group(ImGUI FILES ${IMGUI_SOURCE} ${IMGUI_OPENGL_IMPL})
+
+	add_executable(GL_DrawCallCount ${SOURCE_FILES} ${SHADER_FILES} ${TEXTURE_FILES} ${CONFIGURATION_FILES})
 
 	set_target_properties(GL_DrawCallCount PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 	set_target_properties(GL_DrawCallCount PROPERTIES FOLDER OpenGLBenchmarks/DriverOverhead)

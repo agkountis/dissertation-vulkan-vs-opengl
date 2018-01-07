@@ -1,2 +1,3 @@
 add_subdirectory(DriverOverhead)
 add_subdirectory(MultiPass)
+add_subdirectory(DrawCallPerObject)
