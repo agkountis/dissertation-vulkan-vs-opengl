@@ -54,6 +54,10 @@ bool DemoApplication::BuildDeferredPassCommandBuffer()
 		return false;
 	}
 
+	vkCmdResetQueryPool(m_DeferredCommandBuffer, deferredQueryPool, 0, 2);
+	vkCmdWriteTimestamp(m_DeferredCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, deferredQueryPool, 0);
+
+
 	vkCmdBeginRenderPass(m_DeferredCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	VkViewport viewport{};
@@ -76,6 +80,8 @@ bool DemoApplication::BuildDeferredPassCommandBuffer()
 	m_DemoScene.Draw(m_DeferredCommandBuffer);
 
 	vkCmdEndRenderPass(m_DeferredCommandBuffer);
+
+	vkCmdWriteTimestamp(m_DeferredCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, deferredQueryPool, 1);
 
 	result = vkEndCommandBuffer(m_DeferredCommandBuffer);
 
@@ -175,6 +181,7 @@ DemoApplication::~DemoApplication() noexcept
 
 bool DemoApplication::Initialize() noexcept
 {
+	deferredBench = true;
 	if (!VulkanApplication::Initialize()) {
 		return false;
 	}
@@ -209,7 +216,7 @@ void DemoApplication::Draw() noexcept
 {
 	PreDraw();
 
-	if (!BuildDisplayCommandBuffer()) {
+	if (!BuildDisplayCommandBuffer()) { // Have to rebuild every frame only due to ImGui
 		ERROR_LOG("Failed to build display command buffer.");
 		return;
 	}

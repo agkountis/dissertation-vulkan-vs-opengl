@@ -253,6 +253,9 @@ public:
 
 	std::vector<VulkanQueryPool> queryPools;
 
+	bool deferredBench{ false };
+	VulkanQueryPool deferredQueryPool; //used specifically for the deferred benchmark.
+
 	f64 w1{ 0.0 };
 	f64 w2{ 0.0 };
 

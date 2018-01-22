@@ -380,6 +380,10 @@ bool VulkanApplication::Initialize() noexcept
 		queryPool.Initialize(VK_QUERY_TYPE_TIMESTAMP, 2, VK_NULL_HANDLE);
 	}
 
+	if (deferredBench) {
+		deferredQueryPool.Initialize(VK_QUERY_TYPE_TIMESTAMP, 2, VK_NULL_HANDLE);
+	}
+
 	if (!CreateFramebuffers()) {
 		ERROR_LOG("Failed to create framebuffers.");
 		return false;
@@ -408,6 +412,13 @@ i32 VulkanApplication::Run() noexcept
 		const auto nanosInAnIncrement{ m_Device.GetPhysicalDevice().properties.limits.timestampPeriod };
 
 		gpuTime = (gpuResults[1] - gpuResults[0]) * nanosInAnIncrement * 1e-6;
+
+		if (deferredBench) {
+			gpuResults.clear();
+			deferredQueryPool.GetResults(gpuResults);
+			gpuTime += (gpuResults[1] - gpuResults[0]) * nanosInAnIncrement * 1e-6;
+		}
+
 		cpuTime = wholeFrameTime - gpuTime;
 
 		if (cpuTime < 0.0f) {

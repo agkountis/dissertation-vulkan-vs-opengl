@@ -284,7 +284,7 @@ bool DemoScene::PrepareUniforms() noexcept
 	// Descriptor pool size for the deferred shading resolution pass (display pass)
 	VkDescriptorPoolSize gBufferPoolSize{};
 	gBufferPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	gBufferPoolSize.descriptorCount = 5; // x4 (position, normal, specular, albedo, depth textures)
+	gBufferPoolSize.descriptorCount = 5; // x5 (position, normal, specular, albedo, depth textures)
 
 	// 1 UBO for the light array (display pass)
 	VkDescriptorPoolSize lightsPoolSize{};
