@@ -27,7 +27,7 @@ bool VulkanInstance::Create(const VkApplicationInfo& applicationInfo,
 	}
 
 	VkResult result{ vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance) };
-	
+
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to create Vulkan Instance.");
 		return false;

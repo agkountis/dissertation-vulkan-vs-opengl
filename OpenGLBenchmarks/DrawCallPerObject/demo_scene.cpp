@@ -193,7 +193,7 @@ void DemoScene::DrawUi() const noexcept
 
 		if (ImGui::Button("Save to CSV")) {
 			LOG("Saving to CSV");
-			SaveToCsv("GL_DrawCallCount_Metrics");
+			SaveToCsv("GL_DrawCallPerObject_Metrics");
 		}
 
 		if (ImGui::Button("Exit Application")) {

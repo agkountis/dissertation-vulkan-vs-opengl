@@ -47,7 +47,7 @@ elseif(MSVC)
     set(VULKAN_LIB C:/VulkanSDK/1.0.65.0/Lib32/vulkan-1.lib)
 	set(GL_LIB opengl32.lib)
 	set(GLEW_LIB ${DEPENDENCIES_PATH}/lib/glew32.lib)
-    set(GLFW_LIB C:/usr/lib/glfw3.lib)
+    set(GLFW_LIB ${DEPENDENCIES_PATH}/lib/glfw3.lib)
 
     set(VULKAN_APP_LIBRARIES ${VULKAN_LIB} ${GLFW_LIB})
 	set(OPENGL_APP_LIBRARIES ${GL_LIB} ${GLEW_LIB} ${GLFW_LIB})
