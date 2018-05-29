@@ -21,10 +21,9 @@ bool DemoApplication::BuildCommandBuffers() noexcept
 	return true;
 }
 
-
 bool DemoApplication::BuildDeferredPassCommandBuffer()
 {
-	std::array<VkClearValue, 5> clearValues;
+	std::array<VkClearValue, 5> clearValues{};
 	for (auto i = 0; i < clearValues.size(); ++i) {
 		if (i < 4) {
 			clearValues[i].color = VkClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
@@ -176,6 +175,8 @@ DemoApplication::DemoApplication(const ApplicationSettings& settings)
 DemoApplication::~DemoApplication() noexcept
 {
 	vkDeviceWaitIdle(G_VulkanDevice);
+
+    vkDestroyFence(G_VulkanDevice, m_Fence, nullptr);
 }
 
 
@@ -199,6 +200,15 @@ bool DemoApplication::Initialize() noexcept
 
 	if (!BuildDeferredPassCommandBuffer()) {
 		ERROR_LOG("Failed to build deferred command buffer.");
+		return false;
+	}
+
+	VkFenceCreateInfo fenceCreateInfo{};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+
+
+	if (vkCreateFence(G_VulkanDevice, &fenceCreateInfo, nullptr, &m_Fence) != VK_SUCCESS) {
+		ERROR_LOG("Failed to create fence");
 		return false;
 	}
 
@@ -248,7 +258,11 @@ void DemoApplication::Draw() noexcept
 	result = vkQueueSubmit(G_VulkanDevice.GetQueue(QueueFamily::GRAPHICS),
 	                       1,
 	                       &submitInfo,
-	                       VK_NULL_HANDLE);
+	                       m_Fence);
+
+	vkWaitForFences(G_VulkanDevice, 1, &m_Fence, VK_TRUE, std::numeric_limits<ui32>::max());
+
+    vkResetFences(G_VulkanDevice, 1, &m_Fence);
 
 	if (result != VK_SUCCESS) {
 		ERROR_LOG("Failed to submit the command buffer.");

@@ -13,6 +13,8 @@ private:
 
 	VulkanSemaphore m_DeferredSemaphore;
 
+	VkFence m_Fence{VK_NULL_HANDLE};
+
 	void EnableFeatures() noexcept override;
 
 	bool BuildCommandBuffers() noexcept override;

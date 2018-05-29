@@ -87,7 +87,7 @@ const Mat4f& Entity::GetXform() const noexcept
 void Entity::Update(const f32 deltaTime) noexcept
 {
 		// Reset identity;
-		m_Xform = Mat4f{};
+		m_Xform = Mat4f{1.0};
 
 		m_Xform = glm::translate(m_Xform, m_Position);
 		m_Xform *= glm::toMat4(m_Orientation);

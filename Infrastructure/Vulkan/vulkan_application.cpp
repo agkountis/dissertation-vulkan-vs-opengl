@@ -456,7 +456,6 @@ i32 VulkanApplication::Run() noexcept
 				cpuTimeAverage = cpuTimeSum / static_cast<f32>(size);
 				gpuTimeAverage = gpuTimeSum / static_cast<f32>(size);
 
-
 				minWholeFrame = std::min(minWholeFrame, wholeFrameTime);
 				maxWholeFrame = std::max(wholeFrameTime, maxWholeFrame);
 
